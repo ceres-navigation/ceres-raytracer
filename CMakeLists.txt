@@ -4,10 +4,8 @@ project(ceres-raytracer CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(ceres-raytracer INTERFACE)
-target_include_directories(ceres-raytracer INTERFACE .)
+add_subdirectory(include)
 
-add_subdirectory(include/bvh)
-target_link_libraries(ceres-raytracer INTERFACE bvh)
+include_directories(include)
 
 add_executable(render render.cpp)
