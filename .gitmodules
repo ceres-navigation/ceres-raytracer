@@ -1,0 +1,3 @@
+[submodule "include/bvh"]
+	path = include/bvh
+	url = git@github.com:madmann91/bvh.git
