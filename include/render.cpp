@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdint>
+#include <chrono>
 
 #include <bvh/bvh.hpp>
 #include <bvh/binned_sah_builder.hpp>
@@ -30,7 +31,7 @@ void lambertian(Vector3 sun_line, Vector3 normal, float &reflected_intensity){
     return;
 };
 
-void render(const Camera& camera, const Bvh& bvh,
+void render(const Camera& camera, const Vector3& sun_position, const Bvh& bvh,
             const Triangle* triangles, Scalar* pixels,
             size_t width, size_t height)
 {
@@ -62,26 +63,30 @@ void render(const Camera& camera, const Bvh& bvh,
             } else {
                 auto tri = triangles[hit->primitive_index];
                 auto normal = bvh::normalize(tri.n);
+                // pixels[index    ] = std::fabs(normal[0]);
+                // pixels[index + 1] = std::fabs(normal[1]);
+                // pixels[index + 2] = std::fabs(normal[2]);
 
                 float u = hit->intersection.u;
                 float v = hit->intersection.v;
-                Vector3 intersect_point = u*tri.p0 + v*tri.p1() + (1-u-v)*tri.p2();
+                Vector3 intersect_point = (u*tri.p0 + v*tri.p1() + (1-u-v)*tri.p2());
 
-                Vector3 sun_line = bvh::normalize(Vector3(100.0, 0.0, 0.0) - intersect_point);
+                //TODO: Figure out how to deal with the self-intersection stuff in a more proper way...
+                float scale = 1.01;
+                intersect_point[0] = intersect_point[0]*scale;
+                intersect_point[1] = intersect_point[1]*scale;
+                intersect_point[2] = intersect_point[2]*scale;
+
+                Vector3 sun_line = bvh::normalize(sun_position - intersect_point);
                 Ray ray(intersect_point, sun_line);
                 auto hit = traverser.traverse(ray, intersector);
                 if (!hit) {
                     // Calculate the shading:
                     float reflected_intensity;
-
                     lambertian(sun_line, normal, reflected_intensity);
                     pixels[index    ] = std::fabs(reflected_intensity);
                     pixels[index + 1] = std::fabs(reflected_intensity);
                     pixels[index + 2] = std::fabs(reflected_intensity);
-
-                    // pixels[index    ] = std::fabs(normal[0]);
-                    // pixels[index + 1] = std::fabs(normal[1]);
-                    // pixels[index + 2] = std::fabs(normal[2]);
                 } else{
                     pixels[index] = pixels[index + 1] = pixels[index + 2] = 0;
                 }
@@ -116,17 +121,50 @@ static void rotate_triangles(Scalar degrees, Triangle* triangles, size_t triangl
 int main(int argc, char** argv) {
 
     const char* output_file  = "render.ppm";
-    const char* input_file   = "Bennu_v20_200k.obj";
+    // const char* input_file   = "Bennu_v20_200k.obj";
+    // Camera camera = {
+    //     Vector3(0.0,  -1.0, 0.0),
+    //     Vector3(0, 1, 0),
+    //     Vector3(0, 0, 1),
+    //     60
+    // };
+    // Vector3 sun_position = Vector3(100.0, 0, 0.0);
+    // size_t rotation_axis = 0;
+    // Scalar rotation_degrees = 0;
 
+    const char* input_file = "../../data/dragon.obj";
     Camera camera = {
-        Vector3(0.0,  -1, 0.0),
+        Vector3(0.0, -15.0, 2.0),
         Vector3(0, 1, 0),
         Vector3(0, 0, 1),
         60
     };
+    Vector3 sun_position = Vector3(-50.0, -20.0, 0.0);
+    size_t rotation_axis = 0;
+    Scalar rotation_degrees = 90;
 
-    size_t rotation_axis = 1;
-    Scalar rotation_degrees = 0;
+    // const char* input_file = "dragon.obj";
+    // Camera camera = {
+    //     Vector3(-2.0, 0.0, 0.0),
+    //     Vector3(1, 0, 0),
+    //     Vector3(0, 0, 1),
+    //     60
+    // };
+    // Vector3 sun_position = Vector3(-50.0, 100.0, 0.0);
+    // size_t rotation_axis = 0;
+    // Scalar rotation_degrees = 90;
+
+    // const char* input_file = "bike.obj";
+    // Camera camera = {
+    //     Vector3(-2.0, 0.0, 0.5),
+    //     Vector3(1, 0, 0),
+    //     Vector3(0, 0, 1),
+    //     60
+    // };
+    // Vector3 sun_position = Vector3(-50.0, 100.0, 0.0);
+    // size_t rotation_axis = 0;
+    // Scalar rotation_degrees = 90;
+    
 
     size_t width  = 1920;
     size_t height = 1080;
@@ -153,7 +191,9 @@ int main(int argc, char** argv) {
 
     // Build an acceleration data structure for this object set
     std::cout << "Building BVH ( using BinnedSahBuilder )..." << std::endl;
-    
+    using namespace std::chrono;
+    auto start = high_resolution_clock::now();
+
     auto bboxes_and_centers = bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
     auto bboxes = bboxes_and_centers.first.get(); 
     auto centers = bboxes_and_centers.second.get(); 
@@ -163,14 +203,27 @@ int main(int argc, char** argv) {
     bvh::BinnedSahBuilder<Bvh, 16> builder(bvh);
     builder.build(global_bbox, bboxes, centers, reference_count);
 
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    std::cout << duration.count()/1000000.0 << std::endl;
+
     std::cout << "BVH of "
         << bvh.node_count << " node(s) and "
         << reference_count << " reference(s)" << std::endl;
 
     auto pixels = std::make_unique<Scalar[]>(3 * width * height);
 
-    std::cout << "Rendering image (" << width << "x" << height << ")..." << std::endl;
-    render(camera, bvh, triangles.data(), pixels.get(), width, height);
+    #pragma omp parallel
+    {
+        #pragma omp single
+        std::cout << "Rendering image (" << width << "x" << height << ") on " << omp_get_num_threads() << " threads..." << std::endl;
+    }
+    // std::cout << "Rendering image (" << width << "x" << height << ")..." << std::endl;
+    auto start2 = high_resolution_clock::now();
+    render(camera, sun_position, bvh, triangles.data(), pixels.get(), width, height);
+    auto stop2 = high_resolution_clock::now();
+    auto duration2 = duration_cast<microseconds>(stop2 - start2);
+    std::cout << duration2.count()/1000000.0 << std::endl;
 
     std::ofstream out(output_file, std::ofstream::binary);
     out << "P6 " << width << " " << height << " " << 255 << "\n";
