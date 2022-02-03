@@ -60,9 +60,13 @@ void render(const Camera& camera, const Bvh& bvh,
             if (!hit) {
                 pixels[index] = pixels[index + 1] = pixels[index + 2] = 0;
             } else {
-                auto normal = bvh::normalize(triangles[hit->primitive_index].n);
+                auto tri = triangles[hit->primitive_index];
+                auto normal = bvh::normalize(tri.n);
 
-                Vector3 intersect_point = (hit->distance())*bvh::normalize(image_u * u + image_v * v + dir) + camera.eye;
+                float u = hit->intersection.u;
+                float v = hit->intersection.v;
+                Vector3 intersect_point = u*tri.p0 + v*tri.p1() + (1-u-v)*tri.p2();
+
                 Vector3 sun_line = bvh::normalize(Vector3(100.0, 0.0, 0.0) - intersect_point);
                 Ray ray(intersect_point, sun_line);
                 auto hit = traverser.traverse(ray, intersector);
