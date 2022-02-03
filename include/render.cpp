@@ -25,6 +25,11 @@ struct Camera {
     Scalar  fov;
 };
 
+void lambertian(Vector3 sun_line, Vector3 normal, float &reflected_intensity){
+    reflected_intensity = sun_line[0]*normal[0] + sun_line[1]*normal[1] + sun_line[2]*normal[2];
+    return;
+};
+
 void render(const Camera& camera, const Bvh& bvh,
             const Triangle* triangles, Scalar* pixels,
             size_t width, size_t height)
@@ -58,15 +63,21 @@ void render(const Camera& camera, const Bvh& bvh,
                 auto normal = bvh::normalize(triangles[hit->primitive_index].n);
 
                 Vector3 intersect_point = (hit->distance())*bvh::normalize(image_u * u + image_v * v + dir) + camera.eye;
-                Vector3 sun_line = Vector3(100.0, 0.0, 0.0) - intersect_point;
-                Ray ray(intersect_point, bvh::normalize(sun_line));
+                Vector3 sun_line = bvh::normalize(Vector3(100.0, 0.0, 0.0) - intersect_point);
+                Ray ray(intersect_point, sun_line);
                 auto hit = traverser.traverse(ray, intersector);
                 if (!hit) {
                     // Calculate the shading:
-                    
-                    pixels[index    ] = std::fabs(normal[0]);
-                    pixels[index + 1] = std::fabs(normal[1]);
-                    pixels[index + 2] = std::fabs(normal[2]);
+                    float reflected_intensity;
+
+                    lambertian(sun_line, normal, reflected_intensity);
+                    pixels[index    ] = std::fabs(reflected_intensity);
+                    pixels[index + 1] = std::fabs(reflected_intensity);
+                    pixels[index + 2] = std::fabs(reflected_intensity);
+
+                    // pixels[index    ] = std::fabs(normal[0]);
+                    // pixels[index + 1] = std::fabs(normal[1]);
+                    // pixels[index + 2] = std::fabs(normal[2]);
                 } else{
                     pixels[index] = pixels[index + 1] = pixels[index + 2] = 0;
                 }
