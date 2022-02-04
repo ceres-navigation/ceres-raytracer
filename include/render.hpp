@@ -2,6 +2,7 @@
 #define __RENDER_H
 
 #include <cstdint>
+#include <math.h>
 
 #include <bvh/bvh.hpp>
 #include <bvh/binned_sah_builder.hpp>
@@ -18,12 +19,14 @@
 // using Triangle =  bvh::Triangle<Scalar>;
 
 template <typename Scalar>
-std::pair<int, int> render(PinholeCamera<Scalar>& camera, const bvh::Vector3<Scalar>& sun_position, const bvh::Bvh<Scalar>& bvh,
-            const bvh::Triangle<Scalar>* triangles, Scalar* pixels,
-            size_t width, size_t height)
+std::pair<int, int> render(CameraModel<Scalar> &camera, const bvh::Vector3<Scalar>& sun_position, const bvh::Bvh<Scalar>& bvh,
+            const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> intersector(bvh, triangles);
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
+
+    size_t width  = (size_t) floor(camera.get_resolutionX());
+    size_t height = (size_t) floor(camera.get_resolutionY());
 
     size_t traversal_steps = 0, intersections = 0;
 
@@ -31,7 +34,6 @@ std::pair<int, int> render(PinholeCamera<Scalar>& camera, const bvh::Vector3<Sca
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             size_t index = 3 * (width * j + i);
-
             // auto u = 2 * (i + Scalar(0.5)) / Scalar(width)  - Scalar(1);
             // auto v = 2 * (j + Scalar(0.5)) / Scalar(height) - Scalar(1);
 
