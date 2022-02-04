@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
 
     size_t width  = 1280;
     size_t height = 720;
-    const char* input_file   = "../../data/bunny.obj";
+    const char* input_file   = "../data/bunny.obj";
 
     if (argc > 2) {
         if (!strcmp("-d", argv[1])) {

@@ -13,8 +13,13 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(lib)
 include_directories(lib)
 
 add_subdirectory(include)
+include_directories(include)
+
+add_subdirectory(src)
+include_directories(src)
