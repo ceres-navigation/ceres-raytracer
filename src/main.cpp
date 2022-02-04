@@ -16,17 +16,10 @@
 #include "obj.hpp"
 
 template <typename Scalar>
-void scene(std::string input_file, std::string out_file, size_t width, size_t height) {
+void scene(PinholeCamera<Scalar> camera, std::string input_file, std::string out_file, size_t width, size_t height) {
     using Vector3 =  bvh::Vector3<Scalar>;
     using Bvh =  bvh::Bvh<Scalar>;
     using Triangle =  bvh::Triangle<Scalar>;
-
-    Camera<Scalar> camera = {
-        Vector3(0.0, -1.0, 0.0),
-        Vector3(0, 1, 0),
-        Vector3(0, 0, 1),
-        60
-    };
 
     Vector3 sun_position = Vector3(100.0, 0, 0.0);
 
@@ -72,10 +65,10 @@ void scene(std::string input_file, std::string out_file, size_t width, size_t he
     #pragma omp parallel
     {
         #pragma omp single
-        std::cout << "Rendering image " << " (" << width << "x" << height << ") on " << omp_get_num_threads() << " threads..." << std::endl;
+        std::cout << "Rendering image on " << omp_get_num_threads() << " threads..." << std::endl;
     }
 #else
-    std::cout << "Rendering image " << " (" << width << "x" << height << ") on single thread..." << std::endl;
+    std::cout << "Rendering image on single thread..." << std::endl;
 #endif
 
     auto start2 = high_resolution_clock::now();
@@ -101,31 +94,81 @@ void scene(std::string input_file, std::string out_file, size_t width, size_t he
     std::cout << "Total Rays: " << tot_rays << std::endl;    
 }
 
+
+// template <typename Scalar>
+// std::unique_ptr<CameraModel<Scalar>> create_camera(const char* camera_model){
+//     using Vector3 =  bvh::Vector3<Scalar>;
+//     if (!strcmp("PinholeCamera", camera_model) ) {
+//         Scalar focal_length = 60;
+//         Scalar resolution[2];
+//         resolution[0] = 1920;
+//         resolution[1] = 1080;
+//         Scalar sensor_size[2];
+//         sensor_size[0] = 35;
+//         sensor_size[1] = 19.7;
+//         Vector3 position = Vector3(0.0, -1.0, 0.0);
+//         Vector3 euler_angles = Vector3(0.0, 0.0, 0.0);
+//         PinholeCamera<Scalar>* camera = new PinholeCamera(focal_length, resolution, sensor_size, position, euler_angles);
+//         return camera;
+//     }
+// }
+
 int main(int argc, char** argv) {
 
-    (void) argc;
-    (void) argv;
-
-    bool use_double = false;
-    std::string out_file = "render.png";
-
-    size_t width  = 1280;
-    size_t height = 720;
-    const char* input_file   = "../data/bunny.obj";
-
-    if (argc > 2) {
-        if (!strcmp("-d", argv[1])) {
-            use_double = true;   
-        }
-        out_file = argv[2];
-    } else if (argc == 2) {
-        out_file = argv[1];
+    if (argc != 2) {
+        std::cout << "A YAML configuration file must be provided\n";
+        return 1;
     }
-
-    if (use_double) {
-        scene<double>(input_file, out_file, width, height);
-    } else {
-        scene<float>(input_file, out_file, width, height);
+    else {
+        std::cout << "Processing configuration given by: " << argv[1] << "\n";
     }
     
+    // Things to be read from the YAML:
+    bool use_double = true;
+    const char* camera_model = "PinholeCamera";
+    size_t width  = 1920;
+    size_t height = 1080;
+    const char* input_file   = "../data/bunny.obj";
+    std::string out_file = "render.png";
+
+    // Parse the camera model:
+    if (!strcmp("PinholeCamera", camera_model) ) {
+        }
+    else {
+        std::cout << "Invalid camera model!\n";
+    }
+
+    // Build and render the scene as double precision:
+    if (use_double) {
+        double focal_length = 60;
+        double resolution[2];
+        resolution[0] = width;
+        resolution[1] = height;
+        double sensor_size[2];
+        sensor_size[0] = 35;
+        sensor_size[1] = 19.7;
+        using Vector3 = bvh::Vector3<double>;
+        Vector3 position = Vector3(0.0, -1.0, 0.0);
+        Vector3 euler_angles = Vector3(0.0, 0.0, 0.0);
+        PinholeCamera<double> camera = PinholeCamera(focal_length, resolution, sensor_size, position, euler_angles);
+        // auto camera = create_camera<double>(camera_model);
+        scene<double>(camera, input_file, out_file, width, height);
+    
+    // Build and render the scene as single precision:
+    } else {
+        float focal_length = 60;
+        float resolution[2];
+        resolution[0] = width;
+        resolution[1] = height;
+        float sensor_size[2];
+        sensor_size[0] = 35;
+        sensor_size[1] = 19.7;
+        using Vector3 = bvh::Vector3<float>;
+        Vector3 position = Vector3(0.0, -1.0, 0.0);
+        Vector3 euler_angles = Vector3(0.0, 0.0, 0.0);
+        PinholeCamera<float> camera = PinholeCamera(focal_length, resolution, sensor_size, position, euler_angles);
+        // auto camera = create_camera<float>(camera_model);
+        scene<float>(camera, input_file, out_file, width, height);
+    }
+    return 0;
 }

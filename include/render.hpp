@@ -18,18 +18,10 @@
 // using Triangle =  bvh::Triangle<Scalar>;
 
 template <typename Scalar>
-std::pair<int, int> render(const Camera<Scalar>& camera, const bvh::Vector3<Scalar>& sun_position, const bvh::Bvh<Scalar>& bvh,
+std::pair<int, int> render(PinholeCamera<Scalar>& camera, const bvh::Vector3<Scalar>& sun_position, const bvh::Bvh<Scalar>& bvh,
             const bvh::Triangle<Scalar>* triangles, Scalar* pixels,
             size_t width, size_t height)
 {
-    auto dir = bvh::normalize(camera.dir);
-    auto image_u = bvh::normalize(bvh::cross(dir, camera.up));
-    auto image_v = bvh::normalize(bvh::cross(image_u, dir));
-    auto image_w = std::tan(camera.fov * Scalar(3.14159265 * (1.0 / 180.0) * 0.5));
-    auto ratio = Scalar(height) / Scalar(width);
-    image_u = image_u * image_w;
-    image_v = image_v * image_w * ratio;
-
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> intersector(bvh, triangles);
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
 
@@ -40,10 +32,10 @@ std::pair<int, int> render(const Camera<Scalar>& camera, const bvh::Vector3<Scal
         for(size_t j = 0; j < height; ++j) {
             size_t index = 3 * (width * j + i);
 
-            auto u = 2 * (i + Scalar(0.5)) / Scalar(width)  - Scalar(1);
-            auto v = 2 * (j + Scalar(0.5)) / Scalar(height) - Scalar(1);
+            // auto u = 2 * (i + Scalar(0.5)) / Scalar(width)  - Scalar(1);
+            // auto v = 2 * (j + Scalar(0.5)) / Scalar(height) - Scalar(1);
 
-            bvh::Ray<Scalar> ray(camera.eye, bvh::normalize(image_u * u + image_v * v + dir));
+            bvh::Ray<Scalar> ray = camera.pixel_to_ray(i,j);
             auto hit = traverser.traverse(ray, intersector);
             traversal_steps++;
             if (!hit) {
