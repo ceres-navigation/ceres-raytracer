@@ -4,54 +4,18 @@
 #include <cstdint>
 
 #include <bvh/bvh.hpp>
-#include <bvh/triangle.hpp>
-
-#include "transform.hpp"
-
-template <typename Scalar>
-struct Camera {
-    bvh::Vector3<Scalar> eye;
-    bvh::Vector3<Scalar> dir;
-    bvh::Vector3<Scalar> up;
-    Scalar  fov;
-};
-
-template <size_t Axis, typename Scalar>
-static void rotate_triangles(Scalar degrees, bvh::Triangle<Scalar>* triangles, size_t triangle_count) {
-    static constexpr Scalar pi = Scalar(3.14159265359);
-    auto cos = std::cos(degrees * pi / Scalar(180));
-    auto sin = std::sin(degrees * pi / Scalar(180));
-    auto rotate = [&] (const bvh::Vector3<Scalar>& p) {
-        if (Axis == 0)
-            return bvh::Vector3<Scalar>(p[0], p[1] * cos - p[2] * sin, p[1] * sin + p[2] * cos);
-        else if (Axis == 1)
-            return bvh::Vector3<Scalar>(p[0] * cos + p[2] * sin, p[1], -p[0] * sin + p[2] * cos);
-        else
-            return bvh::Vector3<Scalar>(p[0] * cos - p[1] * sin, p[0] * sin + p[1] * cos, p[2]);
-    };
-    #pragma omp parallel for
-    for (size_t i = 0; i < triangle_count; ++i) {
-        auto p0 = rotate(triangles[i].p0);
-        auto p1 = rotate(triangles[i].p1());
-        auto p2 = rotate(triangles[i].p2());
-        triangles[i] = bvh::Triangle<Scalar>(p0, p1, p2);
-    }
-}
-
-#include <bvh/bvh.hpp>
 #include <bvh/binned_sah_builder.hpp>
 #include <bvh/single_ray_traverser.hpp>
 #include <bvh/primitive_intersectors.hpp>
 #include <bvh/triangle.hpp>
 
-#include "render.hpp"
 #include "transform.hpp"
+#include "brdfs.hpp"
+#include "cameras.hpp"
 
-template <typename Vector3>
-void lambertian(Vector3 sun_line, Vector3 normal, float &reflected_intensity){
-    reflected_intensity = sun_line[0]*normal[0] + sun_line[1]*normal[1] + sun_line[2]*normal[2];
-    return;
-};
+// using Vector3 =  bvh::Vector3<Scalar>;
+// using Bvh =  bvh::Bvh<Scalar>;
+// using Triangle =  bvh::Triangle<Scalar>;
 
 template <typename Scalar>
 std::pair<int, int> render(const Camera<Scalar>& camera, const bvh::Vector3<Scalar>& sun_position, const bvh::Bvh<Scalar>& bvh,
