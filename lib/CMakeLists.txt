@@ -4,6 +4,7 @@ add_library(
     bvh
     ${BVHSources}
     obj.hpp
+    toml.hpp
 )
 
 set_target_properties(bvh PROPERTIES LINKER_LANGUAGE CXX)

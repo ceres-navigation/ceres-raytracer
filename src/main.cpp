@@ -11,6 +11,7 @@
 #include <bvh/triangle.hpp>
 
 #include <Magick++.h> 
+#include <toml.hpp>
 
 #include "render.hpp"
 #include "obj.hpp"
@@ -130,6 +131,19 @@ int main(int argc, char** argv) {
     else {
         std::cout << "Processing configuration given by: " << argv[1] << "\n";
     }
+
+    // Parse the TOML configuration file:
+    toml::table tbl;
+    try
+    {
+        tbl = toml::parse_file(argv[1]);
+            std::cout << tbl << "\n";
+    }
+    catch (const toml::parse_error& err)
+   {
+       std::cerr << "Parsing failed:\n" << err << "\n";
+       return 2;
+   }
     
     // Things to be read from the YAML:
     bool use_double = true;
@@ -144,7 +158,7 @@ int main(int argc, char** argv) {
     }
     else {
         std::cout << "Invalid camera model!\n";
-        return 2;
+        return 3;
     }
 
     // Build and render the scene as double precision:
