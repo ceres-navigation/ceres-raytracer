@@ -18,6 +18,7 @@
 // using Bvh =  bvh::Bvh<Scalar>;
 // using Triangle =  bvh::Triangle<Scalar>;
 
+
 template <typename Scalar>
 std::pair<int, int> render(CameraModel<Scalar> &camera, const bvh::Vector3<Scalar>& sun_position, const bvh::Bvh<Scalar>& bvh,
             const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
@@ -63,9 +64,13 @@ std::pair<int, int> render(CameraModel<Scalar> &camera, const bvh::Vector3<Scala
                 auto hit = traverser.traverse(ray, intersector);
                 traversal_steps++;
                 if (!hit) {
-                    // Calculate the shading:
+                    // // Calculate the shading:
                     float reflected_intensity;
-                    lambertian(sun_line, normal, reflected_intensity);
+
+                    bvh::Vector3<Scalar> interpolated_normal = u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0;
+                    // lambertian(sun_line, normal, reflected_intensity);
+                    lambertian(sun_line, interpolated_normal, reflected_intensity);
+
                     pixels[index    ] = std::fabs(reflected_intensity) * 1.00;
                     pixels[index + 1] = std::fabs(reflected_intensity) * 1.00;
                     pixels[index + 2] = std::fabs(reflected_intensity) * 1.00;

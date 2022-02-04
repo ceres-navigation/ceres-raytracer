@@ -28,6 +28,7 @@ void scene(CameraModel<Scalar> &camera, std::string input_file, std::string out_
 
     // Load mesh from file
     auto triangles = obj::load_from_file<Scalar>(input_file);
+    // auto [triangles, tri_norms] = obj::load_from_file<Scalar>(input_file);
     if (triangles.size() == 0) {
         std::cerr << "The given scene is empty or cannot be loaded" << std::endl;
         return;
@@ -115,7 +116,7 @@ CameraStruct load_camera_struct() {
     camera_struct.resolution[1] = 1080.0;
     camera_struct.sensor_size[0] = 35.0;
     camera_struct.sensor_size[1] = 19.7;
-    camera_struct.position = bvh::Vector3<double>(0.0, 0.1, 0.5);
+    camera_struct.position = bvh::Vector3<double>(0.0, 0.0, 1.5);
     camera_struct.euler_angles = bvh::Vector3<double>(0.0, 0.0, 0.0);
     return camera_struct;
 };
@@ -133,7 +134,7 @@ int main(int argc, char** argv) {
     // Things to be read from the YAML:
     bool use_double = true;
     
-    const char* input_file   = "../data/bunny.obj";
+    const char* input_file   = "../data/bennu.obj";
     std::string out_file = "render.png";
 
     CameraStruct camera_struct = load_camera_struct();
