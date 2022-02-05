@@ -134,9 +134,9 @@ void euler_to_rotation(Scalar euler_angles[3], const char* euler_sequence, Scala
     }
 
     // Apply all three rotations to the default:
-    MatrixMultiply<double>(rotation_3, rotation);
-    MatrixMultiply<double>(rotation_2, rotation);
-    MatrixMultiply<double>(rotation_1, rotation);
+    MatrixMultiply<Scalar>(rotation_3, rotation);
+    MatrixMultiply<Scalar>(rotation_2, rotation);
+    MatrixMultiply<Scalar>(rotation_1, rotation);
 }
 
 #endif

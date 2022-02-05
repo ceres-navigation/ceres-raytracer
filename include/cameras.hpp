@@ -3,13 +3,14 @@
 
 #include <bvh/bvh.hpp>
 
+template <typename Scalar>
 struct CameraStruct {
     std::string name;
-    bvh::Vector3<double> position;
-    double rotation[3][3];
-    double focal_length;
-    double resolution[2];
-    double sensor_size[2];
+    bvh::Vector3<Scalar> position;
+    Scalar rotation[3][3];
+    Scalar focal_length;
+    Scalar resolution[2];
+    Scalar sensor_size[2];
 } ;
 
 template <typename Scalar>
@@ -47,10 +48,10 @@ class PinholeCamera: public CameraModel<Scalar> {
         Scalar scale[2];
         Scalar K[3][3];
 
-        PinholeCamera(CameraStruct camera_struct) {
-            this -> position = Vector3((Scalar) camera_struct.position[0],
-                                       (Scalar) camera_struct.position[1],
-                                       (Scalar) camera_struct.position[2]);
+        PinholeCamera(CameraStruct<Scalar> camera_struct) {
+            this -> position = Vector3(camera_struct.position[0],
+                                       camera_struct.position[1],
+                                       camera_struct.position[2]);
 
             for (int i = 0; i < 3; i++){
                 for (int j = 0; j <3; j++){
@@ -58,11 +59,11 @@ class PinholeCamera: public CameraModel<Scalar> {
                 }
             }
 
-            this -> focal_length = (Scalar) camera_struct.focal_length;
-            this -> resolution[0] = (Scalar) camera_struct.resolution[0];
-            this -> resolution[1] = (Scalar) camera_struct.resolution[1];
-            this -> sensor_size[0] = (Scalar) camera_struct.sensor_size[0];
-            this -> sensor_size[1] = (Scalar) camera_struct.sensor_size[1];
+            this -> focal_length = camera_struct.focal_length;
+            this -> resolution[0] = camera_struct.resolution[0];
+            this -> resolution[1] = camera_struct.resolution[1];
+            this -> sensor_size[0] = camera_struct.sensor_size[0];
+            this -> sensor_size[1] = camera_struct.sensor_size[1];
 
             center[0] = resolution[0]/2.0;
             center[1] = resolution[1]/2.0;

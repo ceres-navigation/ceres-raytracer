@@ -4,12 +4,13 @@
 #include <bvh/bvh.hpp>
 
 template <typename Scalar>
-using Vector3 =  bvh::Vector3<Scalar>;
-
-template <typename Vector3>
-void lambertian(Vector3 sun_line, Vector3 normal, float &reflected_intensity){
-    reflected_intensity = sun_line[0]*normal[0] + sun_line[1]*normal[1] + sun_line[2]*normal[2];
-    return;
+void lambertian(bvh::Ray<Scalar> light_ray, bvh::Vector3<Scalar> normal, bvh::Vector3<Scalar> &intensity){
+    bvh::Vector3<Scalar> color(0.8,0.5,0.5);
+    Scalar light_intensity = 1;
+    Scalar L_dot_N = light_ray.direction[0]*normal[0] + light_ray.direction[1]*normal[1] +light_ray.direction[2]*normal[2];
+    intensity[0] = L_dot_N*color[0]*light_intensity;
+    intensity[1] = L_dot_N*color[1]*light_intensity;
+    intensity[2] = L_dot_N*color[2]*light_intensity;
 };
 
 

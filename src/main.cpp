@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cstdint>
 #include <chrono>
+#include <random>
 
 #include <bvh/bvh.hpp>
 #include <bvh/binned_sah_builder.hpp>
@@ -29,7 +30,8 @@ void load_settings(INIReader reader, bool &use_double, std::string &output) {
 
 
 // Function to get the position:
-void get_position(INIReader reader, const char* object_name, bvh::Vector3<double> &position) {
+template <typename Scalar>
+void get_position(INIReader reader, const char* object_name, bvh::Vector3<Scalar> &position) {
     std::string segment;
     std::vector<std::string> seglist;
     std::stringstream test_str;
@@ -43,17 +45,18 @@ void get_position(INIReader reader, const char* object_name, bvh::Vector3<double
         position[idx] = std::stod(segment);
         idx = idx +1;
     }
-
     std::cout << "    position       : [" << position[0] << ", " << position[0] << ", " << position[2] << "]\n";
 }
 
-void get_scale(INIReader reader, const char* object_name, double &scale) {
+template <typename Scalar>
+void get_scale(INIReader reader, const char* object_name, Scalar &scale) {
     scale = reader.GetReal(object_name, "scale", 1);
     std::cout << "    scale          : " << scale << "\n";
 }
 
 // Function to get the rotation matrix:
-void get_rotation(INIReader reader, const char* object_name, double (&rotation)[3][3]) {
+template <typename Scalar>
+void get_rotation(INIReader reader, const char* object_name, Scalar (&rotation)[3][3]) {
     std::string segment;
     std::vector<std::string> seglist;
     std::stringstream test_str;
@@ -64,7 +67,7 @@ void get_rotation(INIReader reader, const char* object_name, double (&rotation)[
     value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
     test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")-1));
     idx = 0;
-    double quaternion[4];
+    Scalar quaternion[4];
     while(std::getline(test_str, segment, ',')) {
         quaternion[idx] = std::stod(segment);
         idx = idx +1;
@@ -75,7 +78,7 @@ void get_rotation(INIReader reader, const char* object_name, double (&rotation)[
     quaternion[3] = 1.0;
 
     std::string euler_sequence;
-    double euler_angles[3];
+    Scalar euler_angles[3];
 
     // Determine the rotation matrix:
     value_str = reader.Get(object_name, "euler_angles", "UNKNOWN");
@@ -89,11 +92,11 @@ void get_rotation(INIReader reader, const char* object_name, double (&rotation)[
             euler_angles[idx] = std::stod(segment);
             idx = idx +1;
         }
-        euler_to_rotation<double>(euler_angles, euler_sequence.c_str(), rotation);
+        euler_to_rotation<Scalar>(euler_angles, euler_sequence.c_str(), rotation);
     }
     else {
         // If no euler angles provided, default to the quaternion:
-        quaternion_to_rotation<double>(quaternion, rotation);
+        quaternion_to_rotation<Scalar>(quaternion, rotation);
     }
 
     if (strcmp(value_str.c_str(),"UNKNOWN")) {
@@ -109,35 +112,8 @@ void get_rotation(INIReader reader, const char* object_name, double (&rotation)[
 template <typename Scalar>
 std::unique_ptr<CameraModel<Scalar>> load_camera(INIReader reader) {
     std::cout << "Loading camera model...\n";
-<<<<<<< HEAD
 
-    struct CameraStruct camera_struct;
-
-    // Get the camera model:
-    camera_struct.name = reader.Get("camera", "type", "PinholeCamera");
-
-    // Get the focal length:
-    camera_struct.focal_length = reader.GetReal("camera", "focal_length", 0);
-
-    // Declare intermediate variables for parsing arrays:
-    std::string segment;
-    std::vector<std::string> seglist;
-    std::stringstream test_str;
-    int idx;
-
-    // Get the resolution:
-    auto value_str = reader.Get("camera", "resolution", "UNKNOWN");
-    value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
-    test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")));
-    idx = 0;
-    while(std::getline(test_str, segment, ',')) {
-        camera_struct.resolution[idx] = std::stod(segment);
-        idx = idx +1;
-    }
-
-=======
-
-    struct CameraStruct camera_struct;
+    struct CameraStruct<Scalar> camera_struct;
 
     // Get the camera model:
     camera_struct.name = reader.Get("camera", "type", "PinholeCamera");
@@ -161,7 +137,6 @@ std::unique_ptr<CameraModel<Scalar>> load_camera(INIReader reader) {
         idx = idx +1;
     }
 
->>>>>>> multiple_objects
     // Get the sensor size:
     value_str = reader.Get("camera", "sensor_size", "UNKNOWN");
     value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
@@ -173,14 +148,14 @@ std::unique_ptr<CameraModel<Scalar>> load_camera(INIReader reader) {
     }
 
     // Print if desired:
-    std::cout << "    type           : " << camera_struct.name << "\n";
+    std::cout << "  " << camera_struct.name << "\n";
     std::cout << "    focal_length   : " << camera_struct.focal_length << "\n";
     std::cout << "    resolution     : [" << camera_struct.resolution[0] << ", " << camera_struct.resolution[1] << "]\n";
     std::cout << "    sensor_size    : [" << camera_struct.sensor_size[0] << ", " << camera_struct.sensor_size[1] << "]\n";
 
     // Get the pose information:
-    get_position(reader, "camera", camera_struct.position);
-    get_rotation(reader, "camera", camera_struct.rotation);
+    get_position<Scalar>(reader, "camera", camera_struct.position);
+    get_rotation<Scalar>(reader, "camera", camera_struct.rotation);
 
     if (!strcmp("PinholeCamera", camera_struct.name.c_str()) ) {
         auto camera = std::make_unique<PinholeCamera<Scalar>>(camera_struct);
@@ -198,9 +173,9 @@ std::vector<bvh::Triangle<Scalar>> load_objects(INIReader reader) {
     
     std::vector<bvh::Triangle<Scalar>> triangles;
 
-    double scale;
-    double rotation[3][3];
-    bvh::Vector3<double> position;
+    Scalar scale;
+    Scalar rotation[3][3];
+    bvh::Vector3<Scalar> position;
 
     std::string segment;
     std::vector<std::string> seglist;
@@ -212,14 +187,15 @@ std::vector<bvh::Triangle<Scalar>> load_objects(INIReader reader) {
             // Load the triangular mesh:
             std::string path_to_obj = reader.Get((*it), "path", "UNKNOWN");
             auto triangles_new = obj::load_from_file<Scalar>(path_to_obj);
-            
+            std::cout << "  " << (*it).substr(4) << " loaded from " << path_to_obj << "\n";
+
             // Load the position:
-            get_scale(reader, (*it).c_str(), scale);
-            get_position(reader, (*it).c_str(), position);
-            get_rotation(reader, (*it).c_str(), rotation);
+            get_scale<Scalar>(reader, (*it).c_str(), scale);
+            get_position<Scalar>(reader, (*it).c_str(), position);
+            get_rotation<Scalar>(reader, (*it).c_str(), rotation);
 
             // Apply the transformation:
-            transform_triangles(triangles_new, rotation, position, scale);
+            transform_triangles<Scalar>(triangles_new, rotation, position, scale);
 
             // Store the triangles:
             if (first_obj) {
@@ -229,31 +205,30 @@ std::vector<bvh::Triangle<Scalar>> load_objects(INIReader reader) {
             else {
                 triangles.insert(triangles.end(), triangles_new.begin(), triangles_new.end() );
             };
-            std::cout << "    " << (*it).substr(4) << " loaded from " << path_to_obj << "\n";
         };
     };
     return triangles;
 }
 
-<<<<<<< HEAD
-
 // Function for loading lights:
-load_pointlights(INIReader reader) {
+template <typename Scalar>
+std::vector<PointLight<Scalar>> load_pointlights(INIReader reader) {
     // Get the sections from the INI file:
+    std::cout << "Loading Point lights...\n";
     auto sections = reader.Sections();
+    std::vector<PointLight<Scalar>> point_lights;
+    bvh::Vector3<Scalar> position;
 
-    std::cout << "\nREADING ALL LIGHTS\n";
     for (auto it = sections.begin(); it != sections.end(); ++it) {
         if (!strcmp((*it).substr(0,3).c_str(), "lgt")) {
-            std::cout << (*it).substr(4) << "\n";
-            std::cout << "   " << reader.Get((*it), "type", "UNKNOWN") << "\n";
-            std::cout << "   " << reader.Get((*it), "position", "UNKNOWN") << "\n";
+            std::cout << "  " << (*it).substr(4) << ":\n";
+            get_position(reader, (*it).c_str(), position);
+            point_lights.push_back(PointLight<Scalar>(position));
         };
     }
+    return point_lights;
 }
 
-=======
->>>>>>> multiple_objects
 
 int main(int argc, char** argv) {
 

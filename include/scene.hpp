@@ -3,7 +3,6 @@
 
 template <typename Scalar>
 void scene(CameraModel<Scalar> &camera, std::vector<bvh::Triangle<Scalar>> triangles, std::vector<PointLight<Scalar>> point_lights, std::string out_file) {
-    using Vector3 =  bvh::Vector3<Scalar>;
     using Bvh =  bvh::Bvh<Scalar>;
     using Triangle =  bvh::Triangle<Scalar>;
 
@@ -37,9 +36,7 @@ void scene(CameraModel<Scalar> &camera, std::vector<bvh::Triangle<Scalar>> trian
     std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
     auto pixels = std::make_unique<Scalar[]>(3 * width * height);
-
-    long tot_rays = 0;
-
+    
 #ifdef _OPENMP
     #pragma omp parallel
     {
@@ -50,18 +47,11 @@ void scene(CameraModel<Scalar> &camera, std::vector<bvh::Triangle<Scalar>> trian
     std::cout << "Rendering image on single thread..." << std::endl;
 #endif
 
-    auto start2 = high_resolution_clock::now();
-<<<<<<< HEAD
-    auto [rays, hits] = render(camera, point_lights, bvh, triangles.data(), pixels.get());
-=======
-    auto [rays, hits] = render(camera, sun_position, bvh, triangles.data(), pixels.get());
->>>>>>> multiple_objects
-    auto stop2 = high_resolution_clock::now();
-    auto duration2 = duration_cast<microseconds>(stop2 - start2);
-    tot_rays += rays;
-    std::cout << "    Rays: " << rays << "\tHits: " << hits << std::endl;
-    std::cout << "    Total Rays: " << tot_rays << std::endl;    
-    std::cout << "    Tracing completed in " << duration2.count()/1000000.0 << " seconds\n\n";
+    start = high_resolution_clock::now();
+    render(camera, point_lights, bvh, triangles.data(), pixels.get());
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "    Tracing completed in " << duration.count()/1000000.0 << " seconds\n\n";
 
     Magick::Image image(Magick::Geometry(width,height), "green");
     image.modifyImage();

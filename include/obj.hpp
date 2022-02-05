@@ -112,7 +112,6 @@ load_from_stream(std::istream& is) {
 
     int count = 0;
     for (auto [x, y, z] : tri_idx) {
-        // printf("%d, %d, %d\n",x,y,z);
         triangles[count].add_vetex_normals(normals[x], normals[y], normals[z]);
         count = count+1;
     }

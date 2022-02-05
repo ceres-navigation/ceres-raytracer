@@ -8,9 +8,7 @@ template <typename Scalar>
 class Light {
     using Vector3 =  bvh::Vector3<Scalar>;
     public:
-        Vector3 position;
-
-        virtual bvh::Ray<Scalar> sample_ray(Scalar position) = 0;
+        virtual bvh::Ray<Scalar> sample_ray(Vector3 origin) = 0;
 };
 
 
@@ -21,20 +19,14 @@ class PointLight: public Light<Scalar>  {
     public:
         Vector3 position;
 
-        PointLight(){
-
+        PointLight(Vector3 position){
+            this -> position = position;
         }
-};
 
-
-// Area light class:
-template <typename Scalar>
-class AreaLight: public Light<Scalar> {
-    using Vector3 =  bvh::Vector3<Scalar>;
-    public:
-        Vector3 position;
-        Scalar rotation[3][3];
-        int num_samples;
+        bvh::Ray<Scalar> sample_ray(Vector3 origin){
+            bvh::Vector3<Scalar> light_direction = bvh::normalize(this->position - origin);
+            return bvh::Ray<Scalar>(origin, light_direction);
+        }
 };
 
 #endif
