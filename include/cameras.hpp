@@ -93,9 +93,9 @@ class PinholeCamera: public CameraModel<Scalar> {
 
             // Rotate rays to the world frame (NOTE: the TRANSPOSE of the provided rotation is used for this)
             Vector3 temp;
-            temp[0] = rotation[0][0]*dir[0] + rotation[0][1]*dir[1] + rotation[0][2]*dir[2];
-            temp[1] = rotation[1][0]*dir[0] + rotation[1][1]*dir[1] + rotation[1][2]*dir[2];
-            temp[2] = rotation[2][0]*dir[0] + rotation[2][1]*dir[1] + rotation[2][2]*dir[2];
+            temp[0] = rotation[0][0]*dir[0] + rotation[1][0]*dir[1] + rotation[2][0]*dir[2];
+            temp[1] = rotation[0][1]*dir[0] + rotation[1][1]*dir[1] + rotation[2][1]*dir[2];
+            temp[2] = rotation[0][2]*dir[0] + rotation[1][2]*dir[1] + rotation[2][2]*dir[2];
             dir = temp;
             // std::cout << dir[0] << " " << dir[1] << " " << dir[2] << "\n";
 

@@ -3,7 +3,6 @@ FILE(GLOB BVHSources bvh/*.hpp)
 add_library(
     bvh
     ${BVHSources}
-    obj.hpp
     INIReader.h
 )
 

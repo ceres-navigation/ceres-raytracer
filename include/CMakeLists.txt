@@ -4,6 +4,9 @@ add_library(
     brdfs.hpp
     cameras.hpp
     rotations.hpp
+    scene.hpp
+    obj.hpp
+    lights.hpp
 )
 
 set_target_properties(render.hpp PROPERTIES LINKER_LANGUAGE CXX)

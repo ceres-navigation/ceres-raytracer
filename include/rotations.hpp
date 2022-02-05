@@ -137,14 +137,6 @@ void euler_to_rotation(Scalar euler_angles[3], const char* euler_sequence, Scala
     MatrixMultiply<double>(rotation_3, rotation);
     MatrixMultiply<double>(rotation_2, rotation);
     MatrixMultiply<double>(rotation_1, rotation);
-
-    std::cout << "[" << rotation[0][0] << " " << rotation[0][1] << " " << rotation[0][2] << "\n";
-    std::cout << rotation[1][0] << " " << rotation[1][1] << " " << rotation[1][2] << "\n";
-    std::cout << rotation[2][0] << " " << rotation[2][1] << " " << rotation[2][2] << "]\n";
-
-    std::cout << "[" << rotation_1[0][0] << " " << rotation_1[0][1] << " " << rotation_1[0][2] << "\n";
-    std::cout << rotation_1[1][0] << " " << rotation_1[1][1] << " " << rotation_1[1][2] << "\n";
-    std::cout << rotation_1[2][0] << " " << rotation_1[2][1] << " " << rotation_1[2][2] << "]\n";
 }
 
 #endif

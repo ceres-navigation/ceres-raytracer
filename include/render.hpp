@@ -10,17 +10,12 @@
 #include <bvh/primitive_intersectors.hpp>
 #include <bvh/triangle.hpp>
 
-#include "transform.hpp"
+#include "lights.hpp"
 #include "brdfs.hpp"
 #include "cameras.hpp"
 
-// using Vector3 =  bvh::Vector3<Scalar>;
-// using Bvh =  bvh::Bvh<Scalar>;
-// using Triangle =  bvh::Triangle<Scalar>;
-
-
 template <typename Scalar>
-std::pair<int, int> render(CameraModel<Scalar> &camera, const bvh::Vector3<Scalar>& sun_position, const bvh::Bvh<Scalar>& bvh,
+std::pair<int, int> render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> point_lights, const bvh::Bvh<Scalar>& bvh,
             const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> intersector(bvh, triangles);
