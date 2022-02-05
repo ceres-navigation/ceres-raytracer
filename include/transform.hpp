@@ -4,127 +4,49 @@
 #include <bvh/bvh.hpp>
 #include <bvh/triangle.hpp>
 
-
 template <typename Scalar>
-class Transform {
-  public:
-    Scalar a[3][3];
-    bvh::Vector3<Scalar> v;
-    Transform();
-    Transform(Transform<Scalar> &t);
-    Transform<Scalar> rotate(bvh::Vector3<Scalar> axis, Scalar angle) const;
-    Transform<Scalar> scale(Scalar scale) const;
-    Transform<Scalar> translate(bvh::Vector3<Scalar> translate) const;
-    bvh::Vector3<Scalar> operator()(const bvh::Vector3<Scalar>& p) const;
-};
-
-template <typename Scalar>
-Transform<Scalar>::Transform() {
-    a[0][0] = 1;
-    a[0][1] = 0;
-    a[0][2] = 0;
-    a[1][0] = 0;
-    a[1][1] = 1;
-    a[1][2] = 0;
-    a[2][0] = 0;
-    a[2][1] = 0;
-    a[2][2] = 1;
-
-    v = bvh::Vector3<Scalar>(0,0,0);
-}
-
-template <typename Scalar>
-Transform<Scalar>::Transform(Transform<Scalar> &t) {
-    for (int row = 0; row < 3; row++) {
-        for (int col = 0; col < 3; col++) {
-            a[row][col] = t.a[row][col];
-        }
-    }
-
-    v = t.v;
-}
-
-template <typename Scalar>
-Transform<Scalar> Transform<Scalar>::scale(Scalar scale) const {
-    Transform<Scalar> ret(this);
-    
-    for (int row = 0; row < 3; row++) {
-        for (int col = 0; col < 3; col++) {
-            ret.a[row][col] *= scale;
-        }
-    }
-
-    return ret;
-}
-
-template <typename Scalar>
-Transform<Scalar> Transform<Scalar>::translate(bvh::Vector3<Scalar> translate) const {
-    Transform<Scalar> ret(this);
-    ret.v = ret.v + translate;
-    return ret;
-}
-
-template <typename Scalar>
-Transform<Scalar> Transform<Scalar>::rotate(bvh::Vector3<Scalar> axis, Scalar angle) const {
-    Transform<Scalar> ret;
-
-    ret.a[0][0] = 0;
-    ret.a[1][1] = 0;
-    ret.a[2][2] = 0;
-
-    auto n_axis = bvh::normalize(axis);
-
-    // Markley and Crassidis (Fund. of Spacecraft AD&C), pg 42
-    Scalar s = std::sin(angle);
-    Scalar c = std::cos(angle);
-    Scalar mat[3][3] = {
-        {
-            c+(1-c)*n_axis[0]*n_axis[0],
-            (1-c)*n_axis[0]*n_axis[1]+s*n_axis[2],
-            (1-c)*n_axis[0]*n_axis[2]-s*n_axis[1],
-        },
-        {
-            (1-c)*n_axis[1]*n_axis[0]-s*n_axis[2],
-            c+(1-c)*n_axis[1]*n_axis[1],
-            (1-c)*n_axis[1]*n_axis[2]+s*n_axis[0],
-        },
-        {
-            (1-c)*n_axis[2]*n_axis[0]+s*n_axis[1],
-            (1-c)*n_axis[2]*n_axis[1]-s*n_axis[0],
-            c+(1-c)*n_axis[2]*n_axis[2],
-        }
-    };
-    
-    for (int row = 0; row < 3; row++) {
-        for (int col = 0; col < 3; col++) {
-            for (int i = 0; i < 3; i++) {
-                ret.a[row][col] += a[row][i] * mat[i][col];
-            }
-        }
-    }
-
-    ret.v = v;
-
-    return ret;
-}
-
-template <typename Scalar>
-bvh::Vector3<Scalar> Transform<Scalar>::operator()(const bvh::Vector3<Scalar>& p) const {
+bvh::Vector3<Scalar> transform(bvh::Vector3<Scalar> vector, double rotation[3][3], bvh::Vector3<double> position, double scale){
+    vector[0] = scale*vector[0];
+    vector[1] = scale*vector[1];
+    vector[2] = scale*vector[2];
     return bvh::Vector3<Scalar>(
-        a[0][0]*p[0] + a[0][1]*p[1] + a[0][2]*p[2] + v[0],
-        a[1][0]*p[0] + a[1][1]*p[1] + a[1][2]*p[2] + v[1],
-        a[2][0]*p[0] + a[2][1]*p[1] + a[2][2]*p[2] + v[2]
+        rotation[0][0]*vector[0] + rotation[0][1]*vector[1] + rotation[0][2]*vector[2] + position[0],
+        rotation[1][0]*vector[0] + rotation[1][1]*vector[1] + rotation[1][2]*vector[2] + position[1],
+        rotation[2][0]*vector[0] + rotation[2][1]*vector[1] + rotation[2][2]*vector[2] + position[2]
     );
 }
 
 template <typename Scalar>
-static void transform_triangles(const Transform<Scalar> &transform, bvh::Triangle<Scalar>* triangles, size_t triangle_count) {
+bvh::Vector3<Scalar> rotate(bvh::Vector3<Scalar> vector, double rotation[3][3]){
+    return bvh::Vector3<Scalar>(
+        rotation[0][0]*vector[0] + rotation[0][1]*vector[1] + rotation[0][2]*vector[2],
+        rotation[1][0]*vector[0] + rotation[1][1]*vector[1] + rotation[1][2]*vector[2],
+        rotation[2][0]*vector[0] + rotation[2][1]*vector[1] + rotation[2][2]*vector[2]
+    );
+}
+
+template <typename Scalar>
+void transform_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, double rotation[3][3], bvh::Vector3<double> position, double scale) {
+    // Apply the rotation and translation:
     // #pragma omp parallel for
-    for (size_t i = 0; i < triangle_count; ++i) {
-        auto p0 = transform(triangles[i].p0);
-        auto p1 = transform(triangles[i].p1());
-        auto p2 = transform(triangles[i].p2());
+    for (size_t i = 0; i < triangles.size(); ++i) {
+        // Transform each of the vertices:
+        auto p0 = transform(triangles[i].p0, rotation, position, scale);
+        auto p1 = transform(triangles[i].p1(), rotation, position, scale);
+        auto p2 = transform(triangles[i].p2(), rotation, position, scale);
+
+        // Transform the face normal:
+        auto fn = rotate(triangles[i].n, rotation);
+
+        // Transform each of the vertex normals:
+        auto vn0 = rotate(triangles[i].vn0, rotation);
+        auto vn1 = rotate(triangles[i].vn1, rotation);
+        auto vn2 = rotate(triangles[i].vn2, rotation);
+
+        // Update the triangle:
         triangles[i] = bvh::Triangle<Scalar>(p0, p1, p2);
+        triangles[i].add_vetex_normals(vn0, vn1, vn2);
+        triangles[i].n = fn;
     }
 }
 
