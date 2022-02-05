@@ -28,6 +28,24 @@ void load_settings(INIReader reader, bool &use_double, std::string &output) {
     output = reader.Get("settings", "output", "render.png");
 };
 
+// Function to get the size:
+template <typename Scalar>
+void get_size(INIReader reader, const char* object_name, Scalar (&size)[2]) {
+    std::string segment;
+    std::vector<std::string> seglist;
+    std::stringstream test_str;
+    int idx;
+
+    auto value_str = reader.Get(object_name, "size", "[1,1]");
+    value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
+    test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")));
+    idx = 0;
+    while(std::getline(test_str, segment, ',')) {
+        size[idx] = std::stod(segment);
+        idx = idx +1;
+    }
+    std::cout << "    size       : [" << size[0] << ", " << size[1] << "]\n";
+}
 
 // Function to get the position:
 template <typename Scalar>
@@ -45,7 +63,7 @@ void get_position(INIReader reader, const char* object_name, bvh::Vector3<Scalar
         position[idx] = std::stod(segment);
         idx = idx +1;
     }
-    std::cout << "    position       : [" << position[0] << ", " << position[0] << ", " << position[2] << "]\n";
+    std::cout << "    position       : [" << position[0] << ", " << position[1] << ", " << position[2] << "]\n";
 }
 
 template <typename Scalar>
@@ -221,12 +239,41 @@ std::vector<PointLight<Scalar>> load_pointlights(INIReader reader) {
 
     for (auto it = sections.begin(); it != sections.end(); ++it) {
         if (!strcmp((*it).substr(0,3).c_str(), "lgt")) {
-            std::cout << "  " << (*it).substr(4) << ":\n";
-            get_position(reader, (*it).c_str(), position);
-            point_lights.push_back(PointLight<Scalar>(position));
+            std::string type = reader.Get((*it), "type", "UNKNOWN");
+            if (!strcmp(type.c_str(),"PointLight")){
+                std::cout << "  " << (*it).substr(4) << ":\n";
+                get_position(reader, (*it).c_str(), position);
+                point_lights.push_back(PointLight<Scalar>(position));
+            };
         };
     }
     return point_lights;
+}
+
+// Function for loading square lights:
+template <typename Scalar>
+std::vector<SquareLight<Scalar>> load_squarelights(INIReader reader) {
+    // Get the sections from the INI file:
+    std::cout << "Loading Square lights...\n";
+    auto sections = reader.Sections();
+    std::vector<SquareLight<Scalar>> square_lights;
+    bvh::Vector3<Scalar> position;
+    Scalar rotation[3][3];
+    Scalar size[2];
+
+    for (auto it = sections.begin(); it != sections.end(); ++it) {
+        if (!strcmp((*it).substr(0,3).c_str(), "lgt")) {
+            std::string type = reader.Get((*it), "type", "UNKNOWN");
+            if (!strcmp(type.c_str(),"SquareLight")){
+                std::cout << "  " << (*it).substr(4) << ":\n";
+                get_position(reader, (*it).c_str(), position);
+                get_rotation(reader, (*it).c_str(), rotation);
+                get_size(reader, (*it).c_str(), size);
+                square_lights.push_back(SquareLight<Scalar>(position, rotation, size));
+            }
+        };
+    }
+    return square_lights;
 }
 
 
@@ -251,15 +298,17 @@ int main(int argc, char** argv) {
     if (use_double) {
         auto camera = load_camera<double>(reader);
         auto triangles = load_objects<double>(reader);
-        auto lights = load_pointlights<double>(reader);
-        scene<double>(*camera, triangles, lights, output);
+        auto point_lights = load_pointlights<double>(reader);
+        auto square_lights = load_squarelights<double>(reader);
+        scene<double>(*camera, triangles, point_lights, square_lights, output);
     
     // Build and render the scene as single precision:
     } else {
         auto camera = load_camera<float>(reader);
         auto triangles = load_objects<float>(reader);
-        auto lights = load_pointlights<float>(reader);
-        scene<float>(*camera, triangles, lights, output);
+        auto point_lights = load_pointlights<float>(reader);
+        auto square_lights = load_squarelights<float>(reader);
+        scene<float>(*camera, triangles, point_lights, square_lights, output);
     }
     return 0;
 }

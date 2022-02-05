@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <math.h>
+#include <random>
 
 #include <bvh/bvh.hpp>
 #include <bvh/binned_sah_builder.hpp>
@@ -33,13 +34,13 @@ bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &tra
 
 
 template <typename Scalar>
-bvh::Vector3<Scalar>  direct_lighting(std::vector<PointLight<Scalar>> point_lights, bvh::Vector3<Scalar> intersect_point, Scalar &u, Scalar &v,
-                     bvh::Triangle<Scalar> &tri, bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, 
-                     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &intersector) {
+bvh::Vector3<Scalar>  direct_lighting(std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
+                                      bvh::Vector3<Scalar> intersect_point, Scalar &u, Scalar &v,
+                                      bvh::Triangle<Scalar> &tri, bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, 
+                                      bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &intersector) {
     bvh::Vector3<Scalar> intensity;
     int count = 1;
     for (PointLight<Scalar> light : point_lights){
-
         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
         bvh::Vector3<Scalar> intensity_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
         if (count == 1) {
@@ -52,16 +53,26 @@ bvh::Vector3<Scalar>  direct_lighting(std::vector<PointLight<Scalar>> point_ligh
         }
         count++;
     };
-    //TODO Add in area lights:
-    // for AreaLight<Scalar> light : area_lights){
-    // };
+    for (SquareLight<Scalar> light : square_lights){
+        bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
+        bvh::Vector3<Scalar> intensity_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
+        if (count == 1) {
+            intensity = intensity_new;
+        }
+        else {
+            intensity[0] += (intensity_new[0] - intensity[0])/count;
+            intensity[1] += (intensity_new[1] - intensity[1])/count;
+            intensity[2] += (intensity_new[2] - intensity[2])/count;
+        }
+        count++;
+    };
     return intensity;
 };
 
 
 template <typename Scalar>
-void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> point_lights, const bvh::Bvh<Scalar>& bvh,
-            const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
+void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
+            const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> intersector(bvh, triangles);
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
@@ -92,7 +103,9 @@ void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> point_l
                     ray = camera.pixel_to_ray(i, j);
                 }
                 else {
-                    ray = camera.pixel_to_ray(i + distr(eng), j + distr(eng));
+                    auto i_rand = distr(eng);
+                    auto j_rand = distr(eng);
+                    ray = camera.pixel_to_ray(i + i_rand, j + j_rand);
                 }
                 bvh::Vector3<Scalar> new_intensity;
                 auto hit = traverser.traverse(ray, intersector);
@@ -121,7 +134,7 @@ void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> point_l
                         intersect_point = intersect_point + scale*normal;
 
                         // Calculate the direct lighting:
-                        auto direct_intensity = direct_lighting<Scalar>(point_lights, intersect_point, u, v, tri, traverser, intersector);
+                        auto direct_intensity = direct_lighting<Scalar>(point_lights, square_lights, intersect_point, u, v, tri, traverser, intersector);
 
                         // Calculate indirect lighting:
                         new_intensity = direct_intensity;
