@@ -109,6 +109,7 @@ void get_rotation(INIReader reader, const char* object_name, double (&rotation)[
 template <typename Scalar>
 std::unique_ptr<CameraModel<Scalar>> load_camera(INIReader reader) {
     std::cout << "Loading camera model...\n";
+<<<<<<< HEAD
 
     struct CameraStruct camera_struct;
 
@@ -134,6 +135,33 @@ std::unique_ptr<CameraModel<Scalar>> load_camera(INIReader reader) {
         idx = idx +1;
     }
 
+=======
+
+    struct CameraStruct camera_struct;
+
+    // Get the camera model:
+    camera_struct.name = reader.Get("camera", "type", "PinholeCamera");
+
+    // Get the focal length:
+    camera_struct.focal_length = reader.GetReal("camera", "focal_length", 0);
+
+    // Declare intermediate variables for parsing arrays:
+    std::string segment;
+    std::vector<std::string> seglist;
+    std::stringstream test_str;
+    int idx;
+
+    // Get the resolution:
+    auto value_str = reader.Get("camera", "resolution", "UNKNOWN");
+    value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
+    test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")));
+    idx = 0;
+    while(std::getline(test_str, segment, ',')) {
+        camera_struct.resolution[idx] = std::stod(segment);
+        idx = idx +1;
+    }
+
+>>>>>>> multiple_objects
     // Get the sensor size:
     value_str = reader.Get("camera", "sensor_size", "UNKNOWN");
     value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
@@ -207,6 +235,7 @@ std::vector<bvh::Triangle<Scalar>> load_objects(INIReader reader) {
     return triangles;
 }
 
+<<<<<<< HEAD
 
 // Function for loading lights:
 load_pointlights(INIReader reader) {
@@ -223,6 +252,8 @@ load_pointlights(INIReader reader) {
     }
 }
 
+=======
+>>>>>>> multiple_objects
 
 int main(int argc, char** argv) {
 

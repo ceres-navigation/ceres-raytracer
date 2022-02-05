@@ -51,7 +51,11 @@ void scene(CameraModel<Scalar> &camera, std::vector<bvh::Triangle<Scalar>> trian
 #endif
 
     auto start2 = high_resolution_clock::now();
+<<<<<<< HEAD
     auto [rays, hits] = render(camera, point_lights, bvh, triangles.data(), pixels.get());
+=======
+    auto [rays, hits] = render(camera, sun_position, bvh, triangles.data(), pixels.get());
+>>>>>>> multiple_objects
     auto stop2 = high_resolution_clock::now();
     auto duration2 = duration_cast<microseconds>(stop2 - start2);
     tot_rays += rays;

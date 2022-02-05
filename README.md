@@ -12,4 +12,4 @@
 - `make`
 
 ## Examples
-- Simple scene rendering: `./render ../data/example.ini`
+- Simple scene rendering: `./render ../data/bunny.ini`
