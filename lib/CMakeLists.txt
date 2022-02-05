@@ -4,7 +4,7 @@ add_library(
     bvh
     ${BVHSources}
     obj.hpp
-    toml.hpp
+    INIReader.h
 )
 
 set_target_properties(bvh PROPERTIES LINKER_LANGUAGE CXX)

@@ -12,5 +12,4 @@
 - `make`
 
 ## Examples
-First build the project using the steps above
-- Simple OBJ Preview: `./render ../data/bennu.obj`
+- Simple scene rendering: `./render ../data/example.ini`

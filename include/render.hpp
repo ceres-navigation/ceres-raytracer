@@ -35,8 +35,6 @@ std::pair<int, int> render(CameraModel<Scalar> &camera, const bvh::Vector3<Scala
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             size_t index = 3 * (width * j + i);
-            // auto u = 2 * (i + Scalar(0.5)) / Scalar(width)  - Scalar(1);
-            // auto v = 2 * (j + Scalar(0.5)) / Scalar(height) - Scalar(1);
 
             bvh::Ray<Scalar> ray = camera.pixel_to_ray(i,j);
             auto hit = traverser.traverse(ray, intersector);
@@ -67,8 +65,8 @@ std::pair<int, int> render(CameraModel<Scalar> &camera, const bvh::Vector3<Scala
                     // // Calculate the shading:
                     float reflected_intensity;
 
+                    //TODO: Add smooth shading as an option per triangle:
                     bvh::Vector3<Scalar> interpolated_normal = u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0;
-                    // lambertian(sun_line, normal, reflected_intensity);
                     lambertian(sun_line, interpolated_normal, reflected_intensity);
 
                     pixels[index    ] = std::fabs(reflected_intensity) * 1.00;

@@ -3,6 +3,7 @@ add_library(
     transform.hpp
     brdfs.hpp
     cameras.hpp
+    rotations.hpp
 )
 
 set_target_properties(render.hpp PROPERTIES LINKER_LANGUAGE CXX)
