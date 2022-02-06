@@ -40,7 +40,7 @@ bvh::Vector3<Scalar>  direct_lighting(std::vector<PointLight<Scalar>> &point_lig
                                       bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &intersector) {
     bvh::Vector3<Scalar> intensity;
     int count = 1;
-    for (PointLight<Scalar> light : point_lights){
+    for (PointLight<Scalar> &light : point_lights){
         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
         bvh::Vector3<Scalar> intensity_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
         if (count == 1) {
@@ -53,7 +53,7 @@ bvh::Vector3<Scalar>  direct_lighting(std::vector<PointLight<Scalar>> &point_lig
         }
         count++;
     };
-    for (SquareLight<Scalar> light : square_lights){
+    for (SquareLight<Scalar> &light : square_lights){
         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
         bvh::Vector3<Scalar> intensity_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
         if (count == 1) {
@@ -83,7 +83,7 @@ void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_
     std::uniform_real_distribution<Scalar> distr(0.0, 1.0);
 
     // TODO: MOVE THIS TO BE PARAMETER OF RENDER:
-    int num_samples = 20;
+    int num_samples = 60;
     bool no_bounce = false;
 
     size_t width  = (size_t) floor(camera.get_resolutionX());

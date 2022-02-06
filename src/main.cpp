@@ -44,7 +44,7 @@ void get_size(INIReader reader, const char* object_name, Scalar (&size)[2]) {
         size[idx] = std::stod(segment);
         idx = idx +1;
     }
-    std::cout << "    size       : [" << size[0] << ", " << size[1] << "]\n";
+    std::cout << "    size           : [" << size[0] << ", " << size[1] << "]\n";
 }
 
 // Function to get the position:
@@ -266,9 +266,9 @@ std::vector<SquareLight<Scalar>> load_squarelights(INIReader reader) {
             std::string type = reader.Get((*it), "type", "UNKNOWN");
             if (!strcmp(type.c_str(),"SquareLight")){
                 std::cout << "  " << (*it).substr(4) << ":\n";
+                get_size(reader, (*it).c_str(), size);
                 get_position(reader, (*it).c_str(), position);
                 get_rotation(reader, (*it).c_str(), rotation);
-                get_size(reader, (*it).c_str(), size);
                 square_lights.push_back(SquareLight<Scalar>(position, rotation, size));
             }
         };
