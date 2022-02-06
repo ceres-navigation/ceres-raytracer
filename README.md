@@ -1,8 +1,8 @@
-# CERES Path Tracer
+# CERES Ray Tracer (CRT)
 <!-- ![Tests](https://github.com/ceres-navigation/ceres/actions/workflows/tests.yml/badge.svg) -->
 <!-- [![codecov](https://codecov.io/gh/ceres-navigation/ceres/branch/main/graph/badge.svg?token=BX07Q0PITB)](https://codecov.io/gh/ceres-navigation/ceres) -->
-[![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-pathtracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
-[![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-pathtracer)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
+[![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
+[![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This proejct was developed for [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
