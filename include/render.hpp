@@ -34,43 +34,6 @@ bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &tra
 
 
 template <typename Scalar>
-bvh::Vector3<Scalar>  direct_lighting(std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
-                                      bvh::Vector3<Scalar> intersect_point, Scalar &u, Scalar &v,
-                                      bvh::Triangle<Scalar> &tri, bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, 
-                                      bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &intersector) {
-    bvh::Vector3<Scalar> intensity;
-    int count = 1;
-    for (PointLight<Scalar> &light : point_lights){
-        bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-        bvh::Vector3<Scalar> intensity_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
-        if (count == 1) {
-            intensity = intensity_new;
-        }
-        else {
-            intensity[0] += (intensity_new[0] - intensity[0])/count;
-            intensity[1] += (intensity_new[1] - intensity[1])/count;
-            intensity[2] += (intensity_new[2] - intensity[2])/count;
-        }
-        count++;
-    };
-    for (SquareLight<Scalar> &light : square_lights){
-        bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-        bvh::Vector3<Scalar> intensity_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
-        if (count == 1) {
-            intensity = intensity_new;
-        }
-        else {
-            intensity[0] += (intensity_new[0] - intensity[0])/count;
-            intensity[1] += (intensity_new[1] - intensity[1])/count;
-            intensity[2] += (intensity_new[2] - intensity[2])/count;
-        }
-        count++;
-    };
-    return intensity;
-};
-
-
-template <typename Scalar>
 void render(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
             const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
@@ -80,7 +43,7 @@ void render(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::
     // Initialize random number generator:
     std::random_device rd;
     std::default_random_engine eng(rd());
-    std::uniform_real_distribution<Scalar> distr(0.0, 1.0);
+    std::uniform_real_distribution<Scalar> distr(-0.5, 0.5);
 
     size_t width  = (size_t) floor(camera.get_resolutionX());
     size_t height = (size_t) floor(camera.get_resolutionY());
@@ -88,73 +51,88 @@ void render(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::
     #pragma omp parallel for
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
+            // std::cout << i <<"\n";
             size_t index = 3 * (width * j + i);
             // Loop through all samples for a given pixel:
             // TODO: Make this adaptive sampling at some point...
-            bvh::Vector3<Scalar> pixel_intensity(0.0,0.0,0.0);
+            bvh::Vector3<Scalar> pixel_radiance(0.0,0.0,0.0);
             for (int sample = 1; sample < num_samples+1; ++sample) {
                 // TODO: Make a better random sampling algorithm:
                 bvh::Ray<Scalar> ray;
+                auto i_rand = distr(eng);
+                auto j_rand = distr(eng);
                 if (num_samples == 1) {
                     ray = camera.pixel_to_ray(i, j);
                 }
                 else {
-                    auto i_rand = distr(eng);
-                    auto j_rand = distr(eng);
                     ray = camera.pixel_to_ray(i + i_rand, j + j_rand);
                 }
-                bvh::Vector3<Scalar> new_intensity;
+                bvh::Vector3<Scalar> path_radiance(0.0,0.0,0.0);
 
                 auto hit = traverser.traverse(ray, intersector);
-                auto tri = triangles[hit->primitive_index];
-                auto normal = bvh::normalize(tri.n);
 
+                // If no bouncesm, return just the vertex normal as the color:
                 if (num_bounces == 0) {
-                    new_intensity[0] = normal[0];
-                    new_intensity[1] = normal[1];
-                    new_intensity[2] = normal[2];
-                }
-
-                for (int bounce = 0; bounce < num_bounces; ++bounce){
-                    
-                    if (!hit) {
-                        new_intensity[0] = 0;
-                        new_intensity[1] = 0;
-                        new_intensity[2] = 0;
-                    } 
-                    else {
-                        //TODO: Figure out how to deal with the self-intersection stuff in a more proper way...
-                        auto u = hit->intersection.u;
-                        auto v = hit->intersection.v;
-                        bvh::Vector3<Scalar> intersect_point = (u*tri.p1() + v*tri.p2() + (1-u-v)*tri.p0);
-                        Scalar scale = -0.0000001;
-                        intersect_point = intersect_point + scale*normal;
-
-                        // Calculate the direct lighting:
-                        auto direct_intensity = direct_lighting<Scalar>(point_lights, square_lights, intersect_point, u, v, tri, traverser, intersector);
-
-                        // Calculate indirect lighting:
-                        new_intensity = direct_intensity;
+                    if (hit) {
+                        auto tri = triangles[hit->primitive_index];
+                        auto normal = bvh::normalize(tri.n);
+                        path_radiance[0] = normal[0];
+                        path_radiance[1] = normal[1];
+                        path_radiance[2] = normal[2];
                     }
                 }
 
+                // Loop through all bounces
+                for (int bounce = 0; bounce < num_bounces; ++bounce){
+                    if (!hit) {
+                        break;
+                    }
+                    auto tri = triangles[hit->primitive_index];
+                    auto normal = bvh::normalize(tri.n);
+
+                    //TODO: Figure out how to deal with the self-intersection stuff in a more proper way...
+                    auto u = hit->intersection.u;
+                    auto v = hit->intersection.v;
+                    bvh::Vector3<Scalar> intersect_point = (u*tri.p1() + v*tri.p2() + (1-u-v)*tri.p0);
+                    Scalar scale = -0.0001;
+                    intersect_point = intersect_point + scale*normal;
+
+                    // Calculate the direct illumination:
+                    bvh::Vector3<Scalar> light_radiance(0.0,0.0,0.0);
+                    int count = 1;
+                    for (PointLight<Scalar> &light : point_lights){
+                        bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
+                        bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
+                        light_radiance = light_radiance + (light_radiance_new - light_radiance)*Scalar(1.0/count);
+                        count++;
+                    };
+                    for (SquareLight<Scalar> &light : square_lights){
+                        bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
+                        bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
+                        light_radiance = light_radiance + (light_radiance_new - light_radiance)*Scalar(1.0/count);
+                        count++;
+                    };
+
+                    //TODO: Update the path radiance with the newly calculated radiance:
+                    path_radiance = path_radiance + light_radiance*Scalar(1.0/(bounce+1));
+
+                    // Exit or cast next ray:
+                    if (bounce == num_bounces-1) {
+                        break;
+                    }
+
+                    //TODO: Move this into a class contained by a parent object to a triangle:
+                    bvh::Ray<Scalar> ray = cosine_importance(intersect_point, -normal, i_rand, j_rand);
+                    hit = traverser.traverse(ray, intersector);
+                }
+
                 // Update the new pixel intensity:
-                if (sample == 1){
-                    pixel_intensity[0] = new_intensity[0];
-                    pixel_intensity[1] = new_intensity[1];
-                    pixel_intensity[2] = new_intensity[2];
-                }
-                else {
-                    // Sequentially compute the average intensity given each new sample:
-                    pixel_intensity[0] += (new_intensity[0] - pixel_intensity[0])/sample;
-                    pixel_intensity[1] += (new_intensity[1] - pixel_intensity[1])/sample;
-                    pixel_intensity[2] += (new_intensity[2] - pixel_intensity[2])/sample;
-                }
+                pixel_radiance = pixel_radiance + (path_radiance - pixel_radiance)*Scalar(1.0/sample);
             }
             // Store the pixel intensity:
-            pixels[index    ] = std::fabs(pixel_intensity[0]);
-            pixels[index + 1] = std::fabs(pixel_intensity[1]);
-            pixels[index + 2] = std::fabs(pixel_intensity[2]);
+            pixels[index    ] = std::fabs(pixel_radiance[0]);
+            pixels[index + 1] = std::fabs(pixel_radiance[1]);
+            pixels[index + 2] = std::fabs(pixel_radiance[2]);
         }
     }
 }
