@@ -27,6 +27,11 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 # Tasks:
 - [ ] Implement physically based radiance tracking for paths
 - [ ] Improve the adaptive sampling noise calculation
+- [ ] Triangular meshes
+  - [ ] Add vertex color support
+  - [ ] Add parent object support
+  - [ ] Add parsers for more mesh type (.PLY)
+  - [ ] Add texture mapping
 - [ ] Refactor
   - [ ] Reorganize code into classes
   - [ ] Move INI parser out of `main.cpp`
