@@ -12,15 +12,18 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 
 ## Installation
 **Dependencies:**
-- ImageMagick version 7 \*
+- ImageMagick version 7
 
-\* *NOTE: ImageMagick version 7 is not available in the standard Ubuntu repository.  If using Ubuntu, please [compile from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)*
+### Linux/MacOS:
+**If using Ubuntu** please [compile from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)
 
-### Linux
 - `mkdir build; cd build; cmake ..`
 - `make`
 
-## Examples
+### Windows
+*Coming Soon*
+
+## INI Examples
 - Simple scene rendering: `./render ../data/bunny.ini`
 - *NOTE: Because of ongoing development this test may not work.  Will provide update soon*
 
@@ -51,7 +54,7 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
   - [ ] Fix euler angle sequencing issue
 
 # Attributions
-## MadMann91's Modern C++ BVH Construction and Traversal Library:
+## madmann91's Modern C++ BVH Construction and Traversal Library
 This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume heirarchy used in this project.  Their originaly source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
 
 ## National Science Foundation Graduate Research Fellowship
