@@ -30,11 +30,13 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 - [ ] Triangular meshes
   - [ ] Add vertex color support
   - [ ] Add parent object support
-  - [ ] Add parsers for more mesh type (.PLY)
-  - [ ] Add texture mapping
+  - [ ] Add parsers for more mesh type (.PLY, .GLTF/.GLB)
+  - [ ] Add texture mapping and normal maps
 - [ ] Refactor
   - [ ] Reorganize code into classes
   - [ ] Move INI parser out of `main.cpp`
+  - [ ] Add python interface
+  - [ ] Animation/sequence support
 - [ ] Importance Sampling
   - [ ] Implement Malley's method for cosine importance
   - [ ] Investigate alternative importance sampling method for planetary bodies (where primary indirect contribution is near horizon)
@@ -43,6 +45,8 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
   - [ ] Resolve placement issue with square lights
   - [ ] Add circular area lights
   - [ ] Add emissive mesh geometries
+  - [ ] Add polarized light
+  - [ ] Add specific wavelength support
 - [ ] Attitude (Orientation)
   - [ ] Fix euler angle sequencing issue
 
