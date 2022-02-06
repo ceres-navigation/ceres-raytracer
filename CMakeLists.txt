@@ -4,17 +4,24 @@ project(ceres-raytracer CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# set(CMAKE_BUILD_TYPE Debug)
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-Wall -mavx2 -mfma")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(lib)
 include_directories(lib)
 
 add_subdirectory(include)
+include_directories(include)
+
+add_subdirectory(src)
+include_directories(src)

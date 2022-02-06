@@ -1,6 +1,12 @@
-add_executable(render render.cpp)
+add_library(
+    render.hpp
+    transform.hpp
+    brdfs.hpp
+    cameras.hpp
+    rotations.hpp
+    scene.hpp
+    obj.hpp
+    lights.hpp
+)
 
-find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(render PUBLIC OpenMP::OpenMP_CXX)
-endif()
+set_target_properties(render.hpp PROPERTIES LINKER_LANGUAGE CXX)

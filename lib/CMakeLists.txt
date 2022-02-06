@@ -3,7 +3,7 @@ FILE(GLOB BVHSources bvh/*.hpp)
 add_library(
     bvh
     ${BVHSources}
-    obj.hpp
+    INIReader.h
 )
 
 set_target_properties(bvh PROPERTIES LINKER_LANGUAGE CXX)

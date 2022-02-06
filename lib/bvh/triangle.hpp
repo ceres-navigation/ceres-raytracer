@@ -24,13 +24,19 @@ struct Triangle {
     using ScalarType       = Scalar;
     using IntersectionType = Intersection;
 
-    Vector3<Scalar> p0, e1, e2, n;
+    Vector3<Scalar> p0, e1, e2, n, vn0, vn1, vn2;
 
     Triangle() = default;
     Triangle(const Vector3<Scalar>& p0, const Vector3<Scalar>& p1, const Vector3<Scalar>& p2)
         : p0(p0), e1(p0 - p1), e2(p2 - p0)
     {
         n = LeftHandedNormal ? cross(e1, e2) : cross(e2, e1);
+    }
+
+    void add_vetex_normals(Vector3<Scalar> vn0, Vector3<Scalar> vn1, Vector3<Scalar> vn2) {
+        this -> vn0 = vn0;
+        this -> vn1 = vn1;
+        this -> vn2 = vn2;
     }
 
     Vector3<Scalar> p1() const { return p0 - e1; }
