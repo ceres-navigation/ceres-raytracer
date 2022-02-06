@@ -23,10 +23,12 @@
 #include "scene.hpp"
 
 // Function for loading general settings:
-void load_settings(INIReader reader, bool &use_double, std::string &output, int &num_samples, int &num_bounces) {
+void load_settings(INIReader reader, bool &use_double, std::string &output, int &max_samples, int &min_samples, double &noise_threshold, int &num_bounces) {
     use_double = reader.GetBoolean("settings", "use_double", true);
     output = reader.Get("settings", "output", "render.png");
-    num_samples = reader.GetInteger("settings","num_samples",1);
+    max_samples = reader.GetInteger("settings","max_samples",1);
+    min_samples = reader.GetInteger("settings","min_samples",1);
+    noise_threshold = reader.GetReal("settings","noise_threshold",0.0);
     num_bounces = reader.GetInteger("settings","num_bounces",1);
 };
 
@@ -292,11 +294,13 @@ int main(int argc, char** argv) {
     // Parse the INI configuration file:
     INIReader reader(argv[1]);
     
-    int num_samples;
+    int max_samples;
+    int min_samples;
+    double noise_threshold;
     int num_bounces;
     bool use_double;
     std::string output;
-    load_settings(reader, use_double, output, num_samples, num_bounces);
+    load_settings(reader, use_double, output, max_samples, min_samples, noise_threshold, num_bounces);
 
     // Build and render the scene as double precision:
     if (use_double) {
@@ -304,7 +308,7 @@ int main(int argc, char** argv) {
         auto triangles = load_objects<double>(reader);
         auto point_lights = load_pointlights<double>(reader);
         auto square_lights = load_squarelights<double>(reader);
-        scene<double>(num_samples, num_bounces, *camera, triangles, point_lights, square_lights, output);
+        scene<double>(max_samples, min_samples, (double) noise_threshold, num_bounces, *camera, triangles, point_lights, square_lights, output);
     
     // Build and render the scene as single precision:
     } else {
@@ -312,7 +316,7 @@ int main(int argc, char** argv) {
         auto triangles = load_objects<float>(reader);
         auto point_lights = load_pointlights<float>(reader);
         auto square_lights = load_squarelights<float>(reader);
-        scene<float>(num_samples, num_bounces, *camera, triangles, point_lights, square_lights, output);
+        scene<float>(max_samples, min_samples, (float) noise_threshold, num_bounces, *camera, triangles, point_lights, square_lights, output);
     }
     return 0;
 }

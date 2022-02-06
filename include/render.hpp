@@ -34,7 +34,8 @@ bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &tra
 
 
 template <typename Scalar>
-void render(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
+void render(int max_samples, int min_samples, Scalar noise_threshold, int num_bounces, CameraModel<Scalar> &camera, 
+            std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
             const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> intersector(bvh, triangles);
@@ -51,17 +52,16 @@ void render(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::
     #pragma omp parallel for
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
-            // std::cout << i <<"\n";
             size_t index = 3 * (width * j + i);
             // Loop through all samples for a given pixel:
-            // TODO: Make this adaptive sampling at some point...
             bvh::Vector3<Scalar> pixel_radiance(0.0,0.0,0.0);
-            for (int sample = 1; sample < num_samples+1; ++sample) {
+            bvh::Vector3<Scalar> pixel_radiance_prev(0.0,0.0,0.0);
+            for (int sample = 1; sample < max_samples+1; ++sample) {
                 // TODO: Make a better random sampling algorithm:
                 bvh::Ray<Scalar> ray;
                 auto i_rand = distr(eng);
                 auto j_rand = distr(eng);
-                if (num_samples == 1) {
+                if (max_samples == 1) {
                     ray = camera.pixel_to_ray(i, j);
                 }
                 else {
@@ -126,8 +126,16 @@ void render(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::
                     hit = traverser.traverse(ray, intersector);
                 }
 
-                // Update the new pixel intensity:
+                // Run adaptive sampling:
+                pixel_radiance_prev = pixel_radiance;
                 pixel_radiance = pixel_radiance + (path_radiance - pixel_radiance)*Scalar(1.0/sample);
+                if (sample >= min_samples) {
+                    auto diff_vec = pixel_radiance - pixel_radiance_prev;
+                    Scalar noise = diff_vec[0]*diff_vec[0] + diff_vec[1]*diff_vec[1] + diff_vec[2]*diff_vec[2];
+                    if (noise < noise_threshold) {
+                        break;
+                    }
+                }
             }
             // Store the pixel intensity:
             pixels[index    ] = std::fabs(pixel_radiance[0]);

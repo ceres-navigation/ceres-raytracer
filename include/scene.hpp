@@ -2,7 +2,7 @@
 #define __SCENE_H
 
 template <typename Scalar>
-void scene(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::vector<bvh::Triangle<Scalar>> triangles,
+void scene(int max_samples, int min_samples, Scalar noise_threshold, int num_bounces, CameraModel<Scalar> &camera, std::vector<bvh::Triangle<Scalar>> triangles,
            std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights, std::string out_file) {
     using Bvh =  bvh::Bvh<Scalar>;
     using Triangle =  bvh::Triangle<Scalar>;
@@ -49,7 +49,7 @@ void scene(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::v
 #endif
 
     start = high_resolution_clock::now();
-    render(num_samples, num_bounces, camera, point_lights, square_lights, bvh, triangles.data(), pixels.get());
+    render(max_samples, min_samples, noise_threshold, num_bounces, camera, point_lights, square_lights, bvh, triangles.data(), pixels.get());
     stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(stop - start);
     std::cout << "    Tracing completed in " << duration.count()/1000000.0 << " seconds\n\n";
