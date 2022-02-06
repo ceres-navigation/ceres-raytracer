@@ -71,7 +71,7 @@ bvh::Vector3<Scalar>  direct_lighting(std::vector<PointLight<Scalar>> &point_lig
 
 
 template <typename Scalar>
-void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
+void render(int num_samples, int num_bounces, CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
             const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> intersector(bvh, triangles);
@@ -81,10 +81,6 @@ void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_
     std::random_device rd;
     std::default_random_engine eng(rd());
     std::uniform_real_distribution<Scalar> distr(0.0, 1.0);
-
-    // TODO: MOVE THIS TO BE PARAMETER OF RENDER:
-    int num_samples = 60;
-    bool no_bounce = false;
 
     size_t width  = (size_t) floor(camera.get_resolutionX());
     size_t height = (size_t) floor(camera.get_resolutionY());
@@ -108,23 +104,24 @@ void render(CameraModel<Scalar> &camera, std::vector<PointLight<Scalar>> &point_
                     ray = camera.pixel_to_ray(i + i_rand, j + j_rand);
                 }
                 bvh::Vector3<Scalar> new_intensity;
+
                 auto hit = traverser.traverse(ray, intersector);
-                if (!hit) {
-                    new_intensity[0] = 0;
-                    new_intensity[1] = 0;
-                    new_intensity[2] = 0;
-                } 
-                else {
-                    auto tri = triangles[hit->primitive_index];
+                auto tri = triangles[hit->primitive_index];
+                auto normal = bvh::normalize(tri.n);
 
-                     // TODO: Move this normalization into the triangle creation step.
-                    auto normal = bvh::normalize(tri.n);
+                if (num_bounces == 0) {
+                    new_intensity[0] = normal[0];
+                    new_intensity[1] = normal[1];
+                    new_intensity[2] = normal[2];
+                }
 
-                    if (no_bounce) {
-                        new_intensity[0] = normal[0];
-                        new_intensity[1] = normal[1];
-                        new_intensity[2] = normal[2];
-                    }
+                for (int bounce = 0; bounce < num_bounces; ++bounce){
+                    
+                    if (!hit) {
+                        new_intensity[0] = 0;
+                        new_intensity[1] = 0;
+                        new_intensity[2] = 0;
+                    } 
                     else {
                         //TODO: Figure out how to deal with the self-intersection stuff in a more proper way...
                         auto u = hit->intersection.u;
