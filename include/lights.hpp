@@ -27,12 +27,14 @@ class PointLight: public Light<Scalar>  {
         : position(position), intensity(intensity) { };
 
         bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){
-            bvh::Vector3<Scalar> light_direction = bvh::normalize(this->position - origin);
-            return bvh::Ray<Scalar>(origin, light_direction);
+            bvh::Vector3<Scalar> light_direction = bvh::normalize(position - origin);
+            return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(position - origin));
         };
 
         Scalar get_intensity() { return intensity; }
-        Scalar get_intensity(bvh::Vector3<Scalar> point) { return intensity / bvh::dot(point - position, point - position); }
+        Scalar get_intensity(bvh::Vector3<Scalar> point) { 
+            return std::min(intensity / bvh::dot(point - position, point - position), Scalar(1));
+        }
 };
 
 template <typename Scalar>
@@ -77,11 +79,13 @@ class SquareLight: public Light<Scalar> {
 
             // Generate the ray:
             bvh::Vector3<Scalar> light_direction = bvh::normalize(point_on_light_world - origin);
-            return bvh::Ray<Scalar>(origin, light_direction);
+            return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(position - origin));
         };
 
         Scalar get_intensity() { return intensity; }
-        Scalar get_intensity(bvh::Vector3<Scalar> point) { return intensity / bvh::dot(point - position, point - position); }
+        Scalar get_intensity(bvh::Vector3<Scalar> point) { 
+            return std::min(intensity / bvh::dot(point - position, point - position), Scalar(1));
+        }
 };
 
 #endif

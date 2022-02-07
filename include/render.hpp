@@ -127,7 +127,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     Scalar r2 = dist1(eng);
                     bvh::Ray<Scalar> ray = cosine_importance(intersect_point, -normal, r1, r2);
                     hit = traverser.traverse(ray, intersector);
-                    weight *= r1; // cos(theta)
+                    weight *= (1-r1); // cos(theta) I think?
                 }
 
                 // Run adaptive sampling:
