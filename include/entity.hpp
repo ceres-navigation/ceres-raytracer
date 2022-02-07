@@ -107,17 +107,9 @@ class Entity {
 
         Entity() = delete;
 
-        Entity(std::string path, std::string texture = "", Color color=Color(0.5, 0.5, 0.5), bool smooth=true) :
-        interp_normals(smooth) {
 
-            material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
-            
-            if (!texture.empty()) {
-                materials.emplace_back(new TexturedLambertianMaterial<Scalar>(std::shared_ptr<UVMap<Color>>(new ImageUVMap(texture))));
-            } else { 
-                materials.emplace_back(std::shared_ptr<Material<Scalar>>(new ColoredLambertianMaterial<Scalar>(color)));
-            }
-            
+        Entity(std::string path, std::vector<std::shared_ptr<Material<Scalar>>> materials, std::shared_ptr<UVMap<size_t>> material_map, bool smooth=true) 
+        : materials(materials), material_map(material_map), interp_normals(smooth) {
             bool is_ply = path.size() > 4 && 0 == path.compare(path.size() - 4, 4, ".ply");
             
             if (!is_ply) {
@@ -185,8 +177,18 @@ class Entity {
                     count++;
                 }
             }
+        }
 
+        Entity(std::string path, std::string texture = "", Color color=Color(0.5, 0.5, 0.5), bool smooth=true) :
+        Entity(path, {}, nullptr, smooth) {
 
+            material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
+            
+            if (!texture.empty()) {
+                materials.emplace_back(new TexturedLambertianMaterial<Scalar>(std::shared_ptr<UVMap<Color>>(new ImageUVMap(texture))));
+            } else { 
+                materials.emplace_back(new ColoredLambertianMaterial<Scalar>(color));
+            }
         }
 
 

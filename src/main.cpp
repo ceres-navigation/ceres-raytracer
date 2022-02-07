@@ -98,14 +98,21 @@ Color get_color(INIReader &reader, const char* object_name) {
 }
 
 template <typename Scalar>
-void get_scale(INIReader reader, const char* object_name, Scalar &scale) {
+Scalar get_intensity(INIReader &reader, const char* object_name) {
+    auto intensity = reader.GetReal(object_name, "intensity", 1);
+    std::cout << "    intensity      : " << intensity << "\n";
+    return intensity;
+}
+
+template <typename Scalar>
+void get_scale(INIReader &reader, const char* object_name, Scalar &scale) {
     scale = reader.GetReal(object_name, "scale", 1);
     std::cout << "    scale          : " << scale << "\n";
 }
 
 // Function to get the rotation matrix:
 template <typename Scalar>
-void get_rotation(INIReader reader, const char* object_name, Scalar (&rotation)[3][3]) {
+void get_rotation(INIReader &reader, const char* object_name, Scalar (&rotation)[3][3]) {
     std::string segment;
     std::vector<std::string> seglist;
     std::stringstream test_str;
@@ -274,7 +281,9 @@ std::vector<PointLight<Scalar>> load_pointlights(INIReader reader) {
             if (!strcmp(type.c_str(),"PointLight")){
                 std::cout << "  " << (*it).substr(4) << ":\n";
                 get_position(reader, (*it).c_str(), position);
-                point_lights.push_back(PointLight<Scalar>(position));
+                Scalar intensity = get_intensity<Scalar>(reader, (*it).c_str());
+
+                point_lights.push_back(PointLight<Scalar>(position, intensity));
             };
         };
     }
@@ -300,7 +309,8 @@ std::vector<SquareLight<Scalar>> load_squarelights(INIReader reader) {
                 get_size(reader, (*it).c_str(), size);
                 get_position(reader, (*it).c_str(), position);
                 get_rotation(reader, (*it).c_str(), rotation);
-                square_lights.push_back(SquareLight<Scalar>(position, rotation, size));
+                Scalar intensity = get_intensity<Scalar>(reader, (*it).c_str());
+                square_lights.push_back(SquareLight<Scalar>(position, rotation, size, intensity));
             }
         };
     }

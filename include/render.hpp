@@ -46,8 +46,9 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
 
     // Initialize random number generator:
     std::random_device rd;
-    std::default_random_engine eng(rd());
+    std::minstd_rand eng(rd());
     std::uniform_real_distribution<Scalar> distr(-0.5, 0.5);
+    std::uniform_real_distribution<Scalar> dist1(0.0, 1.0);
 
     size_t width  = (size_t) floor(camera.get_resolutionX());
     size_t height = (size_t) floor(camera.get_resolutionY());
@@ -58,7 +59,6 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
             size_t index = 3 * (width * j + i);
             // Loop through all samples for a given pixel:
             bvh::Vector3<Scalar> pixel_radiance(0.0,0.0,0.0);
-            bvh::Vector3<Scalar> pixel_radiance_prev(0.0,0.0,0.0);
             for (int sample = 1; sample < max_samples+1; ++sample) {
                 // TODO: Make a better random sampling algorithm:
                 bvh::Ray<Scalar> ray;
@@ -86,6 +86,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                 }
 
                 // Loop through all bounces
+                Scalar weight = 2*M_PI;
                 for (int bounce = 0; bounce < num_bounces; ++bounce){
                     if (!hit) {
                         break;
@@ -102,22 +103,19 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
 
                     // Calculate the direct illumination:
                     bvh::Vector3<Scalar> light_radiance(0.0,0.0,0.0);
-                    int count = 1;
                     for (PointLight<Scalar> &light : point_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
                         bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
-                        light_radiance = light_radiance + (light_radiance_new - light_radiance)*Scalar(1.0/count);
-                        count++;
+                        light_radiance += light_radiance_new * light.get_intensity(intersect_point);
                     };
                     for (SquareLight<Scalar> &light : square_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
                         bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
-                        light_radiance = light_radiance + (light_radiance_new - light_radiance)*Scalar(1.0/count);
-                        count++;
+                        light_radiance += light_radiance_new * light.get_intensity(intersect_point);
                     };
 
-                    //TODO: Update the path radiance with the newly calculated radiance:
-                    path_radiance +=  light_radiance*Scalar(1.0/(bounce+1));
+                    // Update the path radiance with the newly calculated radiance:
+                    path_radiance += light_radiance*weight;
 
                     // Exit or cast next ray:
                     if (bounce == num_bounces-1) {
@@ -125,16 +123,18 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     }
 
                     //TODO: Move this into a class contained by a parent object to a triangle:
-                    bvh::Ray<Scalar> ray = cosine_importance(intersect_point, -normal, i_rand + Scalar(0.5), j_rand + Scalar(0.5));
+                    Scalar r1 = dist1(eng);
+                    Scalar r2 = dist1(eng);
+                    bvh::Ray<Scalar> ray = cosine_importance(intersect_point, -normal, r1, r2);
                     hit = traverser.traverse(ray, intersector);
+                    weight *= r1; // cos(theta)
                 }
 
                 // Run adaptive sampling:
-                pixel_radiance_prev = pixel_radiance;
-                pixel_radiance = pixel_radiance + (path_radiance - pixel_radiance)*Scalar(1.0/sample);
+                auto rad_contrib = (path_radiance - pixel_radiance)*Scalar(1.0/sample);
+                pixel_radiance += rad_contrib;
                 if (sample >= min_samples) {
-                    auto diff_vec = pixel_radiance - pixel_radiance_prev;
-                    Scalar noise = diff_vec[0]*diff_vec[0] + diff_vec[1]*diff_vec[1] + diff_vec[2]*diff_vec[2];
+                    Scalar noise = bvh::length(rad_contrib);
                     if (noise < noise_threshold) {
                         break;
                     }
