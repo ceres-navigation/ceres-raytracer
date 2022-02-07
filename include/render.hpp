@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <math.h>
 #include <random>
+#include <iomanip>
 
 #include <bvh/bvh.hpp>
 #include <bvh/binned_sah_builder.hpp>
@@ -53,7 +54,8 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
     size_t width  = (size_t) floor(camera.get_resolutionX());
     size_t height = (size_t) floor(camera.get_resolutionY());
 
-    #pragma omp parallel for
+    size_t done = 0;
+    #pragma omp parallel for shared(done)
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             size_t index = 3 * (width * j + i);
@@ -145,6 +147,9 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
             pixels[index + 1] = std::fabs(pixel_radiance[1]);
             pixels[index + 2] = std::fabs(pixel_radiance[2]);
         }
+
+        #pragma omp critical
+        std::cout << "Rendering " << std::setprecision(1) << std::fixed  << (100. * ++done) / width << "%..." << std::endl;
     }
 }
 

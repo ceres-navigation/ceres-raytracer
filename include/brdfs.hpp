@@ -37,11 +37,11 @@ bvh::Ray<Scalar> cosine_importance(bvh::Vector3<Scalar> origin, bvh::Vector3<Sca
 
     bvh::Vector3<Scalar> Ny = cross(normal, Nx);
 
-    bvh::Vector3<Scalar> dir(x*Ny[0] + y*normal[0] + z*Nx[0], 
-                             x*Ny[1] + y*normal[1] + z*Nx[1], 
-                             x*Ny[2] + y*normal[2] + z*Nx[2]);
+    // bvh::Vector3<Scalar> dir(x*Nx[0] + y*Ny[0] + z*normal[0], 
+    //                          x*Nx[1] + y*Ny[1] + z*normal[1], 
+    //                          x*Nx[2] + y*Ny[2] + z*normal[2]);
 
-    return bvh::Ray<Scalar>(origin, bvh::normalize(dir));
+    return bvh::Ray<Scalar>(origin, bvh::normalize(Nx*x + Ny*y + normal*z));
 }
 
 #endif
