@@ -323,14 +323,17 @@ void add_entities(INIReader &reader, Scene<Scalar> &scene) {
             std::string path_to_obj = reader.Get((*it), "path", "UNKNOWN");
             std::string path_to_tex = reader.Get((*it), "texture", "");
             Color c = get_color(reader, (*it).c_str());
-            Entity<Scalar> entity(path_to_obj, path_to_tex, c);
+            bool smooth = reader.GetBoolean((*it).c_str(), "smooth", true);
+            
+            Entity<Scalar> entity(path_to_obj, path_to_tex, c, smooth);
             std::cout << "  " << (*it).substr(4) << " with " << entity.get_triangles().size() << " triangles loaded from " << path_to_obj << "\n";
 
             // Load the position:
             get_scale<Scalar>(reader, (*it).c_str(), scale);
             get_position<Scalar>(reader, (*it).c_str(), position);
             get_rotation<Scalar>(reader, (*it).c_str(), rotation);
-            
+
+
             scene.add_entity(entity, rotation, position, scale);
         };
     };

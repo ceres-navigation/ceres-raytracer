@@ -103,10 +103,12 @@ class Entity {
         std::shared_ptr<UVMap<size_t>> material_map;
 
     public:
+        const bool interp_normals;
 
         Entity() = delete;
 
-        Entity(std::string path, std::string texture = "", Color color=Color(0.5, 0.5, 0.5)) {
+        Entity(std::string path, std::string texture = "", Color color=Color(0.5, 0.5, 0.5), bool smooth=true) :
+        interp_normals(smooth) {
 
             material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
             

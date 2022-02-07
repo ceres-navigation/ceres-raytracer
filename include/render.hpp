@@ -23,11 +23,9 @@ bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &tra
     // Loop through all provided lights:
     auto hit = traverser.traverse(light_ray, intersector);
     if (!hit) {
-        //TODO: Add smooth shading as an option per triangle:
-        bvh::Vector3<Scalar> interpolated_normal = u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0;
-        // lambertian<Scalar>(light_ray, interpolated_normal, intensity);
+        auto normal = tri.parent->interp_normals ? u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0 : tri.n;
         bvh::Vector<float, 2> interp_uv = (float)u*tri.uv[1] + (float)v*tri.uv[2] + (float)(1-u-v)*tri.uv[0];
-        auto c = tri.parent->get_material(interp_uv[0], interp_uv[1])->get(light_ray, interpolated_normal, interp_uv[0], interp_uv[1]);
+        auto c = tri.parent->get_material(interp_uv[0], interp_uv[1])->get(light_ray, normal, interp_uv[0], interp_uv[1]);
         intensity[0] = c[0];
         intensity[1] = c[1];
         intensity[2] = c[2];
@@ -119,7 +117,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     };
 
                     //TODO: Update the path radiance with the newly calculated radiance:
-                    path_radiance = path_radiance + light_radiance*Scalar(1.0/(bounce+1));
+                    path_radiance +=  light_radiance*Scalar(1.0/(bounce+1));
 
                     // Exit or cast next ray:
                     if (bounce == num_bounces-1) {
@@ -127,7 +125,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     }
 
                     //TODO: Move this into a class contained by a parent object to a triangle:
-                    bvh::Ray<Scalar> ray = cosine_importance(intersect_point, -normal, i_rand, j_rand);
+                    bvh::Ray<Scalar> ray = cosine_importance(intersect_point, -normal, i_rand + Scalar(0.5), j_rand + Scalar(0.5));
                     hit = traverser.traverse(ray, intersector);
                 }
 
