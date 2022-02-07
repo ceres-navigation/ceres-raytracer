@@ -42,6 +42,12 @@ struct Vector {
         std::copy(other.values, other.values + N, values);
     }
 
+    template<typename T>
+    bvh_always_inline explicit Vector(const std::array<T, N>& arr) {
+        for (size_t i = 0; i < N; ++i)
+            values[i] = arr[i];
+    }
+
     template <typename... Args>
     bvh_always_inline Vector(Scalar first, Scalar second, Args... args) {
         set(first, second, args...);

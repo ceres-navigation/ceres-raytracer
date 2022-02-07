@@ -15,6 +15,8 @@
 #include <Magick++.h> 
 #include <INIReader.h>
 
+#include "entity.hpp"
+
 #include "rotations.hpp"
 #include "transform.hpp"
 #include "render.hpp"
@@ -22,15 +24,19 @@
 #include "lights.hpp"
 #include "scene.hpp"
 
+
 // Function for loading general settings:
-void load_settings(INIReader reader, bool &use_double, std::string &output, int &max_samples, int &min_samples, double &noise_threshold, int &num_bounces) {
-    use_double = reader.GetBoolean("settings", "use_double", true);
+void load_settings(INIReader reader, std::string &output, int &max_samples, int &min_samples, double &noise_threshold, int &num_bounces) {
     output = reader.Get("settings", "output", "render.png");
     max_samples = reader.GetInteger("settings","max_samples",1);
     min_samples = reader.GetInteger("settings","min_samples",1);
     noise_threshold = reader.GetReal("settings","noise_threshold",0.0);
     num_bounces = reader.GetInteger("settings","num_bounces",1);
 };
+
+bool use_double(INIReader &reader) {
+   return reader.GetBoolean("settings", "use_double", true);
+}
 
 // Function to get the size:
 template <typename Scalar>
@@ -68,6 +74,27 @@ void get_position(INIReader reader, const char* object_name, bvh::Vector3<Scalar
         idx = idx +1;
     }
     std::cout << "    position       : [" << position[0] << ", " << position[1] << ", " << position[2] << "]\n";
+}
+
+Color get_color(INIReader &reader, const char* object_name) {
+
+    Color color;
+
+    std::string segment;
+    std::vector<std::string> seglist;
+    std::stringstream test_str;
+    int idx;
+
+    auto value_str = reader.Get(object_name, "color", "[0.5,0.5,0.5]");
+    value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
+    test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")));
+    idx = 0;
+    while(std::getline(test_str, segment, ',')) {
+        color[idx] = std::stod(segment);
+        idx = idx +1;
+    }
+
+    return color;
 }
 
 template <typename Scalar>
@@ -280,6 +307,77 @@ std::vector<SquareLight<Scalar>> load_squarelights(INIReader reader) {
     return square_lights;
 }
 
+// Function for loading objects:
+template <typename Scalar>
+void add_entities(INIReader &reader, Scene<Scalar> &scene) {
+    std::cout << "Loading .OBJs...\n";
+    auto sections = reader.Sections();
+
+    Scalar scale;
+    Scalar rotation[3][3];
+    bvh::Vector3<Scalar> position;
+
+    for (auto it = sections.begin(); it != sections.end(); ++it) {
+        if (!strcmp((*it).substr(0,3).c_str(), "obj")) {
+            // Load the triangular mesh:
+            std::string path_to_obj = reader.Get((*it), "path", "UNKNOWN");
+            std::string path_to_tex = reader.Get((*it), "texture", "");
+            Color c = get_color(reader, (*it).c_str());
+            Entity<Scalar> entity(path_to_obj, path_to_tex, c);
+            std::cout << "  " << (*it).substr(4) << " with " << entity.get_triangles().size() << " triangles loaded from " << path_to_obj << "\n";
+
+            // Load the position:
+            get_scale<Scalar>(reader, (*it).c_str(), scale);
+            get_position<Scalar>(reader, (*it).c_str(), position);
+            get_rotation<Scalar>(reader, (*it).c_str(), rotation);
+            
+            scene.add_entity(entity, rotation, position, scale);
+        };
+    };
+}
+
+template <typename Scalar>
+Scene<Scalar> construct_scene(INIReader &reader) {
+    Scene<Scalar> s;
+
+    auto triangles = load_objects<Scalar>(reader);
+    // s.add_triangles(triangles);
+    add_entities(reader, s);
+
+    auto point_lights = load_pointlights<Scalar>(reader);
+    for (auto light : point_lights) {
+        s.add_point_light(light);
+    }
+
+    auto square_lights = load_squarelights<Scalar>(reader);
+    for (auto light : square_lights) {
+        s.add_square_light(light);
+    }
+
+    return s;
+}
+
+
+template <typename Scalar>
+void render_scene(INIReader &reader)
+{
+    int max_samples;
+    int min_samples;
+    double noise_threshold;
+    int num_bounces;
+    std::string output;
+
+    load_settings(reader, output, max_samples, min_samples, noise_threshold, num_bounces);
+    auto camera = load_camera<Scalar>(reader);
+    auto scene = construct_scene<Scalar>(reader);
+
+    scene.max_samples = max_samples;
+    scene.min_samples = min_samples;
+    scene.noise_threshold = Scalar(noise_threshold);
+    scene.num_bounces = num_bounces;
+
+    scene.render(*camera, output);
+}
 
 int main(int argc, char** argv) {
 
@@ -293,30 +391,13 @@ int main(int argc, char** argv) {
 
     // Parse the INI configuration file:
     INIReader reader(argv[1]);
-    
-    int max_samples;
-    int min_samples;
-    double noise_threshold;
-    int num_bounces;
-    bool use_double;
-    std::string output;
-    load_settings(reader, use_double, output, max_samples, min_samples, noise_threshold, num_bounces);
 
-    // Build and render the scene as double precision:
-    if (use_double) {
-        auto camera = load_camera<double>(reader);
-        auto triangles = load_objects<double>(reader);
-        auto point_lights = load_pointlights<double>(reader);
-        auto square_lights = load_squarelights<double>(reader);
-        scene<double>(max_samples, min_samples, (double) noise_threshold, num_bounces, *camera, triangles, point_lights, square_lights, output);
-    
-    // Build and render the scene as single precision:
+    if (use_double(reader)) {
+        // Build and render the scene as double precision:
+        render_scene<double>(reader);
     } else {
-        auto camera = load_camera<float>(reader);
-        auto triangles = load_objects<float>(reader);
-        auto point_lights = load_pointlights<float>(reader);
-        auto square_lights = load_squarelights<float>(reader);
-        scene<float>(max_samples, min_samples, (float) noise_threshold, num_bounces, *camera, triangles, point_lights, square_lights, output);
+        // Build and render the scene as single precision:
+        render_scene<float>(reader);
     }
     return 0;
 }

@@ -25,7 +25,12 @@ bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &tra
     if (!hit) {
         //TODO: Add smooth shading as an option per triangle:
         bvh::Vector3<Scalar> interpolated_normal = u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0;
-        lambertian<Scalar>(light_ray, interpolated_normal, intensity);
+        // lambertian<Scalar>(light_ray, interpolated_normal, intensity);
+        bvh::Vector<float, 2> interp_uv = (float)u*tri.uv[1] + (float)v*tri.uv[2] + (float)(1-u-v)*tri.uv[0];
+        auto c = tri.parent->get_material(interp_uv[0], interp_uv[1])->get(light_ray, interpolated_normal, interp_uv[0], interp_uv[1]);
+        intensity[0] = c[0];
+        intensity[1] = c[1];
+        intensity[2] = c[2];
     } else{
         intensity = bvh::Vector3<Scalar>(0.0,0.0,0.0);
     }
@@ -34,7 +39,7 @@ bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &tra
 
 
 template <typename Scalar>
-void render(int max_samples, int min_samples, Scalar noise_threshold, int num_bounces, CameraModel<Scalar> &camera, 
+void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num_bounces, CameraModel<Scalar> &camera, 
             std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
             const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
