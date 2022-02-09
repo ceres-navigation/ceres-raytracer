@@ -38,6 +38,7 @@ inline float fast_multiply_add(float x, float y, float z) {
 #ifdef FP_FAST_FMAF
     return std::fmaf(x, y, z);
 #else
+    #warning Using slow (unfused) multiply-add
     #pragma STDC FP_CONTRACT ON
     return x * y + z;
 #endif
@@ -47,6 +48,7 @@ inline double fast_multiply_add(double x, double y, double z) {
 #ifdef FP_FAST_FMA
     return std::fma(x, y, z);
 #else
+    #warning Using slow (unfused) multiply-add
     #pragma STDC FP_CONTRACT ON
     return x * y + z;
 #endif
@@ -59,10 +61,26 @@ const T& robust_min(const T& x, const T& y) {
     return x < y ? x : y;
 }
 
+inline float robust_min(const float x, const float y) {
+    return x < y ? x : y;
+}
+
+inline double robust_min(const double x, const double y) {
+    return x < y ? x : y;
+}
+
 /// Returns the maximum of two values.
 /// Guaranteed to return a non-NaN value if the right hand side is not a NaN.
 template <typename T>
 const T& robust_max(const T& x, const T& y) {
+    return x > y ? x : y;
+}
+
+inline float robust_max(const float x, const float y) {
+    return x > y ? x : y;
+}
+
+inline double robust_max(const double x, const double y) {
     return x > y ? x : y;
 }
 

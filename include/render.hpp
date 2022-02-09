@@ -16,9 +16,8 @@
 #include "brdfs.hpp"
 #include "cameras.hpp"
 
-template <typename Scalar>
-bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, 
-                                 bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &intersector, 
+template <typename Scalar, typename Intersector>
+bvh::Vector3<Scalar> illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Intersector &intersector, 
                                  Scalar &u, Scalar &v, bvh::Triangle<Scalar> &tri, bvh::Ray<Scalar> light_ray) {
     bvh::Vector3<Scalar> intensity;
     // Loop through all provided lights:
@@ -42,7 +41,8 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
             std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
             const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, Scalar* pixels)
 {
-    bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> intersector(bvh, triangles);
+    bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, triangles);
+    bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_intersector(bvh, triangles);
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
 
     // Initialize random number generator:
@@ -74,7 +74,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                 }
                 bvh::Vector3<Scalar> path_radiance(0.0,0.0,0.0);
 
-                auto hit = traverser.traverse(ray, intersector);
+                auto hit = traverser.traverse(ray, closest_intersector);
 
                 // If no bouncesm, return just the vertex normal as the color:
                 if (num_bounces == 0) {
@@ -107,12 +107,12 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     bvh::Vector3<Scalar> light_radiance(0.0,0.0,0.0);
                     for (PointLight<Scalar> &light : point_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-                        bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
+                        bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, any_intersector, u, v, tri, light_ray);
                         light_radiance += light_radiance_new * light.get_intensity(intersect_point);
                     };
                     for (SquareLight<Scalar> &light : square_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-                        bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, intersector, u, v, tri, light_ray);
+                        bvh::Vector3<Scalar> light_radiance_new = illumination<Scalar>(traverser, any_intersector, u, v, tri, light_ray);
                         light_radiance += light_radiance_new * light.get_intensity(intersect_point);
                     };
 
@@ -128,7 +128,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     Scalar r1 = dist1(eng);
                     Scalar r2 = dist1(eng);
                     bvh::Ray<Scalar> ray = cosine_importance(intersect_point, -normal, r1, r2);
-                    hit = traverser.traverse(ray, intersector);
+                    hit = traverser.traverse(ray, closest_intersector);
                     weight *= (1-r1); // cos(theta) I think?
                 }
 

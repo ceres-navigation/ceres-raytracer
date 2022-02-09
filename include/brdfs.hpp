@@ -23,7 +23,7 @@ bvh::Ray<Scalar> cosine_importance(bvh::Vector3<Scalar> origin, bvh::Vector3<Sca
     Scalar theta = r2*2*3.1415926;
     Scalar x = r*std::cos(theta);
     Scalar y = r*std::sin(theta);
-    Scalar z = std::sqrt(std::max(0.0, 1.0 - r1*r1 - r2*r2));
+    Scalar z = std::sqrt(std::max(0.0, 1.0 - x*x - y*y));
 
     // Transform back into world coordinates:
     bvh::Vector3<Scalar> Nx;
@@ -41,7 +41,9 @@ bvh::Ray<Scalar> cosine_importance(bvh::Vector3<Scalar> origin, bvh::Vector3<Sca
     //                          x*Nx[1] + y*Ny[1] + z*normal[1], 
     //                          x*Nx[2] + y*Ny[2] + z*normal[2]);
 
-    return bvh::Ray<Scalar>(origin, bvh::normalize(Nx*x + Ny*y + normal*z));
+
+    auto dir = Nx*x + Ny*y + normal*z;
+    return bvh::Ray<Scalar>(origin, dir);
 }
 
 #endif
