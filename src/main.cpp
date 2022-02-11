@@ -23,6 +23,7 @@
 #include "obj.hpp"
 #include "lights.hpp"
 #include "scene.hpp"
+#include "material.hpp"
 
 
 // Function for loading general settings:
@@ -331,20 +332,48 @@ void add_entities(INIReader &reader, Scene<Scalar> &scene) {
         if (!strcmp((*it).substr(0,3).c_str(), "obj")) {
             // Load the triangular mesh:
             std::string path_to_obj = reader.Get((*it), "path", "UNKNOWN");
+            std::string material_name = reader.Get((*it), "material", "");
             std::string path_to_tex = reader.Get((*it), "texture", "");
             Color c = get_color(reader, (*it).c_str());
             bool smooth = reader.GetBoolean((*it).c_str(), "smooth", true);
-            
-            Entity<Scalar> entity(path_to_obj, path_to_tex, c, smooth);
-            std::cout << "  " << (*it).substr(4) << " with " << entity.get_triangles().size() << " triangles loaded from " << path_to_obj << "\n";
 
             // Load the position:
             get_scale<Scalar>(reader, (*it).c_str(), scale);
             get_position<Scalar>(reader, (*it).c_str(), position);
             get_rotation<Scalar>(reader, (*it).c_str(), rotation);
+            
+            std::shared_ptr<Material<Scalar>> material(nullptr);
+            std::shared_ptr<UVMap<Color>> texture(nullptr);
 
+            if (!path_to_tex.empty()) {
+                texture = std::shared_ptr<UVMap<Color>>(new ImageUVMap(path_to_tex));
+            } else { 
+                texture = std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(c));
+            }
 
+            if (material_name == "mirror") {
+                material = std::make_shared<MirrorMaterial<Scalar>>();
+            } else if (material_name == "specular") {
+                material = std::make_shared<TexturedBlinnPhongMaterial<Scalar>>(
+                    texture, 
+                    std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
+                    32
+                );
+            } else {
+                material = std::make_shared<TexturedLambertianMaterial<Scalar>>(
+                    texture
+                );
+            } 
+
+            Entity<Scalar> entity(path_to_obj, material, smooth);
+            std::cout << "  " << (*it).substr(4) << "( " << material_name << " ) with " << entity.get_triangles().size() << " triangles loaded from " << path_to_obj << "\n";
             scene.add_entity(entity, rotation, position, scale);
+
+
+            
+
+
+            
         };
     };
 }
@@ -353,7 +382,7 @@ template <typename Scalar>
 Scene<Scalar> construct_scene(INIReader &reader) {
     Scene<Scalar> s;
 
-    auto triangles = load_objects<Scalar>(reader);
+    // auto triangles = load_objects<Scalar>(reader);
     // s.add_triangles(triangles);
     add_entities(reader, s);
 

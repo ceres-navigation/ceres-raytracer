@@ -15,15 +15,15 @@ void lambertian(bvh::Ray<Scalar> light_ray, bvh::Vector3<Scalar> normal, bvh::Ve
 
 
 template <typename Scalar>
-bvh::Ray<Scalar> cosine_importance(bvh::Vector3<Scalar> origin, bvh::Vector3<Scalar> normal, Scalar r1, Scalar r2) {
+inline bvh::Vector3<Scalar> cosine_importance(bvh::Vector3<Scalar> normal, Scalar r1, Scalar r2) {
     // This implementation is based on Malley's method:
-
+    // NOTE: Assumes left-handed normal!!!
     // Generate a random sample:
     Scalar r = std::sqrt(r1);
     Scalar theta = r2*2*3.1415926;
-    Scalar x = r*std::cos(theta);
-    Scalar y = r*std::sin(theta);
-    Scalar z = std::sqrt(std::max(0.0, 1.0 - x*x - y*y));
+    Scalar x = -r*std::cos(theta);
+    Scalar y = -r*std::sin(theta);
+    Scalar z = -std::sqrt(std::max(0.0, 1.0 - x*x - y*y));
 
     // Transform back into world coordinates:
     bvh::Vector3<Scalar> Nx;
@@ -37,13 +37,8 @@ bvh::Ray<Scalar> cosine_importance(bvh::Vector3<Scalar> origin, bvh::Vector3<Sca
 
     bvh::Vector3<Scalar> Ny = cross(normal, Nx);
 
-    // bvh::Vector3<Scalar> dir(x*Nx[0] + y*Ny[0] + z*normal[0], 
-    //                          x*Nx[1] + y*Ny[1] + z*normal[1], 
-    //                          x*Nx[2] + y*Ny[2] + z*normal[2]);
-
-
     auto dir = Nx*x + Ny*y + normal*z;
-    return bvh::Ray<Scalar>(origin, dir);
+    return dir;
 }
 
 #endif

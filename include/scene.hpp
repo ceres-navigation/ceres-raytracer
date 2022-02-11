@@ -4,6 +4,11 @@
 #include "entity.hpp"
 #include "render.hpp"
 
+#include <bvh/binned_sah_builder.hpp>
+#include <bvh/sweep_sah_builder.hpp>
+#include <bvh/parallel_reinsertion_optimizer.hpp>
+#include <bvh/node_layout_optimizer.hpp>
+
 template <typename Scalar>
 class Scene {
     using Bvh = bvh::Bvh<Scalar>;
@@ -84,7 +89,7 @@ class Scene {
             std::unique_ptr<Triangle[]> shuffled_triangles;
 
             // Build an acceleration data structure for this object set
-            std::cout << "\nBuilding BVH ( using BinnedSahBuilder )..." << std::endl;
+            std::cout << "\nBuilding BVH ( using SweepSahBuilder )..." << std::endl;
             using namespace std::chrono;
             auto start = high_resolution_clock::now();
 
@@ -94,8 +99,14 @@ class Scene {
             
             auto global_bbox = bvh::compute_bounding_boxes_union(bboxes, triangles.size());
 
-            bvh::BinnedSahBuilder<Bvh, 16> builder(bvh);
+            bvh::SweepSahBuilder<Bvh> builder(bvh);
             builder.build(global_bbox, bboxes, centers, reference_count);
+
+            bvh::ParallelReinsertionOptimizer<Bvh> pro_opt(bvh);
+            pro_opt.optimize();
+
+            bvh::NodeLayoutOptimizer<Bvh> nlo_opt(bvh);
+            nlo_opt.optimize();
 
             auto stop = high_resolution_clock::now();
             auto duration = duration_cast<microseconds>(stop - start);
@@ -104,7 +115,7 @@ class Scene {
                 << reference_count << " reference(s)\n";
             std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
-            auto pixels = std::make_unique<Scalar[]>(3 * width * height);
+            auto pixels = std::make_unique<float[]>(3 * width * height);
             
         #ifdef _OPENMP
             #pragma omp parallel
@@ -128,7 +139,7 @@ class Scene {
             Magick::Quantum *img_pix = view.set(0,0,width,height);
 
             for (size_t j = 0; j < 3 * width*height; j++) {
-                *img_pix++ = pixels[j] * 65535;
+                *img_pix++ = std::clamp(pixels[j], 0.f, 1.f) * 65535;
             }
 
             view.sync();

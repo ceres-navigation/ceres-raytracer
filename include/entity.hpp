@@ -15,81 +15,7 @@
 #include "happly.hpp"
 #include "rotations.hpp"
 #include "transform.hpp"
-
-using Color = bvh::Vector3<float>;
-
-template <typename Value>
-class UVMap {
-    public:
-    virtual Value operator()(float u, float v) = 0;
-};
-
-template <typename Value>
-class ConstantUVMap : public  UVMap<Value> {
-    private:
-    Value v;
-   
-    public:
-    ConstantUVMap(Value val) : v(val) { }
-    Value operator()(float u, float v) { return v; };
-};
-
-class ImageUVMap : public UVMap<Color> {
-    private:
-    
-    Magick::Image img;
-    
-    public:
-    ImageUVMap(std::string path) { img.read(path); }
-    
-    Color operator()(float u, float v) {
-        size_t x = (size_t)(u * img.size().width() + 0.5);
-        size_t y = (size_t)(v * img.size().height() + 0.5);
-
-        Magick::Color color = img.pixelColor(x, y);
-
-        return Color(
-            color.quantumRed() / 65535.f,
-            color.quantumGreen() / 65535.f,
-            color.quantumBlue() / 65535.f
-        );
-    };
-};
-
-template <typename Scalar>
-class Material {
-    public:
-    virtual Color get(bvh::Ray<Scalar> light_ray, bvh::Vector3<Scalar> normal, float u, float v) = 0;
-};
-
-template <typename Scalar>
-class ColoredLambertianMaterial : public Material<Scalar> {
-    private:
-    Color c;
-    
-    public:
-    ColoredLambertianMaterial(Color color) : c(color) { }
-
-    Color get(bvh::Ray<Scalar> light_ray, bvh::Vector3<Scalar> normal, float u, float v) {
-        auto L_dot_N = bvh::dot(light_ray.direction, normal);
-        return c * (float)(L_dot_N);
-    }
-};
-
-template <typename Scalar>
-class TexturedLambertianMaterial : public Material<Scalar> {
-    private:
-    std::shared_ptr<UVMap<Color>> tex_map;
-   
-    public:
-    TexturedLambertianMaterial(std::shared_ptr<UVMap<Color>> texture) : tex_map(texture) { }
-
-    Color get(bvh::Ray<Scalar> light_ray, bvh::Vector3<Scalar> normal, float u, float v) {
-        auto L_dot_N = bvh::dot(light_ray.direction, normal);
-        return (*tex_map)(u, v) * (float)(L_dot_N);
-    }
-};
-
+#include "material.hpp"
 
 template <typename Scalar>
 class Entity {
@@ -179,15 +105,35 @@ class Entity {
             }
         }
 
+        Entity(std::string path, std::shared_ptr<Material<Scalar>> material, bool smooth=true) :
+        Entity(
+            path, 
+            {material}, 
+            std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0)), 
+            smooth
+        ) { }
+
         Entity(std::string path, std::string texture = "", Color color=Color(0.5, 0.5, 0.5), bool smooth=true) :
         Entity(path, {}, nullptr, smooth) {
 
             material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
             
             if (!texture.empty()) {
-                materials.emplace_back(new TexturedLambertianMaterial<Scalar>(std::shared_ptr<UVMap<Color>>(new ImageUVMap(texture))));
+                materials.emplace_back(
+                    new TexturedBlinnPhongMaterial<Scalar>(
+                        std::shared_ptr<UVMap<Color>>(new ImageUVMap(texture)), 
+                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
+                        32
+                    )
+                );
             } else { 
-                materials.emplace_back(new ColoredLambertianMaterial<Scalar>(color));
+                materials.emplace_back(
+                    new TexturedBlinnPhongMaterial<Scalar>(
+                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(color)), 
+                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
+                        32
+                    )
+                );
             }
         }
 
