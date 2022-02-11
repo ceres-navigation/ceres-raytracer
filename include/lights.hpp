@@ -12,6 +12,7 @@ template <typename Scalar>
 class Light {
     public:
         virtual bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin) = 0;
+        virtual Scalar get_intensity() = 0;
 };
 
 
@@ -20,15 +21,20 @@ template <typename Scalar>
 class PointLight: public Light<Scalar>  {
     public:
         bvh::Vector3<Scalar> position;
+        Scalar intensity;
 
-        PointLight(bvh::Vector3<Scalar> position){
-            this -> position = position;
-        };
+        PointLight(bvh::Vector3<Scalar> position, Scalar intensity = 1.0) 
+        : position(position), intensity(intensity) { };
 
         bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){
-            bvh::Vector3<Scalar> light_direction = bvh::normalize(this->position - origin);
-            return bvh::Ray<Scalar>(origin, light_direction);
+            bvh::Vector3<Scalar> light_direction = bvh::normalize(position - origin);
+            return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(position - origin));
         };
+
+        Scalar get_intensity() { return intensity; }
+        Scalar get_intensity(bvh::Vector3<Scalar> point) { 
+            return std::min(intensity / bvh::dot(point - position, point - position), Scalar(10000));
+        }
 };
 
 template <typename Scalar>
@@ -37,12 +43,14 @@ class SquareLight: public Light<Scalar> {
         bvh::Vector3<Scalar> position;
         Scalar rotation[3][3];
         Scalar size[2];
+        Scalar intensity;
 
         std::mt19937 generator;
         std::uniform_real_distribution<Scalar> distr_x;
         std::uniform_real_distribution<Scalar> distr_y;
 
-        SquareLight(bvh::Vector3<Scalar> position, Scalar rotation[3][3], Scalar size[2]) {
+        SquareLight(bvh::Vector3<Scalar> position, Scalar rotation[3][3], Scalar size[2], Scalar intensity = 1.) 
+        : intensity(intensity) {
             this -> position = position;
             for (int i = 0; i < 3; ++i){
                 for (int j = 0; j < 3; ++j) {
@@ -71,8 +79,13 @@ class SquareLight: public Light<Scalar> {
 
             // Generate the ray:
             bvh::Vector3<Scalar> light_direction = bvh::normalize(point_on_light_world - origin);
-            return bvh::Ray<Scalar>(origin, light_direction);
+            return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(point_on_light_world - origin));
         };
+
+        Scalar get_intensity() { return intensity; }
+        Scalar get_intensity(bvh::Vector3<Scalar> point) { 
+            return std::min(intensity / bvh::dot(point - position, point - position), Scalar(10000));
+        }
 };
 
 #endif
