@@ -91,7 +91,7 @@ class SquareLight: public Light<Scalar> {
         };
 
         Scalar get_intensity(bvh::Vector3<Scalar> point) { 
-            return std::min(intensity / bvh::dot(point - this->sampled_point, point - this->sampled_point), Scalar(10000));
+            return intensity / bvh::dot(point - this->sampled_point, point - this->sampled_point);
         };
 };
 

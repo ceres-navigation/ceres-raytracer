@@ -89,14 +89,14 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     auto u = hit->intersection.u;
                     auto v = hit->intersection.v;
 
-                    auto normal = tri.n;
-                    auto interp_normal = tri.parent->interp_normals ? u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0 : normal;
+                    auto normal = tri.parent->interp_normals ? u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0 : tri.n;
+                    normal = -normal;
                     bvh::Vector<float, 2> interp_uv = (float)u*tri.uv[1] + (float)v*tri.uv[2] + (float)(1-u-v)*tri.uv[0];
                     auto material = tri.parent->get_material(interp_uv[0], interp_uv[1]);
 
                     //TODO: Figure out how to deal with the self-intersection stuff in a more proper way...
                     bvh::Vector3<Scalar> intersect_point = (u*tri.p1() + v*tri.p2() + (1-u-v)*tri.p0);
-                    Scalar scale = -0.0001;
+                    Scalar scale = 0.0001;
                     intersect_point = intersect_point + scale*normal;
 
                     // Calculate the direct illumination:
@@ -104,14 +104,20 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     // Loop through all provided lights:
                     for (PointLight<Scalar> &light : point_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, interp_normal, material);
+                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, normal, material);
                         light_radiance += light_color * (float) light.get_intensity(intersect_point);
                     };
                     for (SquareLight<Scalar> &light : square_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, interp_normal, material);
+                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, normal, material);
                         light_radiance += light_color * (float) light.get_intensity(intersect_point);
                     };
+
+                    if (bounce >= 1) {
+                        for (int idx = 0; idx < 3; ++idx){
+                            light_radiance[idx] = std::clamp(light_radiance[idx], float(0), float(1));
+                        }
+                    }
 
                     // Update the path radiance with the newly calculated radiance:
                     path_radiance += light_radiance*weight;
@@ -121,7 +127,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                         break;
                     }
 
-                    auto [new_direction, bounce_color] = material->sample(ray, bvh::normalize(tri.n), interp_uv[0], interp_uv[1]);
+                    auto [new_direction, bounce_color] = material->sample(ray, normal, interp_uv[0], interp_uv[1]);
 
                     ray = bvh::Ray<Scalar>(intersect_point, new_direction);
                     hit = traverser.traverse(ray, closest_intersector);

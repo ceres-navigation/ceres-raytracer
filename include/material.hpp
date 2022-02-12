@@ -93,7 +93,7 @@ class ColoredLambertianMaterial : public Material<Scalar> {
     ColoredLambertianMaterial(Color color) : c(color), eng(std::random_device()()), d(0.0, 1.0) { }
 
     Color compute(const bvh::Ray<Scalar> &light_ray, const bvh::Ray<Scalar> &view_ray, const bvh::Vector3<Scalar> &normal, float u, float v) {
-        auto L_dot_N = -bvh::dot(light_ray.direction, normal);
+        auto L_dot_N = bvh::dot(light_ray.direction, normal);
         return c * (float)(L_dot_N);
     }
 
@@ -117,7 +117,7 @@ class TexturedLambertianMaterial : public Material<Scalar> {
     : tex_map(texture), eng(std::random_device()()), d(0.0, 1.0) { }
 
     Color compute(const bvh::Ray<Scalar> &light_ray, const bvh::Ray<Scalar> &view_ray, const bvh::Vector3<Scalar> &normal, float u, float v) {
-        auto L_dot_N = -bvh::dot(light_ray.direction, normal);
+        auto L_dot_N = bvh::dot(light_ray.direction, normal);
         return (*tex_map)(u, v) * (float)(L_dot_N);
     }
 
@@ -143,7 +143,7 @@ class TexturedBlinnPhongMaterial : public Material<Scalar> {
     : tex_map(texture), spec_map(specular), alpha(alpha), eng(std::random_device()()), d(0.0, 1.0) { }
 
     Color compute(const bvh::Ray<Scalar> &light_ray, const bvh::Ray<Scalar> &view_ray, const bvh::Vector3<Scalar> &normal, float u, float v) {
-        float diffuse = -static_cast<float>(bvh::dot(light_ray.direction, normal));
+        float diffuse = static_cast<float>(bvh::dot(light_ray.direction, normal));
         auto color = (*tex_map)(u, v);
         auto coeffs = (*spec_map)(u, v);
         auto ka = coeffs[0];
