@@ -71,11 +71,13 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                 // If no bouncesm, return just the vertex normal as the color:
                 if (num_bounces == 0) {
                     if (hit) {
-                        auto tri = triangles[hit->primitive_index];
-                        auto normal = bvh::normalize(tri.n);
-                        path_radiance[0] = normal[0];
-                        path_radiance[1] = normal[1];
-                        path_radiance[2] = normal[2];
+                        auto &tri = triangles[hit->primitive_index];
+                        auto u = hit->intersection.u;
+                        auto v = hit->intersection.v;
+                        auto normal = tri.parent->interp_normals ? bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0) : bvh::normalize(tri.n);
+                        path_radiance[0] = std::abs(normal[0]);
+                        path_radiance[1] = std::abs(normal[1]);
+                        path_radiance[2] = std::abs(normal[2]);
                     }
                 }
 
@@ -89,27 +91,27 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     auto u = hit->intersection.u;
                     auto v = hit->intersection.v;
 
-                    auto normal = tri.parent->interp_normals ? u*tri.vn1 + v*tri.vn2 + (1-u-v)*tri.vn0 : tri.n;
-                    normal = -normal;
-                    bvh::Vector<float, 2> interp_uv = (float)u*tri.uv[1] + (float)v*tri.uv[2] + (float)(1-u-v)*tri.uv[0];
+                    auto normal = bvh::normalize(tri.n);
+                    auto interp_normal = tri.parent->interp_normals ? bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0) : normal;
+                    bvh::Vector<float, 2> interp_uv = (float)u*tri.uv[1] + (float)v*tri.uv[2] + (float)(Scalar(1.0)-u-v)*tri.uv[0];
                     auto material = tri.parent->get_material(interp_uv[0], interp_uv[1]);
 
                     //TODO: Figure out how to deal with the self-intersection stuff in a more proper way...
                     bvh::Vector3<Scalar> intersect_point = (u*tri.p1() + v*tri.p2() + (1-u-v)*tri.p0);
                     Scalar scale = 0.0001;
-                    intersect_point = intersect_point + scale*normal;
+                    intersect_point = intersect_point - scale*normal;
 
                     // Calculate the direct illumination:
                     Color light_radiance(0);
                     // Loop through all provided lights:
                     for (PointLight<Scalar> &light : point_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, normal, material);
+                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, interp_normal, material);
                         light_radiance += light_color * (float) light.get_intensity(intersect_point);
                     };
                     for (SquareLight<Scalar> &light : square_lights){
                         bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, normal, material);
+                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, interp_normal, material);
                         light_radiance += light_color * (float) light.get_intensity(intersect_point);
                     };
 
@@ -127,7 +129,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                         break;
                     }
 
-                    auto [new_direction, bounce_color] = material->sample(ray, normal, interp_uv[0], interp_uv[1]);
+                    auto [new_direction, bounce_color] = material->sample(ray, interp_normal, interp_uv[0], interp_uv[1]);
 
                     ray = bvh::Ray<Scalar>(intersect_point, new_direction);
                     hit = traverser.traverse(ray, closest_intersector);

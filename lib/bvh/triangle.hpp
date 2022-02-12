@@ -20,7 +20,7 @@ namespace bvh {
 template <typename Scalar, bool LeftHandedNormal = true>
 struct Triangle {
     struct Intersection {
-        Scalar t, u, v;
+        Scalar t, u, v, w;
         Scalar distance() const { return t; }
     };
 
