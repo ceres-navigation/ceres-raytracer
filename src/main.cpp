@@ -6,25 +6,21 @@
 #include <chrono>
 #include <random>
 
-#include <bvh/bvh.hpp>
-#include <bvh/binned_sah_builder.hpp>
-#include <bvh/single_ray_traverser.hpp>
-#include <bvh/primitive_intersectors.hpp>
-#include <bvh/triangle.hpp>
-
 #include <Magick++.h> 
-#include <INIReader.h>
+
+#include "bvh/bvh.hpp"
+#include "INIReader.h"
 
 //TODO MOVE THESE TWO INTO A SINGLE FILE IN ROOT OF CRT
-#include "tools/rotations.hpp"
-#include "tools/transform.hpp"
+#include "crt/rotations.hpp"
+#include "crt/transform.hpp"
 
 #include "crt/entity.hpp"
 #include "crt/scene.hpp"
 #include "crt/render.hpp"
+#include "crt/lighting.hpp"
 
 #include "model_loaders/obj.hpp"
-#include "lighting/lights.hpp"
 #include "materials/material.hpp"
 
 
@@ -434,6 +430,7 @@ int main(int argc, char** argv) {
     }
 
     // Parse the INI configuration file:
+    // std::string file_path = argv[1];
     INIReader reader(argv[1]);
 
     if (use_double(reader)) {

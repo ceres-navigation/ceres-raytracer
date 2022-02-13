@@ -7,9 +7,11 @@ include_directories(${ImageMagick_INCLUDE_DIRS})
 
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${ImageMagick_LIBRARIES} PUBLIC OpenMP::OpenMP_CXX lib bvh crt tools model_loaders materials lighting cameras)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${ImageMagick_LIBRARIES} PUBLIC OpenMP::OpenMP_CXX lib bvh crt model_loaders materials)
 else()
-    target_link_libraries(${PROJECT_NAME} ${ImageMagick_LIBRARIES} lib bvh crt tools model_loaders materials lighting cameras)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${ImageMagick_LIBRARIES} PUBLIC lib bvh crt model_loaders materials)
 endif()
 
+include_directories(${CMAKE_SOURCE_DIR}/lib)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(crt)

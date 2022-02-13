@@ -5,7 +5,7 @@
 
 #include <bvh/bvh.hpp>
 
-#include "tools/transform.hpp"
+#include "transform.hpp"
 
 // Abstract light class:
 template <typename Scalar>
