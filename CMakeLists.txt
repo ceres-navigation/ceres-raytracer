@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(ceres-raytracer CXX)
+project(ceres-rt CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -17,10 +17,4 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-math-errno -fno-signed-zeros -fno-trapping
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(lib)
-include_directories(lib)
-
-add_subdirectory(include)
-include_directories(include)
-
 add_subdirectory(src)
-include_directories(src)

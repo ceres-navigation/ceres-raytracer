@@ -11,9 +11,9 @@
 #include <bvh/primitive_intersectors.hpp>
 #include <bvh/triangle.hpp>
 
-#include "lights.hpp"
-#include "brdfs.hpp"
-#include "cameras.hpp"
+#include "lighting/lights.hpp"
+#include "materials/brdfs.hpp"
+#include "cameras/cameras.hpp"
 
 template <typename Scalar, typename Intersector>
 Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Intersector &intersector, 

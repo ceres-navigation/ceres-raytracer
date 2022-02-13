@@ -15,15 +15,17 @@
 #include <Magick++.h> 
 #include <INIReader.h>
 
-#include "entity.hpp"
+//TODO MOVE THESE TWO INTO A SINGLE FILE IN ROOT OF CRT
+#include "tools/rotations.hpp"
+#include "tools/transform.hpp"
 
-#include "rotations.hpp"
-#include "transform.hpp"
-#include "render.hpp"
-#include "obj.hpp"
-#include "lights.hpp"
-#include "scene.hpp"
-#include "material.hpp"
+#include "crt/entity.hpp"
+#include "crt/scene.hpp"
+#include "crt/render.hpp"
+
+#include "model_loaders/obj.hpp"
+#include "lighting/lights.hpp"
+#include "materials/material.hpp"
 
 
 // Function for loading general settings:

@@ -11,11 +11,14 @@
 
 #include <Magick++.h>
 
-#include "obj.hpp"
 #include "happly.hpp"
-#include "rotations.hpp"
-#include "transform.hpp"
-#include "material.hpp"
+
+//TODO MOVE THESE TWO INTO A SINGLE FILE IN ROOT OF CRT
+#include "tools/rotations.hpp"
+#include "tools/transform.hpp"
+
+#include "model_loaders/obj.hpp"
+#include "materials/material.hpp"
 
 template <typename Scalar>
 class Entity {

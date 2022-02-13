@@ -1,11 +1,11 @@
-FILE(GLOB BVHSources bvh/*.hpp)
-
 add_library(
-    bvh
-    ${BVHSources}
+    lib
     INIReader.h
+    happly.hpp
 )
 
-set_target_properties(bvh PROPERTIES LINKER_LANGUAGE CXX)
+add_subdirectory(bvh)
 
-target_include_directories(bvh PUBLIC '${CMAKE_CURRENT_SOURCE_DIR}/bvh')
+set_target_properties(lib PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(bvh PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
