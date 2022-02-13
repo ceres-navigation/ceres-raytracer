@@ -1,0 +1,33 @@
+add_library(
+    bvh
+    binned_sah_builder.hpp
+    bottom_up_algorithm.hpp
+    bounding_box.hpp
+    bvh.hpp
+    heuristic_primitive_splitter.hpp
+    hierarchy_refitter.hpp
+    leaf_collapser.hpp
+    linear_bvh_builder.hpp
+    locally_ordered_clustering_builder.hpp
+    morton.hpp
+    morton_code_based_builder.hpp
+    node_intersectors.hpp
+    node_layout_optimizer.hpp
+    parallel_reinsertion_optimizer.hpp
+    platform.hpp
+    prefix_sum.hpp
+    primitive_intersectors.hpp
+    radix_sort.hpp
+    ray.hpp
+    sah_based_algorithm.hpp
+    single_ray_traverser.hpp
+    spatial_split_bvh_builder.hpp
+    sphere.hpp
+    sweep_sah_builder.hpp
+    top_down_builder.hpp
+    triangle.hpp
+    utilities.hpp
+    vector.hpp
+)
+
+set_target_properties(bvh PROPERTIES LINKER_LANGUAGE CXX)

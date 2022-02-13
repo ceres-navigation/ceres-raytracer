@@ -5,17 +5,18 @@
 #include <vector>
 #include <random>
 
-#include <bvh/bvh.hpp>
-#include <bvh/triangle.hpp>
-#include <bvh/vector.hpp>
-
 #include <Magick++.h>
 
-#include "obj.hpp"
+#include "bvh/bvh.hpp"
+#include "bvh/triangle.hpp"
+#include "bvh/vector.hpp"
+
 #include "happly.hpp"
 #include "rotations.hpp"
 #include "transform.hpp"
-#include "material.hpp"
+
+#include "model_loaders/obj.hpp"
+#include "materials/material.hpp"
 
 template <typename Scalar>
 class Entity {

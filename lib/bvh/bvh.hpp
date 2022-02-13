@@ -7,6 +7,7 @@
 
 #include "bvh/bounding_box.hpp"
 #include "bvh/utilities.hpp"
+#include "bvh/ray.hpp"
 
 namespace bvh {
 

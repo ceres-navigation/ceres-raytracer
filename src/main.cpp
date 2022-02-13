@@ -6,24 +6,22 @@
 #include <chrono>
 #include <random>
 
-#include <bvh/bvh.hpp>
-#include <bvh/binned_sah_builder.hpp>
-#include <bvh/single_ray_traverser.hpp>
-#include <bvh/primitive_intersectors.hpp>
-#include <bvh/triangle.hpp>
-
 #include <Magick++.h> 
-#include <INIReader.h>
 
-#include "entity.hpp"
+#include "bvh/bvh.hpp"
+#include "INIReader.h"
 
-#include "rotations.hpp"
-#include "transform.hpp"
-#include "render.hpp"
-#include "obj.hpp"
-#include "lights.hpp"
-#include "scene.hpp"
-#include "material.hpp"
+//TODO MOVE THESE TWO INTO A SINGLE FILE IN ROOT OF CRT
+#include "crt/rotations.hpp"
+#include "crt/transform.hpp"
+
+#include "crt/entity.hpp"
+#include "crt/scene.hpp"
+#include "crt/render.hpp"
+#include "crt/lighting.hpp"
+
+#include "model_loaders/obj.hpp"
+#include "materials/material.hpp"
 
 
 // Function for loading general settings:
@@ -368,12 +366,6 @@ void add_entities(INIReader &reader, Scene<Scalar> &scene) {
             Entity<Scalar> entity(path_to_obj, material, smooth);
             std::cout << "  " << (*it).substr(4) << "( " << material_name << " ) with " << entity.get_triangles().size() << " triangles loaded from " << path_to_obj << "\n";
             scene.add_entity(entity, rotation, position, scale);
-
-
-            
-
-
-            
         };
     };
 }

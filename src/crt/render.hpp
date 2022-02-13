@@ -6,14 +6,15 @@
 #include <random>
 #include <iomanip>
 
-#include <bvh/bvh.hpp>
-#include <bvh/single_ray_traverser.hpp>
-#include <bvh/primitive_intersectors.hpp>
-#include <bvh/triangle.hpp>
+#include "bvh/bvh.hpp"
+#include "bvh/single_ray_traverser.hpp"
+#include "bvh/primitive_intersectors.hpp"
+#include "bvh/triangle.hpp"
 
-#include "lights.hpp"
-#include "brdfs.hpp"
+#include "lighting.hpp"
 #include "cameras.hpp"
+
+#include "materials/brdfs.hpp"
 
 template <typename Scalar, typename Intersector>
 Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Intersector &intersector, 
