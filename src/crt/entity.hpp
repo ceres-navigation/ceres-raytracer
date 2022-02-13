@@ -5,15 +5,13 @@
 #include <vector>
 #include <random>
 
-#include <bvh/bvh.hpp>
-#include <bvh/triangle.hpp>
-#include <bvh/vector.hpp>
-
 #include <Magick++.h>
 
-#include "happly.hpp"
+#include "bvh/bvh.hpp"
+#include "bvh/triangle.hpp"
+#include "bvh/vector.hpp"
 
-//TODO MOVE THESE TWO INTO A SINGLE FILE IN ROOT OF CRT
+#include "happly.hpp"
 #include "rotations.hpp"
 #include "transform.hpp"
 

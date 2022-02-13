@@ -12,7 +12,7 @@
 #include "bvh/triangle.hpp"
 
 #include "lighting.hpp"
-#include "crt/cameras.hpp"
+#include "cameras.hpp"
 
 #include "materials/brdfs.hpp"
 

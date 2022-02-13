@@ -2,7 +2,7 @@ add_library(
     crt
     rotations.hpp
     transform.hpp
-    cameras.cpp
+    cameras.hpp
     entity.hpp
     render.hpp
     scene.hpp

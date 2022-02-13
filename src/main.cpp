@@ -366,12 +366,6 @@ void add_entities(INIReader &reader, Scene<Scalar> &scene) {
             Entity<Scalar> entity(path_to_obj, material, smooth);
             std::cout << "  " << (*it).substr(4) << "( " << material_name << " ) with " << entity.get_triangles().size() << " triangles loaded from " << path_to_obj << "\n";
             scene.add_entity(entity, rotation, position, scale);
-
-
-            
-
-
-            
         };
     };
 }
@@ -430,7 +424,6 @@ int main(int argc, char** argv) {
     }
 
     // Parse the INI configuration file:
-    // std::string file_path = argv[1];
     INIReader reader(argv[1]);
 
     if (use_double(reader)) {
