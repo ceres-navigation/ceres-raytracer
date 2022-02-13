@@ -19,9 +19,9 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 **Dependencies:**
 - ImageMagick version 7
 
-### Linux/MacOS:
-**If using Ubuntu** please [compile from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)
+**If using Ubuntu** please [compile ImageMagick from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)
 
+### Linux/MacOS:
 - `mkdir build; cd build; cmake ..`
 - `make`
 
