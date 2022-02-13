@@ -29,8 +29,11 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 *Coming Soon*
 
 ## INI Examples
-- Simple scene rendering: `./render ../data/bunny.ini`
-- *NOTE: Because of ongoing development this test may not work.  Will provide update soon*
+*NOTE: All of these examples assume that `render` is run from within the build directory.*
+
+### Cornell Box
+- Simple "Cornell Box" scene" : `./render ../examples/cornell_box.ini`
+![](examples/cornell_box.png)
 
 # Tasks:
 - [ ] Implement physically based radiance tracking for paths
