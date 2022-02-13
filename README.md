@@ -2,8 +2,13 @@
 <!-- ![Tests](https://github.com/ceres-navigation/ceres/actions/workflows/tests.yml/badge.svg) -->
 <!-- [![codecov](https://codecov.io/gh/ceres-navigation/ceres/branch/main/graph/badge.svg?token=BX07Q0PITB)](https://codecov.io/gh/ceres-navigation/ceres) -->
 [![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
-[![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer?include_prereleases)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
+[![GitHub Contributers](https://img.shields.io/github/contributors/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/graphs/contributors)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+<!-- ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) -->
+<!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
 
 This proejct was developed for [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
 - Rendering photo-real images
@@ -14,9 +19,9 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 **Dependencies:**
 - ImageMagick version 7
 
-### Linux/MacOS:
-**If using Ubuntu** please [compile from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)
+**If using Ubuntu** please [compile ImageMagick from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)
 
+### Linux/MacOS:
 - `mkdir build; cd build; cmake ..`
 - `make`
 
@@ -24,8 +29,11 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 *Coming Soon*
 
 ## INI Examples
-- Simple scene rendering: `./render ../data/bunny.ini`
-- *NOTE: Because of ongoing development this test may not work.  Will provide update soon*
+*NOTE: All of these examples assume that `render` is run from within the build directory.*
+
+### Cornell Box
+- Simple "Cornell Box" scene" : `./render ../examples/cornell_box.ini`
+![](examples/cornell_box.png)
 
 # Tasks:
 - [ ] Implement physically based radiance tracking for paths
