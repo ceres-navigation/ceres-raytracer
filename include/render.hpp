@@ -92,7 +92,13 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     auto v = hit->intersection.v;
 
                     auto normal = bvh::normalize(tri.n);
-                    auto interp_normal = tri.parent->interp_normals ? bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0) : normal;
+                    bvh::Vector3<Scalar> interp_normal;
+                    if (tri.parent->interp_normals){
+                        interp_normal = bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0);
+                    }
+                    else {
+                        interp_normal = normal;
+                    }
                     bvh::Vector<float, 2> interp_uv = (float)u*tri.uv[1] + (float)v*tri.uv[2] + (float)(Scalar(1.0)-u-v)*tri.uv[0];
                     auto material = tri.parent->get_material(interp_uv[0], interp_uv[1]);
 
