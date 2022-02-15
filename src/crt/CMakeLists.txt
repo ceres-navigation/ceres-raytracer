@@ -7,10 +7,11 @@ add_library(
     render.hpp
     scene.hpp
     lighting.hpp
+    sceneconfig.hpp
 )
 target_include_directories(crt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_subdirectory(materials)
-add_subdirectory(model_loaders)
+add_subdirectory(obj_temp)
 
 set_target_properties(crt PROPERTIES LINKER_LANGUAGE CXX)

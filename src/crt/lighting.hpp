@@ -12,7 +12,7 @@ template <typename Scalar>
 class Light {
     public:
         virtual bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin) = 0;
-        virtual Scalar get_intensity() = 0;
+        virtual Scalar get_intensity(bvh::Vector3<Scalar> point) = 0;
 };
 
 
@@ -31,10 +31,9 @@ class PointLight: public Light<Scalar>  {
             return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(position - origin));
         };
 
-        Scalar get_intensity() { return intensity; }
         Scalar get_intensity(bvh::Vector3<Scalar> point) { 
             return std::min(intensity / bvh::dot(point - position, point - position), Scalar(10000));
-        }
+        };
 };
 
 template <typename Scalar>
@@ -84,10 +83,6 @@ class SquareLight: public Light<Scalar> {
             // Generate the ray:
             bvh::Vector3<Scalar> light_direction = bvh::normalize(this->sampled_point - origin);
             return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(this->sampled_point - origin));
-        };
-
-        Scalar get_intensity() {
-            return intensity; 
         };
 
         Scalar get_intensity(bvh::Vector3<Scalar> point) { 

@@ -31,8 +31,7 @@ Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Interse
 
 template <typename Scalar>
 void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num_bounces, CameraModel<Scalar> &camera, 
-            std::vector<PointLight<Scalar>> &point_lights, std::vector<SquareLight<Scalar>> &square_lights,
-            const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, float* pixels)
+            std::vector<std::unique_ptr<Light<Scalar>>> &lights, const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, float* pixels)
 {
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, triangles);
     bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh, triangles);
@@ -75,7 +74,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                         auto &tri = triangles[hit->primitive_index];
                         auto u = hit->intersection.u;
                         auto v = hit->intersection.v;
-                        auto normal = tri.parent->interp_normals ? bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0) : bvh::normalize(tri.n);
+                        auto normal = tri.parent->smooth_shading ? bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0) : bvh::normalize(tri.n);
                         path_radiance[0] = std::abs(normal[0]);
                         path_radiance[1] = std::abs(normal[1]);
                         path_radiance[2] = std::abs(normal[2]);
@@ -94,7 +93,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
 
                     auto normal = bvh::normalize(tri.n);
                     bvh::Vector3<Scalar> interp_normal;
-                    if (tri.parent->interp_normals){
+                    if (tri.parent->smooth_shading){
                         interp_normal = bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0);
                     }
                     else {
@@ -111,15 +110,10 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     // Calculate the direct illumination:
                     Color light_radiance(0);
                     // Loop through all provided lights:
-                    for (PointLight<Scalar> &light : point_lights){
-                        bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
+                    for (auto& light : lights){
+                        bvh::Ray<Scalar> light_ray = light->sample_ray(intersect_point);
                         Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, interp_normal, material);
-                        light_radiance += light_color * (float) light.get_intensity(intersect_point);
-                    };
-                    for (SquareLight<Scalar> &light : square_lights){
-                        bvh::Ray<Scalar> light_ray = light.sample_ray(intersect_point);
-                        Color light_color = illumination(traverser, any_int, interp_uv[0], interp_uv[1], light_ray, ray, interp_normal, material);
-                        light_radiance += light_color * (float) light.get_intensity(intersect_point);
+                        light_radiance += light_color * (float) light->get_intensity(intersect_point);
                     };
 
                     if (bounce >= 1) {
