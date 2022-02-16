@@ -12,19 +12,21 @@
 template <typename Scalar>
 class Scene {
     public:       
-        std::vector<Entity<Scalar>> entities;
+        std::vector<Entity<Scalar>*> entities;
         std::vector<bvh::Triangle<Scalar>> triangles;
         std::unique_ptr<CameraModel<Scalar>> camera;
         std::vector<std::unique_ptr<Light<Scalar>>> lights;
 
-        int max_samples;
         int min_samples;
+        int max_samples;
         Scalar noise_threshold;
         int num_bounces;
 
-        Scene() 
-        : max_samples(25), min_samples(3), noise_threshold(0.00001), num_bounces(2) {
-
+        Scene(int min_samples, int max_samples, Scalar noise_threshold, int num_bounces) {
+            this->min_samples = min_samples;
+            this->max_samples = max_samples;
+            this-> noise_threshold = noise_threshold;
+            this->num_bounces = num_bounces;
         }
 
         void add_camera(std::unique_ptr<CameraModel<Scalar>> &camera){
@@ -36,8 +38,8 @@ class Scene {
             this->lights.push_back(std::move(light));
         }
 
-        void add_entity(Entity<Scalar> &entity){
-            this->triangles.insert(this->triangles.end(), entity.triangles.begin(), entity.triangles.end());
+        void add_entity(Entity<Scalar>* entity){
+            this->triangles.insert(this->triangles.end(), entity->triangles.begin(), entity->triangles.end());
             this->entities.push_back(entity);
         }
 
@@ -51,7 +53,7 @@ class Scene {
             std::unique_ptr<bvh::Triangle<Scalar>[]> shuffled_triangles;
 
             // Build an acceleration data structure for this object set
-            std::cout << "\nBuilding BVH ( using SweepSahBuilder )..." << std::endl;
+            std::cout << "\nBuilding BVH ( using SweepSahBuilder )... for " << this->triangles.size() << " triangles\n";
             using namespace std::chrono;
             auto start = high_resolution_clock::now();
 

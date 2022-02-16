@@ -14,15 +14,15 @@ template <typename Scalar>
 class SceneConfig {
     public:
         std::string output;
-        int max_samples;
+        
         int min_samples;
+        int max_samples;
         Scalar noise_threshold;
         int num_bounces;
 
         std::unique_ptr<CameraModel<Scalar>> camera;
         std::vector<std::unique_ptr<Light<Scalar>>> lights;
-        std::vector<Entity<Scalar>> entities;
-        std::string out_file;
+        std::vector<Entity<Scalar>*> entities;
 
         SceneConfig(std::string config_file){
             INIReader reader(config_file);
@@ -137,12 +137,12 @@ class SceneConfig {
         }
 
         // Static method for loading entities:
-        static std::vector<Entity<Scalar>> load_entities(INIReader &reader) {
+        static std::vector<Entity<Scalar>*> load_entities(INIReader &reader) {
             std::cout << "Loading 3d-models...\n";
 
             auto sections = reader.Sections();
 
-            std::vector<Entity<Scalar>> entities;
+            std::vector<Entity<Scalar>*> entities;
             Scalar scale;
             bvh::Vector3<Scalar> position;
             Scalar rotation[3][3];
@@ -158,7 +158,6 @@ class SceneConfig {
                     get_rotation(reader, (*it).c_str(), rotation);
 
                     auto new_entities = load_model<Scalar>(path_to_model,smooth,position,scale,rotation);
-
                     entities.insert(entities.end(), new_entities.begin(), new_entities.end());
                 }
             }

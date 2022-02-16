@@ -77,6 +77,7 @@ class Material {
     virtual std::pair<bvh::Vector3<Scalar>, Color> sample(const bvh::Ray<Scalar> &view_ray, const bvh::Vector3<Scalar> &normal, float u, float v) = 0;
     
     Color get(bvh::Ray<Scalar> light_ray, bvh::Vector3<Scalar> normal, float u, float v) {
+        std::cout << "hello from inside materials\n";
         return this->compute(light_ray, light_ray, normal, u, v);
     };
 

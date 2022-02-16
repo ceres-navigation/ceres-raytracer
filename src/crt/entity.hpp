@@ -27,9 +27,10 @@ class Entity {
         std::vector<bvh::Triangle<Scalar>> triangles;
         std::vector<std::shared_ptr<Material<Scalar>>> materials;
         std::shared_ptr<UVMap<size_t>> material_map;
+        std::string name;
         bool smooth_shading;
 
-        Entity(std::vector<bvh::Triangle<Scalar>> triangles, bool smooth_shading) {
+        Entity(std::vector<bvh::Triangle<Scalar>> triangles, std::string name, bool smooth_shading) {
             // Set current entity as the parent object for all input triangles:
             for (auto &tri : triangles) {
                 tri.set_parent(this);
@@ -48,13 +49,14 @@ class Entity {
                     )
                 );
             this->material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
+            this->name = name;
         }
 
         const std::vector<bvh::Triangle<Scalar>> get_triangles() {
             return triangles;
         }
 
-        Material<Scalar> *get_material(float u, float v) {
+        Material<Scalar>* get_material(float u, float v) {
             return materials[(*material_map)(u, v)].get();
         }
 

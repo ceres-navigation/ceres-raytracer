@@ -49,17 +49,17 @@ int main(int argc, char** argv) {
         auto config = SceneConfig<double>(argv[1]);
 
         // Create and configure the scene:
-        Scene<double> scene;
+        Scene<double> scene(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
         scene.add_camera(config.camera);
         for (auto& light : config.lights){
             scene.add_light(light);
         }
-        for (auto& entity : config.entities) {
+        for (Entity<double>* entity : config.entities) {
             scene.add_entity(entity);
         }
 
         // Render the scene:
-        scene.render(config.out_file);
+        scene.render(config.output);
     }
     else {
         std::cout << "Using SINGLE precision\n\n";
@@ -68,17 +68,17 @@ int main(int argc, char** argv) {
         auto config = SceneConfig<float>(argv[1]);
 
         // Create and configure the scene:
-        Scene<float> scene;
+        Scene<float> scene(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
         scene.add_camera(config.camera);
         for (auto& light : config.lights){
             scene.add_light(light);
         }
-        for (auto& entity : config.entities) {
+        for (Entity<float>* entity : config.entities) {
             scene.add_entity(entity);
         }
 
         // Render the scene:
-        scene.render(config.out_file);
+        scene.render(config.output);
     }
     return 0;
 }

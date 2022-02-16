@@ -65,7 +65,6 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     ray = camera.pixel_to_ray(i + i_rand, j + j_rand);
                 }
                 Color path_radiance(0);
-
                 auto hit = traverser.traverse(ray, closest_intersector);
 
                 // If no bouncesm, return just the vertex normal as the color:
