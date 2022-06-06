@@ -146,6 +146,7 @@ class SceneConfig {
             Scalar scale;
             bvh::Vector3<Scalar> position;
             Scalar rotation[3][3];
+            Color color;
 
             for (auto it = sections.begin(); it != sections.end(); ++it) {
                 if (!strcmp((*it).substr(0,3).c_str(), "obj")) {
@@ -156,8 +157,9 @@ class SceneConfig {
                     get_scale(reader, (*it).c_str(), scale);
                     get_position(reader, (*it).c_str(), position);
                     get_rotation(reader, (*it).c_str(), rotation);
+                    get_color(reader, (*it).c_str(), color);
 
-                    auto new_entities = load_model<Scalar>(path_to_model,smooth,position,scale,rotation);
+                    auto new_entities = load_model<Scalar>(path_to_model,smooth,position,scale,rotation,color);
                     entities.insert(entities.end(), new_entities.begin(), new_entities.end());
                 }
             }
@@ -214,6 +216,21 @@ class SceneConfig {
         static void get_scale(INIReader &reader, const char* object_name, Scalar &scale) {
             scale = reader.GetReal(object_name, "scale", 1);
             std::cout << "    scale          : " << scale << "\n";
+        }
+
+        // Static method to get the color
+        static void get_color(INIReader &reader, const char* object_name, Color &color) {
+            Scalar color_code[3];
+            std::string segment;
+            auto value_str = reader.Get(object_name, "color", "UNKNOWN");
+            value_str.erase(std::remove_if(value_str.begin(), value_str.end(), ::isspace), value_str.end());
+            auto test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")));
+            int idx = 0;
+            while(std::getline(test_str, segment, ',')) {
+                color_code[idx] = std::stod(segment);
+                idx = idx +1;
+            }
+            color = Color(color_code[0], color_code[1], color_code[2]);
         }
 
         // Static method to get the rotation matrix:

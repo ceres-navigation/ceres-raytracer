@@ -30,7 +30,7 @@ class Entity {
         std::string name;
         bool smooth_shading;
 
-        Entity(std::vector<bvh::Triangle<Scalar>> triangles, std::string name, bool smooth_shading) {
+        Entity(std::vector<bvh::Triangle<Scalar>> triangles, std::string name, bool smooth_shading, Color color) {
             // Set current entity as the parent object for all input triangles:
             for (auto &tri : triangles) {
                 tri.set_parent(this);
@@ -40,14 +40,16 @@ class Entity {
 
             //TODO: REMOVE ALL OF THE HARDCODED STUFF HERE:
             auto texture = std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0.5,0.5,0.5)));
-            Color color(0.5,0.5,0.5);
             this->materials.emplace_back(
-                    new TexturedBlinnPhongMaterial<Scalar>(
-                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(color)), 
-                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
-                        32
-                    )
-                );
+                        new ColoredLambertianMaterial<Scalar>(color)
+                        );
+            // this->materials.emplace_back(
+            //         new TexturedBlinnPhongMaterial<Scalar>(
+            //             std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(color)), 
+            //             std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
+            //             32
+            //         )
+            //     );
             this->material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
             this->name = name;
         }

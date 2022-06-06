@@ -9,7 +9,7 @@
 #include "materials/material.hpp"
 
 template <typename Scalar>
-std::vector<Entity<Scalar>*> load_model(std::string path_to_model, bool smooth, bvh::Vector3<Scalar> position, Scalar scale, Scalar rotation[3][3]){
+std::vector<Entity<Scalar>*> load_model(std::string path_to_model, bool smooth, bvh::Vector3<Scalar> position, Scalar scale, Scalar rotation[3][3], Color color){
     std::vector<Entity<Scalar>*> new_entities;
     std::shared_ptr<Material<Scalar>> material(nullptr);
     std::shared_ptr<UVMap<size_t>> material_map;
@@ -56,7 +56,7 @@ std::vector<Entity<Scalar>*> load_model(std::string path_to_model, bool smooth, 
     }
 
     // Create a new entity instance:
-    Entity<Scalar>* entity = new Entity<Scalar>(triangles, path_to_model, smooth);
+    Entity<Scalar>* entity = new Entity<Scalar>(triangles, path_to_model, smooth, color);
     new_entities.push_back(entity);
     return new_entities;
 }
