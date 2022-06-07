@@ -35,6 +35,10 @@ PinholeCamera<Scalar> create_pinhole(Scalar focal_length, pybind11::list resolut
     return PinholeCamera<Scalar>(focal_length, resolution, sensor_size);
 }
 
+PointLight<Scalar> create_pointlight(Scalar intensity){
+    return PointLight<Scalar>(intensity);
+}
+
 // Definition of the python wrapper module:
 PYBIND11_MODULE(ceres_rt, crt) {
     crt.doc() = "ceres ray tracer";
@@ -99,5 +103,21 @@ PYBIND11_MODULE(ceres_rt, crt) {
                             }
                          }
                          self.set_rotation(rotation_arr);
+        });
+
+    py::class_<PointLight<Scalar>>(crt, "PointLight")
+        .def(py::init(&create_pointlight))
+        .def("set_position", [](PointLight<Scalar> &self, py::array_t<Scalar> position){
+                             py::buffer_info buffer = position.request();
+                             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+                             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+                             self.set_position(position_vector3);
+        })
+        .def("get_position", [](PointLight<Scalar> &self){
+                             std::vector<Scalar> position_arr = {self.position[0],
+                                                                 self.position[1],
+                                                                 self.position[2]};
+                             py::array position_out = py::cast(position_arr);
+                             return position_out;
         });
 }

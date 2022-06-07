@@ -26,10 +26,6 @@ class CameraModel {
             this -> position = position;
         }
 
-        Vector3 get_position() {
-             return this->position; 
-        }
-
         void set_rotation(Scalar rotation[3][3]) {
             for (int i = 0; i < 3; i++){
                 for (int j = 0; j <3; j++){

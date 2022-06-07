@@ -124,7 +124,9 @@ class SceneConfig {
                         std::cout << "  " << type.c_str() << ":\n";
                         get_position(reader, (*it).c_str(), position);
                         Scalar intensity = get_intensity(reader, (*it).c_str());
-                        lights.push_back(std::unique_ptr<Light<Scalar>>(new PointLight<Scalar>(position, intensity)));  
+                        auto light = new PointLight<Scalar>(intensity);
+                        light->set_position(position);
+                        lights.push_back(std::unique_ptr<Light<Scalar>>(light));  
                     }
 
                     // Load the square lights:
@@ -134,7 +136,10 @@ class SceneConfig {
                         get_size(reader, (*it).c_str(), size);
                         get_position(reader, (*it).c_str(), position);
                         get_rotation(reader, (*it).c_str(), rotation);
-                        lights.push_back(std::unique_ptr<Light<Scalar>>(new SquareLight<Scalar>(position, rotation, size, intensity)));
+                        auto light = new SquareLight<Scalar>(size, intensity);
+                        light->set_position(position);
+                        light->set_rotation(rotation);
+                        lights.push_back(std::unique_ptr<Light<Scalar>>(light));
                     }
                 }
             }
