@@ -47,13 +47,17 @@ class SceneConfig {
         static std::unique_ptr<CameraModel<Scalar>> load_camera(INIReader &reader) {
             std::cout << "Loading camera model...\n";
 
-            struct CameraStruct<Scalar> camera_struct;
+            bvh::Vector3<Scalar> position;
+            Scalar rotation[3][3];
+            Scalar focal_length;
+            Scalar resolution[2];
+            Scalar sensor_size[2];
 
             // Get the camera model:
-            camera_struct.name = reader.Get("camera", "type", "PinholeCamera");
+            std::string name = reader.Get("camera", "type", "PinholeCamera");
 
             // Get the focal length:
-            camera_struct.focal_length = reader.GetReal("camera", "focal_length", 0);
+            focal_length = reader.GetReal("camera", "focal_length", 0);
 
             // Declare intermediate variables for parsing arrays:
             std::string segment;
@@ -67,7 +71,7 @@ class SceneConfig {
             test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")));
             idx = 0;
             while(std::getline(test_str, segment, ',')) {
-                camera_struct.resolution[idx] = std::stod(segment);
+                resolution[idx] = std::stod(segment);
                 idx = idx +1;
             }
 
@@ -77,22 +81,23 @@ class SceneConfig {
             test_str = std::stringstream(value_str.substr(value_str.find("[")+1,value_str.find("]")));
             idx = 0;
             while(std::getline(test_str, segment, ',')) {
-                camera_struct.sensor_size[idx] = std::stod(segment);
+                sensor_size[idx] = std::stod(segment);
                 idx = idx +1;
             }
 
             // Print if desired:
-            std::cout << "  " << camera_struct.name << "\n";
-            std::cout << "    focal_length   : " << camera_struct.focal_length << "\n";
-            std::cout << "    resolution     : [" << camera_struct.resolution[0] << ", " << camera_struct.resolution[1] << "]\n";
-            std::cout << "    sensor_size    : [" << camera_struct.sensor_size[0] << ", " << camera_struct.sensor_size[1] << "]\n";
+            std::cout << "  " << name << "\n";
+            std::cout << "    focal_length   : " << focal_length << "\n";
+            std::cout << "    resolution     : [" << resolution[0] << ", " << resolution[1] << "]\n";
+            std::cout << "    sensor_size    : [" << sensor_size[0] << ", " << sensor_size[1] << "]\n";
 
             // Get the pose information:
-            get_position(reader, "camera", camera_struct.position);
-            get_rotation(reader, "camera", camera_struct.rotation);
+            get_position(reader, "camera", position);
+            get_rotation(reader, "camera", rotation);
 
-            if (!strcmp("PinholeCamera", camera_struct.name.c_str()) ) {
-                auto camera = std::make_unique<PinholeCamera<Scalar>>(camera_struct);
+            if (!strcmp("PinholeCamera", name.c_str()) ) {
+                auto camera = std::make_unique<PinholeCamera<Scalar>>(focal_length, resolution, sensor_size);
+                camera->set_pose(position, rotation);
                 return camera;
             };
             return nullptr;
