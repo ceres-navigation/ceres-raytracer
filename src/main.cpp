@@ -47,11 +47,9 @@ int main(int argc, char** argv) {
         // Load the configuration file:
         auto config = SceneConfig<double>(argv[1]);
 
-        // Create and configure the ceres ray tracer:
-        CRT<double> crt(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
-
         // Render the scene:
-        auto pixels = crt.render(config.camera, config.light, config.entity);
+        auto pixels = render<double>(config.camera, config.light, config.entity,
+                                     config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
         size_t width  = (size_t) floor(config.camera->get_resolutionX());
         size_t height = (size_t) floor(config.camera->get_resolutionY());
         unsigned error = lodepng::encode(config.output, pixels, width, height);
@@ -65,11 +63,9 @@ int main(int argc, char** argv) {
         // Load the configuration file:
         auto config = SceneConfig<float>(argv[1]);
 
-        // Create and configure the ceres ray tracer:
-        CRT<float> crt(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
-
         // Render the scene:
-        auto pixels = crt.render(config.camera, config.light, config.entity);
+        auto pixels = render<float>(config.camera, config.light, config.entity,
+                                    config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
         size_t width  = (size_t) floor(config.camera->get_resolutionX());
         size_t height = (size_t) floor(config.camera->get_resolutionY());
         unsigned error = lodepng::encode(config.output, pixels, width, height);

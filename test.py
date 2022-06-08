@@ -1,4 +1,4 @@
-from build.src.ceres_rt import PinholeCamera, PointLight, Entity, CRT
+from build.src.ceres_rt import PinholeCamera, PointLight, Entity, render
 import numpy as np
 import cv2
 
@@ -31,12 +31,11 @@ comet_67p = Entity(model_path, smooth_shading, color)
 comet_67p.set_pose(comet_position, comet_rotation)
 
 # Create the CRT instance:
-min_samples = 1
-max_samples = 1
+min_samples = 10
+max_samples = 60
 noise_threshold = 0.000001
 num_bounces = 1
-crt = CRT(min_samples, max_samples, noise_threshold, num_bounces)
 
 # Perform rendering:
-img = crt.render(camera, sun, comet_67p)
+img = render(camera, sun, comet_67p, min_samples, max_samples, noise_threshold, num_bounces)
 cv2.imwrite('demo.png', img)

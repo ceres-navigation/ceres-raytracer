@@ -49,11 +49,6 @@ Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, py
     return new_entity;
 }
 
-CRT<Scalar> create_crt(int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
-
-    return CRT<Scalar>(min_samples, max_samples, noise_threshold, num_bounces);
-}
-
 std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(PinholeCamera<Scalar> camera){
     auto camera_copy = std::make_unique<PinholeCamera<Scalar>>(camera);
     return camera_copy;
@@ -208,22 +203,21 @@ PYBIND11_MODULE(ceres_rt, crt) {
                          }
                          self.set_rotation(rotation_arr);
         });
-    py::class_<CRT<Scalar>>(crt, "CRT")
-    .def(py::init(&create_crt))
-    .def("render", [](CRT<Scalar> &self, PinholeCamera<Scalar> &camera_in, PointLight<Scalar> &light_in, Entity<Scalar>* entity_in) {
-            auto camera_use = copy_camera_unique(camera_in);
-            auto light_use = copy_light_unique(light_in);
-            auto pixels = self.render(camera_use, light_use, entity_in);
+    crt.def("render", [](PinholeCamera<Scalar> &camera_in, PointLight<Scalar> &light_in, Entity<Scalar>* entity_in,
+                         int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
+        auto camera_use = copy_camera_unique(camera_in);
+        auto light_use = copy_light_unique(light_in);
+        auto pixels = render(camera_use, light_use, entity_in,
+                             min_samples, max_samples, noise_threshold, num_bounces);
 
-            int width  = (size_t) floor(camera_in.get_resolutionX());
-            int height = (size_t) floor(camera_in.get_resolutionY());
-            auto result = pybind11::array_t<uint8_t>({height,width,4});
-            
-            auto raw = result.mutable_data();
-            for (int i = 0; i < height*width*4; i++) {
-                raw[i] = pixels[i];
-            }
-
-            return result;
+        int width  = (size_t) floor(camera_in.get_resolutionX());
+        int height = (size_t) floor(camera_in.get_resolutionY());
+        auto result = pybind11::array_t<uint8_t>({height,width,4});
+        
+        auto raw = result.mutable_data();
+        for (int i = 0; i < height*width*4; i++) {
+            raw[i] = pixels[i];
+        }
+        return result;
     });
 }

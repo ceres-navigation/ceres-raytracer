@@ -46,14 +46,12 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
     size_t width  = (size_t) floor(camera.get_resolutionX());
     size_t height = (size_t) floor(camera.get_resolutionY());
 
-    size_t done = 0;
-    #pragma omp parallel for shared(done)
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             size_t index = 4 * (width * j + i);
             // Loop through all samples for a given pixel:
             Color pixel_radiance(0);
-            bool any_hit = false;
+            // bool any_hit = false;
             for (int sample = 1; sample < max_samples+1; ++sample) {
                 // TODO: Make a better random sampling algorithm:
                 bvh::Ray<Scalar> ray;
@@ -110,6 +108,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
 
                     // Calculate the direct illumination:
                     Color light_radiance(0);
+
                     // Loop through all provided lights:
                     for (auto& light : lights){
                         bvh::Ray<Scalar> light_ray = light->sample_ray(intersect_point);
@@ -126,21 +125,21 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     // Update the path radiance with the newly calculated radiance:
                     path_radiance += light_radiance*weight;
 
-                    // Exit or cast next ray:
+                    // Exit if max bounces is reached:
                     if (bounce == num_bounces-1) {
                         break;
                     }
 
+                    // Cast next ray:
                     auto [new_direction, bounce_color] = material->sample(ray, interp_normal, interp_uv[0], interp_uv[1]);
-
                     ray = bvh::Ray<Scalar>(intersect_point, new_direction);
                     hit = traverser.traverse(ray, closest_intersector);
                     weight *= bounce_color;
                 }
 
-                if (bounce > 0) {
-                    any_hit = true;
-                }
+                // if (bounce > 0) {
+                //     any_hit = true;
+                // }
 
                 // Run adaptive sampling:
                 auto rad_contrib = (path_radiance - pixel_radiance)*(1.0f/sample);
@@ -158,9 +157,6 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
             pixels[index + 2] = pixel_radiance[2];
             pixels[index + 3] = 1;//any_hit ? 1 : 0;
         }
-
-        #pragma omp critical
-        std::cout << "Rendering " << std::setprecision(1) << std::fixed  << (100. * ++done) / width << "%..." << std::endl;
     }
 }
 

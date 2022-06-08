@@ -140,6 +140,7 @@ class SceneConfig {
                     }
                 }
             }
+            return nullptr;
         }
 
         // Static method for loading entities:
@@ -180,7 +181,7 @@ class SceneConfig {
                 }
             }
 
-            // return entities;
+            return nullptr;
         }
 
 
