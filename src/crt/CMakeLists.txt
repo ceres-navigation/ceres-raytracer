@@ -4,8 +4,7 @@ add_library(
     transform.hpp
     cameras.hpp
     entity.hpp
-    ceres_ray_tracer.hpp
-    render.hpp
+    ray_tracer.hpp
     lighting.hpp
     sceneconfig.hpp
 )

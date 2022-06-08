@@ -1,6 +1,15 @@
-#ifndef __RENDER_H
-#define __RENDER_H
+#ifndef __CERESRT_H
+#define __CERESRT_H
 
+// From old scene.hpp
+#include "entity.hpp"
+
+#include <bvh/binned_sah_builder.hpp>
+#include <bvh/sweep_sah_builder.hpp>
+#include <bvh/parallel_reinsertion_optimizer.hpp>
+#include <bvh/node_layout_optimizer.hpp>
+
+// From old render.hpp
 #include <cstdint>
 #include <math.h>
 #include <random>
@@ -16,6 +25,8 @@
 
 #include "materials/brdfs.hpp"
 
+
+
 template <typename Scalar, typename Intersector>
 Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Intersector &intersector, 
                                   float u, float v, const bvh::Ray<Scalar> &light_ray, 
@@ -30,11 +41,81 @@ Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Interse
 
 
 template <typename Scalar>
-void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num_bounces, CameraModel<Scalar> &camera, 
-            std::vector<std::unique_ptr<Light<Scalar>>> &lights, const bvh::Bvh<Scalar>& bvh, const bvh::Triangle<Scalar>* triangles, float* pixels)
-{
-    bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, triangles);
-    bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh, triangles);
+std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::unique_ptr<Light<Scalar>> &light, Entity<Scalar>*entity,
+                            int min_samples, int max_samples, Scalar noise_threshold, int num_bounces) {
+    min_samples = min_samples;
+    max_samples = max_samples;
+    noise_threshold = noise_threshold;
+    num_bounces = num_bounces;
+    std::vector<Entity<Scalar>*> entities;
+    std::vector<bvh::Triangle<Scalar>> triangles;
+    std::vector<std::unique_ptr<Light<Scalar>>> lights;
+
+    // TODO Format this so that std::vector<> of each can be passed in instead...
+    lights.push_back(std::move(light));
+    triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+    entities.push_back(entity);
+
+    size_t width  = (size_t) floor(camera->get_resolutionX());
+    size_t height = (size_t) floor(camera->get_resolutionY());
+
+
+    // Build an acceleration data structure for this object set
+    bvh::Bvh<Scalar> bvh;
+
+    size_t reference_count = triangles.size();
+    std::unique_ptr<bvh::Triangle<Scalar>[]> shuffled_triangles;
+
+    std::cout << "\nBuilding BVH ( using SweepSahBuilder )... for " << triangles.size() << " triangles\n";
+    using namespace std::chrono;
+    auto start = high_resolution_clock::now();
+
+    auto bboxes_and_centers = bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
+    auto bboxes = bboxes_and_centers.first.get(); 
+    auto centers = bboxes_and_centers.second.get(); 
+    
+    auto global_bbox = bvh::compute_bounding_boxes_union(bboxes, triangles.size());
+
+    bvh::SweepSahBuilder<bvh::Bvh<Scalar>> builder(bvh);
+    builder.build(global_bbox, bboxes, centers, reference_count);
+
+    bvh::ParallelReinsertionOptimizer<bvh::Bvh<Scalar>> pro_opt(bvh);
+    pro_opt.optimize();
+
+    bvh::NodeLayoutOptimizer<bvh::Bvh<Scalar>> nlo_opt(bvh);
+    nlo_opt.optimize();
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    std::cout << "    BVH of "
+        << bvh.node_count << " node(s) and "
+        << reference_count << " reference(s)\n";
+    std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
+
+    // RBGA
+    auto pixels = std::make_unique<float[]>(4 * width * height);
+    
+#ifdef _OPENMP
+    #pragma omp parallel
+    {
+        #pragma omp single
+        std::cout << "Rendering image on " << omp_get_num_threads() << " threads..." << std::endl;
+    }
+#else
+    std::cout << "Rendering image on single thread..." << std::endl;
+#endif
+
+
+    // Perform rendering:
+    start = high_resolution_clock::now();
+    // do_render(max_samples, min_samples, noise_threshold, num_bounces, *camera_in, lights, bvh, triangles.data(), pixels.get());
+    // camera -> camera_in;
+    // triangles -> triangles.data()
+    // pixels -> pixel.get();
+
+    auto tri_data = triangles.data();
+    bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, tri_data);
+    bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh, tri_data);
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
 
     // Initialize random number generator:
@@ -43,25 +124,24 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
     std::uniform_real_distribution<Scalar> distr(-0.5, 0.5);
     std::uniform_real_distribution<Scalar> dist1(0.0, 1.0);
 
-    size_t width  = (size_t) floor(camera.get_resolutionX());
-    size_t height = (size_t) floor(camera.get_resolutionY());
+    // size_t width  = (size_t) floor(camera->get_resolutionX());
+    // size_t height = (size_t) floor(camera->get_resolutionY());
 
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             size_t index = 4 * (width * j + i);
             // Loop through all samples for a given pixel:
             Color pixel_radiance(0);
-            // bool any_hit = false;
             for (int sample = 1; sample < max_samples+1; ++sample) {
                 // TODO: Make a better random sampling algorithm:
                 bvh::Ray<Scalar> ray;
                 auto i_rand = distr(eng);
                 auto j_rand = distr(eng);
                 if (max_samples == 1) {
-                    ray = camera.pixel_to_ray(i, j);
+                    ray = camera->pixel_to_ray(i, j);
                 }
                 else {
-                    ray = camera.pixel_to_ray(i + i_rand, j + j_rand);
+                    ray = camera->pixel_to_ray(i + i_rand, j + j_rand);
                 }
                 Color path_radiance(0);
                 auto hit = traverser.traverse(ray, closest_intersector);
@@ -69,7 +149,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                 // If no bouncesm, return just the vertex normal as the color:
                 if (num_bounces == 0) {
                     if (hit) {
-                        auto &tri = triangles[hit->primitive_index];
+                        auto &tri = tri_data[hit->primitive_index];
                         auto u = hit->intersection.u;
                         auto v = hit->intersection.v;
                         auto normal = tri.parent->smooth_shading ? bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0) : bvh::normalize(tri.n);
@@ -86,7 +166,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     if (!hit) {
                         break;
                     }
-                    auto &tri = triangles[hit->primitive_index];
+                    auto &tri = tri_data[hit->primitive_index];
                     auto u = hit->intersection.u;
                     auto v = hit->intersection.v;
 
@@ -137,10 +217,6 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     weight *= bounce_color;
                 }
 
-                // if (bounce > 0) {
-                //     any_hit = true;
-                // }
-
                 // Run adaptive sampling:
                 auto rad_contrib = (path_radiance - pixel_radiance)*(1.0f/sample);
                 pixel_radiance += rad_contrib;
@@ -155,9 +231,34 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
             pixels[index    ] = pixel_radiance[0];
             pixels[index + 1] = pixel_radiance[1];
             pixels[index + 2] = pixel_radiance[2];
-            pixels[index + 3] = 1;//any_hit ? 1 : 0;
+            pixels[index + 3] = 1;
         }
     }
-}
+
+
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "    Tracing completed in " << duration.count()/1000000.0 << " seconds\n\n";
+
+
+    // Construct output image:
+    std::vector<uint8_t> image;
+    image.reserve(4*width*height);
+
+    for (size_t j = 0; j < 4*width*height; j++) {
+        image.push_back((uint8_t) std::clamp(pixels[j] * 256, 0.0f, 255.0f));
+    }
+
+    for(unsigned y = 0; y < height; y++) {
+        for(unsigned x = 0; x < width; x++) {
+            size_t i = 4 * (width * y + x);
+            image[4 * width * y + 4 * x + 0] = (uint8_t) std::clamp(pixels[i+0] * 256, 0.0f, 255.0f);
+            image[4 * width * y + 4 * x + 1] = (uint8_t) std::clamp(pixels[i+1] * 256, 0.0f, 255.0f);
+            image[4 * width * y + 4 * x + 2] = (uint8_t) std::clamp(pixels[i+2] * 256, 0.0f, 255.0f);
+            image[4 * width * y + 4 * x + 3] = (uint8_t) std::clamp(pixels[i+3] * 256, 0.0f, 255.0f);
+        }
+    }
+    return image;
+};
 
 #endif

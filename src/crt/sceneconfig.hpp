@@ -170,11 +170,6 @@ class SceneConfig {
                     new_entity->set_position(position);
                     new_entity->set_rotation(rotation);
 
-                    for (auto &tri : new_entity->triangles) { 
-                        std::cout << "INSIDE SCENECONFIG:" << tri.parent -> smooth_shading << "\n";
-                        break;
-                    }
-
                     // Insert to vector of entities:
                     // entities.emplace_back(new_entity);
                     return new_entity;
