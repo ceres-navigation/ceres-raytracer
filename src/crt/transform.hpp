@@ -26,12 +26,26 @@ bvh::Vector3<Scalar> rotate(bvh::Vector3<Scalar> vector, Scalar rotation[3][3]){
 }
 
 template <typename Scalar>
+bvh::Vector3<Scalar> resize(bvh::Vector3<Scalar> vector, Scalar scale){
+    vector[0] = scale*vector[0];
+    vector[1] = scale*vector[1];
+    vector[2] = scale*vector[2];
+    return vector;
+}
+
+template <typename Scalar>
+bvh::Vector3<Scalar> translate(bvh::Vector3<Scalar> vector, bvh::Vector3<Scalar> position){
+    return bvh::Vector3<Scalar>(vector[0] + position[0], vector[1] + position[1], vector[2] + position[2]);
+}
+
+
+template <typename Scalar>
 void transform_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar rotation[3][3], bvh::Vector3<Scalar> position, Scalar scale) {
     // Apply the rotation and translation:
     // #pragma omp parallel for
     for (size_t i = 0; i < triangles.size(); ++i) {
         // Transform each of the vertices:
-        auto p0 = transform(triangles[i].p0, rotation, position, scale);
+        auto p0 = transform(triangles[i].p0,   rotation, position, scale);
         auto p1 = transform(triangles[i].p1(), rotation, position, scale);
         auto p2 = transform(triangles[i].p2(), rotation, position, scale);
 
@@ -43,6 +57,55 @@ void transform_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar r
         // Update the triangle:
         triangles[i] = bvh::Triangle<Scalar>(p0, p1, p2);
         triangles[i].add_vetex_normals(vn0, vn1, vn2);
+    }
+}
+
+template <typename Scalar>
+void translate_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, bvh::Vector3<Scalar> position){
+    // Apply the translation:
+    // #pragma omp parallel for
+    for (auto &tri : triangles) {
+        // Transform each of the vertices:
+        auto p0 = translate(tri.p0,   position);
+        auto p1 = translate(tri.p1(), position);
+        auto p2 = translate(tri.p2(), position);
+
+        // Update the triangle:
+        tri.update_vertices(p0,p1,p2);
+    }
+}
+
+template <typename Scalar>
+void rotate_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar rotation[3][3]){
+    // Apply the rotation:
+    // #pragma omp parallel for
+    for (auto &tri : triangles) {
+        // Transform each of the vertices:
+        auto p0 = rotate(tri.p0,   rotation);
+        auto p1 = rotate(tri.p1(), rotation);
+        auto p2 = rotate(tri.p2(), rotation);
+
+        // Transform each of the vertex normals:
+        auto vn0 = rotate(tri.vn0, rotation);
+        auto vn1 = rotate(tri.vn1, rotation);
+        auto vn2 = rotate(tri.vn2, rotation);
+
+        // Update the triangle:
+        tri.update_vertices(p0,p1,p2);
+        tri.update_vertex_normals(vn0, vn1, vn2);
+    }
+}
+
+template <typename Scalar>
+void resize_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar scale){
+    for (auto &tri : triangles) {
+        // Transform each of the vertices:
+        auto p0 = resize(tri.p0,   scale);
+        auto p1 = resize(tri.p1(), scale);
+        auto p2 = resize(tri.p2(), scale);
+
+        // Update the triangle:
+        tri.update_vertices(p0,p1,p2);
     }
 }
 

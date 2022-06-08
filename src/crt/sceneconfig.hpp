@@ -7,8 +7,6 @@
 
 #include "INIReader/INIReader.hpp"
 
-#include "load_model.hpp"
-
 
 template <typename Scalar>
 class SceneConfig {
@@ -162,15 +160,25 @@ class SceneConfig {
                 if (!strcmp((*it).substr(0,3).c_str(), "obj")) {
                     // Get the configurations for the model:
                     std::string path_to_model = reader.Get((*it), "path", "UNKNOWN");
-                    std::string material_name = reader.Get((*it), "material", "");
-                    bool smooth = reader.GetBoolean((*it).c_str(), "smooth", true);
+                    bool smooth_shading = reader.GetBoolean((*it).c_str(), "smooth", true);
                     get_scale(reader, (*it).c_str(), scale);
                     get_position(reader, (*it).c_str(), position);
                     get_rotation(reader, (*it).c_str(), rotation);
                     get_color(reader, (*it).c_str(), color);
 
-                    auto new_entities = load_model<Scalar>(path_to_model,smooth,position,scale,rotation,color);
-                    entities.insert(entities.end(), new_entities.begin(), new_entities.end());
+                    // Create the new entity instance:
+                    Entity<Scalar>* new_entity = new Entity<Scalar>(path_to_model, smooth_shading, color);
+                    new_entity->set_scale(scale);
+                    new_entity->set_position(position);
+                    new_entity->set_rotation(rotation);
+
+                    for (auto &tri : new_entity->triangles) { 
+                        std::cout << "INSIDE SCENECONFIG:" << tri.parent -> smooth_shading << "\n";
+                        break;
+                    }
+
+                    // Insert to vector of entities:
+                    entities.emplace_back(new_entity);
                 }
             }
 

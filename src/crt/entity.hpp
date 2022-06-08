@@ -23,35 +23,73 @@
 
 template <typename Scalar>
 class Entity {
-    public:        
+    public:
+        bvh::Vector3<Scalar> position;
+        Scalar rotation[3][3];
+        Scalar scale;
+
         std::vector<bvh::Triangle<Scalar>> triangles;
         std::vector<std::shared_ptr<Material<Scalar>>> materials;
         std::shared_ptr<UVMap<size_t>> material_map;
-        std::string name;
         bool smooth_shading;
 
-        Entity(std::vector<bvh::Triangle<Scalar>> triangles, std::string name, bool smooth_shading, Color color) {
+        Entity(std::string path_to_model, bool smooth_shading, Color color){
+            // Load the mesh geometry:
+            std::vector<bvh::Triangle<Scalar>> new_triangles;
+            std::string extension = std::filesystem::path(path_to_model).extension();
+            std::transform(extension.begin(), extension.end(), extension.begin(), static_cast<int(*)(int)>(std::tolower));
+            if (extension.compare(".obj") == 0) {
+                new_triangles = obj::load_from_file<Scalar>(path_to_model);
+            } 
+            else { 
+                std::cout << "file type of " << extension << " is not a valid.  ceres-rt only supports .obj/.OBJ\n";
+            }
+            std::cout << "  " << path_to_model << " provided " << new_triangles.size() << " triangles\n";
+
             // Set current entity as the parent object for all input triangles:
-            for (auto &tri : triangles) {
+            for (auto &tri : new_triangles) {
                 tri.set_parent(this);
                 this -> triangles.push_back(tri);
             }
+
             this->smooth_shading = smooth_shading;
 
             //TODO: REMOVE ALL OF THE HARDCODED STUFF HERE:
-            auto texture = std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0.5,0.5,0.5)));
-            this->materials.emplace_back(
-                        new ColoredLambertianMaterial<Scalar>(color)
-                        );
-            // this->materials.emplace_back(
-            //         new TexturedBlinnPhongMaterial<Scalar>(
-            //             std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(color)), 
-            //             std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
-            //             32
-            //         )
-            //     );
+            this->materials.emplace_back(new ColoredLambertianMaterial<Scalar>(color));
             this->material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
-            this->name = name;
+
+            for (auto &tri : this->triangles) { 
+                std::cout << "INSIDE ENTITY:" << tri.parent -> smooth_shading << "\n";
+                break;
+            }
+        }
+
+        void set_scale(Scalar scale){
+            this -> scale = scale;
+            resize_triangles(this->triangles, scale);
+        }
+
+        void set_position(bvh::Vector3<Scalar> position) {
+            this -> position = position;
+            translate_triangles(this->triangles, position);
+        }
+
+        void set_rotation(Scalar rotation[3][3]) {
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j <3; j++){
+                    this -> rotation[i][j] = rotation[i][j];
+                }
+            }
+
+            // Apply rotation (remove and re-apply translation)
+            translate_triangles(this->triangles, -this->position);
+            rotate_triangles(this->triangles, rotation);
+            translate_triangles(this->triangles, this->position);
+        }
+
+        void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
+            set_position(position);
+            set_rotation(rotation);
         }
 
         const std::vector<bvh::Triangle<Scalar>> get_triangles() {

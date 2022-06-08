@@ -55,6 +55,10 @@ int main(int argc, char** argv) {
             scene.add_light(light);
         }
         for (Entity<double>* entity : config.entities) {
+            for (auto &tri : entity->triangles) {
+                std::cout << tri.parent->smooth_shading << "\n";
+                break;
+            }
             scene.add_entity(entity);
         }
 

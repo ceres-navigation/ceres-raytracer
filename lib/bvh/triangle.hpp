@@ -48,7 +48,14 @@ struct Triangle {
         uv[2] = bvh::Vector<float, 2>(0);
     }
 
-    void add_vetex_normals(Vector3<Scalar> vn0, Vector3<Scalar> vn1, Vector3<Scalar> vn2) {
+    void update_vertices(Vector3<Scalar> p0, Vector3<Scalar> p1, Vector3<Scalar> p2){
+        this -> p0 = p0;
+        this -> e1 = (p0 - p1);
+        this -> e2 = (p2 - p0);
+        this -> n = LeftHandedNormal ? cross(e1, e2) : cross(e2, e1);
+    }
+
+    void update_vertex_normals(Vector3<Scalar> vn0, Vector3<Scalar> vn1, Vector3<Scalar> vn2) {
         this -> vn0 = vn0;
         this -> vn1 = vn1;
         this -> vn2 = vn2;
@@ -67,8 +74,8 @@ struct Triangle {
         uv[2] = t2;
     }
 
-    void set_parent(Entity<Scalar> *p) {
-        parent = p;
+    void set_parent(Entity<Scalar> *parent) {
+        this->parent = parent;
     }
 
     Vector3<Scalar> p1() const { return p0 - e1; }
