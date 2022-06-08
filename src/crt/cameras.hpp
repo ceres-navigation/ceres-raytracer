@@ -50,7 +50,6 @@ class PinholeCamera: public CameraModel<Scalar> {
         Scalar K[3][3];
 
         PinholeCamera(Scalar focal_length, Scalar resolution[2], Scalar sensor_size[2]) {
-
             this -> focal_length = focal_length;
             this -> resolution[0] = resolution[0];
             this -> resolution[1] = resolution[1];
@@ -82,6 +81,30 @@ class PinholeCamera: public CameraModel<Scalar> {
             this -> rotation[2][0] = 0;
             this -> rotation[2][1] = 0;
             this -> rotation[2][2] = 1;
+        }
+
+        // Copy constructor:
+        PinholeCamera(const PinholeCamera<Scalar> &rhs) {
+            this -> focal_length = rhs.focal_length;
+            this -> resolution[0]   = rhs.resolution[0];
+            this -> resolution[1]   = rhs.resolution[1];
+            this -> sensor_size[0]  = rhs.sensor_size[0];
+            this -> sensor_size[1]  = rhs.sensor_size[1];
+            this -> center[0] = rhs.center[0];
+            this -> center[1] = rhs.center[1];
+            this -> scale[0]  = rhs.scale[0];
+            this -> scale[1]  = rhs.scale[1];
+            this -> position = rhs.position;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++) {
+                    this->K[i][j] = rhs.K[i][j];
+                }
+            }
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++) {
+                    this->rotation[i][j] = rhs.rotation[i][j];
+                }
+            }
         }
 
         Scalar get_resolutionX() {

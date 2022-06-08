@@ -5,7 +5,7 @@
 #include <chrono>
 #include <random>
 
-#include <Magick++.h> 
+#include "lodepng/lodepng.h"
 
 #include "bvh/bvh.hpp"
 
@@ -14,16 +14,15 @@
 #include "crt/transform.hpp"
 
 #include "crt/entity.hpp"
-#include "crt/scene.hpp"
-#include "crt/render.hpp"
+#include "crt/ceres_ray_tracer.hpp"
 #include "crt/lighting.hpp"
 
 #include "materials/material.hpp"
 
 #include "crt/sceneconfig.hpp"
 
- //TODO REMOVE THIS:
- #include "obj_temp/obj.hpp"
+//TODO REMOVE THIS:
+#include "obj_temp/obj.hpp"
 
 
 int main(int argc, char** argv) {
@@ -48,41 +47,35 @@ int main(int argc, char** argv) {
         // Load the configuration file:
         auto config = SceneConfig<double>(argv[1]);
 
-        // Create and configure the scene:
-        Scene<double> scene(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
-        scene.add_camera(config.camera);
-        for (auto& light : config.lights){
-            scene.add_light(light);
-        }
-        for (Entity<double>* entity : config.entities) {
-            for (auto &tri : entity->triangles) {
-                std::cout << tri.parent->smooth_shading << "\n";
-                break;
-            }
-            scene.add_entity(entity);
-        }
+        // Create and configure the ceres ray tracer:
+        CRT<double> crt(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
 
         // Render the scene:
-        scene.render(config.output);
-    }
+        auto pixels = crt.render(config.camera, config.light, config.entity);
+        size_t width  = (size_t) floor(config.camera->get_resolutionX());
+        size_t height = (size_t) floor(config.camera->get_resolutionY());
+        unsigned error = lodepng::encode(config.output, pixels, width, height);
+        if(error) {
+            std::cout << "PNG error " << error << ": "<< lodepng_error_text(error) << std::endl;
+        }
+        }
     else {
         std::cout << "Using SINGLE precision\n\n";
 
         // Load the configuration file:
         auto config = SceneConfig<float>(argv[1]);
 
-        // Create and configure the scene:
-        Scene<float> scene(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
-        scene.add_camera(config.camera);
-        for (auto& light : config.lights){
-            scene.add_light(light);
-        }
-        for (Entity<float>* entity : config.entities) {
-            scene.add_entity(entity);
-        }
+        // Create and configure the ceres ray tracer:
+        CRT<float> crt(config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
 
         // Render the scene:
-        scene.render(config.output);
+        auto pixels = crt.render(config.camera, config.light, config.entity);
+        size_t width  = (size_t) floor(config.camera->get_resolutionX());
+        size_t height = (size_t) floor(config.camera->get_resolutionY());
+        unsigned error = lodepng::encode(config.output, pixels, width, height);
+        if(error) {
+            std::cout << "PNG error " << error << ": "<< lodepng_error_text(error) << std::endl;
+        }
     }
     return 0;
 }

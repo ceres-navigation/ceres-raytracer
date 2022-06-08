@@ -19,8 +19,8 @@ class SceneConfig {
         int num_bounces;
 
         std::unique_ptr<CameraModel<Scalar>> camera;
-        std::vector<std::unique_ptr<Light<Scalar>>> lights;
-        std::vector<Entity<Scalar>*> entities;
+        std::unique_ptr<Light<Scalar>> light;
+        Entity<Scalar>* entity;
 
         SceneConfig(std::string config_file){
             INIReader reader(config_file);
@@ -35,10 +35,10 @@ class SceneConfig {
             this->camera = std::move(load_camera(reader));
 
             // Load the lights:
-            this->lights = load_lights(reader);
+            this->light = load_light(reader);
 
             // Load the entities:
-            this->entities = load_entities(reader);
+            this->entity = load_entity(reader);
         }
 
         // Static method for loading the camera model:
@@ -102,12 +102,11 @@ class SceneConfig {
         }
 
         // Static method for loading lights:
-        static std::vector<std::unique_ptr<Light<Scalar>>> load_lights(INIReader &reader) {
+        static std::unique_ptr<Light<Scalar>> load_light(INIReader &reader) {
             // Get the sections:
             auto sections = reader.Sections();
 
             // Create the vector:
-            std::vector<std::unique_ptr<Light<Scalar>>> lights;
             bvh::Vector3<Scalar> position;
             Scalar rotation[3][3];
             Scalar size[2];
@@ -124,7 +123,7 @@ class SceneConfig {
                         Scalar intensity = get_intensity(reader, (*it).c_str());
                         auto light = new PointLight<Scalar>(intensity);
                         light->set_position(position);
-                        lights.push_back(std::unique_ptr<Light<Scalar>>(light));  
+                        return std::unique_ptr<Light<Scalar>>(light);
                     }
 
                     // Load the square lights:
@@ -137,20 +136,18 @@ class SceneConfig {
                         auto light = new SquareLight<Scalar>(size, intensity);
                         light->set_position(position);
                         light->set_rotation(rotation);
-                        lights.push_back(std::unique_ptr<Light<Scalar>>(light));
+                        return std::unique_ptr<Light<Scalar>>(light);
                     }
                 }
             }
-            return lights;
         }
 
         // Static method for loading entities:
-        static std::vector<Entity<Scalar>*> load_entities(INIReader &reader) {
+        static Entity<Scalar>* load_entity(INIReader &reader) {
             std::cout << "Loading 3d-models...\n";
 
             auto sections = reader.Sections();
 
-            std::vector<Entity<Scalar>*> entities;
             Scalar scale;
             bvh::Vector3<Scalar> position;
             Scalar rotation[3][3];
@@ -178,11 +175,12 @@ class SceneConfig {
                     }
 
                     // Insert to vector of entities:
-                    entities.emplace_back(new_entity);
+                    // entities.emplace_back(new_entity);
+                    return new_entity;
                 }
             }
 
-            return entities;
+            // return entities;
         }
 
 

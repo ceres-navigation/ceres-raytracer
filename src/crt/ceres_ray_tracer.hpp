@@ -1,5 +1,5 @@
-#ifndef __SCENE_H
-#define __SCENE_H
+#ifndef __CERESRT_H
+#define __CERESRT_H
 
 #include "entity.hpp"
 #include "render.hpp"
@@ -10,42 +10,34 @@
 #include <bvh/node_layout_optimizer.hpp>
 
 template <typename Scalar>
-class Scene {
-    public:       
-        std::vector<Entity<Scalar>*> entities;
+class CRT {
+    public:
         std::vector<bvh::Triangle<Scalar>> triangles;
-        std::unique_ptr<CameraModel<Scalar>> camera;
-        std::vector<std::unique_ptr<Light<Scalar>>> lights;
 
         int min_samples;
         int max_samples;
         Scalar noise_threshold;
         int num_bounces;
 
-        Scene(int min_samples, int max_samples, Scalar noise_threshold, int num_bounces) {
+        CRT(int min_samples, int max_samples, Scalar noise_threshold, int num_bounces) {
             this->min_samples = min_samples;
             this->max_samples = max_samples;
             this-> noise_threshold = noise_threshold;
             this->num_bounces = num_bounces;
         }
 
-        void add_camera(std::unique_ptr<CameraModel<Scalar>> &camera){
-            // this -> camera = std::make_unique<CameraModel<Scalar>>(camera);
-            this->camera = std::move(camera);
-        }
+        std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera_in, std::unique_ptr<Light<Scalar>> &lights_in, Entity<Scalar>*entity_in){
+            std::vector<Entity<Scalar>*> entities;
+            std::vector<bvh::Triangle<Scalar>> triangles;
+            std::vector<std::unique_ptr<Light<Scalar>>> lights;
 
-        void add_light(std::unique_ptr<Light<Scalar>> &light){
-            this->lights.push_back(std::move(light));
-        }
+            // Ingest the input rendering objects:
+            lights.push_back(std::move(lights_in));
+            triangles.insert(this->triangles.end(), entity_in->triangles.begin(), entity_in->triangles.end());
+            entities.push_back(entity_in);
 
-        void add_entity(Entity<Scalar>* entity){
-            this->triangles.insert(this->triangles.end(), entity->triangles.begin(), entity->triangles.end());
-            this->entities.push_back(entity);
-        }
-
-        void render(std::string out_file) {
-            size_t width  = (size_t) floor((*camera).get_resolutionX());
-            size_t height = (size_t) floor((*camera).get_resolutionY());
+            size_t width  = (size_t) floor(camera_in->get_resolutionX());
+            size_t height = (size_t) floor(camera_in->get_resolutionY());
 
             bvh::Bvh<Scalar> bvh;
 
@@ -79,7 +71,8 @@ class Scene {
                 << reference_count << " reference(s)\n";
             std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
-            auto pixels = std::make_unique<float[]>(3 * width * height);
+            // RBGA
+            auto pixels = std::make_unique<float[]>(4 * width * height);
             
         #ifdef _OPENMP
             #pragma omp parallel
@@ -92,24 +85,29 @@ class Scene {
         #endif
 
             start = high_resolution_clock::now();
-            do_render(max_samples, min_samples, noise_threshold, num_bounces, *camera, lights, bvh, triangles.data(), pixels.get());
+            do_render(max_samples, min_samples, noise_threshold, num_bounces, *camera_in, lights, bvh, triangles.data(), pixels.get());
             stop = high_resolution_clock::now();
             duration = duration_cast<microseconds>(stop - start);
             std::cout << "    Tracing completed in " << duration.count()/1000000.0 << " seconds\n\n";
 
-            Magick::Image image(Magick::Geometry(width,height), "green");
-            image.modifyImage();
-            Magick::Pixels view(image);
-            Magick::Quantum *img_pix = view.set(0,0,width,height);
+            std::vector<uint8_t> image;
+            image.reserve(4*width*height);
 
-            for (size_t j = 0; j < 3 * width*height; j++) {
-                *img_pix++ = std::clamp(pixels[j], 0.f, 1.f) * 65535;
+            for (size_t j = 0; j < 4*width*height; j++) {
+                image.push_back((uint8_t) std::clamp(pixels[j] * 256, 0.0f, 255.0f));
             }
 
-            view.sync();
-            image.write(out_file);
-        }   
-
+            for(unsigned y = 0; y < height; y++) {
+                for(unsigned x = 0; x < width; x++) {
+                    size_t i = 4 * (width * y + x);
+                    image[4 * width * y + 4 * x + 0] = (uint8_t) std::clamp(pixels[i+0] * 256, 0.0f, 255.0f);
+                    image[4 * width * y + 4 * x + 1] = (uint8_t) std::clamp(pixels[i+1] * 256, 0.0f, 255.0f);
+                    image[4 * width * y + 4 * x + 2] = (uint8_t) std::clamp(pixels[i+2] * 256, 0.0f, 255.0f);
+                    image[4 * width * y + 4 * x + 3] = (uint8_t) std::clamp(pixels[i+3] * 256, 0.0f, 255.0f);
+                }
+            }
+            return image;
+        }
 };
 
 #endif

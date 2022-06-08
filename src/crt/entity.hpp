@@ -6,8 +6,6 @@
 #include <vector>
 #include <random>
 
-#include <Magick++.h>
-
 #include "bvh/bvh.hpp"
 #include "bvh/triangle.hpp"
 #include "bvh/vector.hpp"
@@ -44,7 +42,7 @@ class Entity {
             else { 
                 std::cout << "file type of " << extension << " is not a valid.  ceres-rt only supports .obj/.OBJ\n";
             }
-            std::cout << "  " << path_to_model << " provided " << new_triangles.size() << " triangles\n";
+            std::cout << "File " << path_to_model << " provided " << new_triangles.size() << " triangles\n";
 
             // Set current entity as the parent object for all input triangles:
             for (auto &tri : new_triangles) {
@@ -57,11 +55,6 @@ class Entity {
             //TODO: REMOVE ALL OF THE HARDCODED STUFF HERE:
             this->materials.emplace_back(new ColoredLambertianMaterial<Scalar>(color));
             this->material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
-
-            for (auto &tri : this->triangles) { 
-                std::cout << "INSIDE ENTITY:" << tri.parent -> smooth_shading << "\n";
-                break;
-            }
         }
 
         void set_scale(Scalar scale){

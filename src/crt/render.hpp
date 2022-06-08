@@ -50,9 +50,10 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
     #pragma omp parallel for shared(done)
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
-            size_t index = 3 * (width * j + i);
+            size_t index = 4 * (width * j + i);
             // Loop through all samples for a given pixel:
             Color pixel_radiance(0);
+            bool any_hit = false;
             for (int sample = 1; sample < max_samples+1; ++sample) {
                 // TODO: Make a better random sampling algorithm:
                 bvh::Ray<Scalar> ray;
@@ -82,7 +83,8 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
 
                 // Loop through all bounces
                 auto weight = Color(2*M_PI);
-                for (int bounce = 0; bounce < num_bounces; ++bounce){
+                int bounce = 0;
+                for (; bounce < num_bounces; ++bounce){
                     if (!hit) {
                         break;
                     }
@@ -136,6 +138,10 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
                     weight *= bounce_color;
                 }
 
+                if (bounce > 0) {
+                    any_hit = true;
+                }
+
                 // Run adaptive sampling:
                 auto rad_contrib = (path_radiance - pixel_radiance)*(1.0f/sample);
                 pixel_radiance += rad_contrib;
@@ -150,6 +156,7 @@ void do_render(int max_samples, int min_samples, Scalar noise_threshold, int num
             pixels[index    ] = pixel_radiance[0];
             pixels[index + 1] = pixel_radiance[1];
             pixels[index + 2] = pixel_radiance[2];
+            pixels[index + 3] = 1;//any_hit ? 1 : 0;
         }
 
         #pragma omp critical

@@ -5,8 +5,7 @@
 #include <vector>
 #include <random>
 
-#include <Magick++.h>
-
+#include "lodepng/lodepng.h"
 
 #include "bvh/triangle.hpp"
 #include "bvh/vector.hpp"
@@ -37,22 +36,27 @@ class ConstantUVMap : public  UVMap<Value> {
 
 class ImageUVMap : public UVMap<Color> {
     private:
-    
-    Magick::Image img;
-    
-    public:
-    ImageUVMap(std::string path) { img.read(path); }
-    
-    Color operator()(float u, float v) {
-        size_t x = (size_t)(u * img.size().width() + 0.5);
-        size_t y = (size_t)(v * img.size().height() + 0.5);
 
-        Magick::Color color = img.pixelColor(x, y);
+    unsigned int width;
+    unsigned int height;
+    std::vector<uint8_t> pixels;
+ 
+    public:
+    ImageUVMap(std::string path) { 
+        unsigned error = lodepng::decode(pixels, width, height, path);
+        if(error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+     }
+ 
+    Color operator()(float u, float v) {
+        size_t x = (size_t)(u * width + 0.5);
+        size_t y = (size_t)(v * height + 0.5);
+
+        size_t idx = 4 * width * y + 4 * x;
 
         return Color(
-            color.quantumRed() / 65535.f,
-            color.quantumGreen() / 65535.f,
-            color.quantumBlue() / 65535.f
+            pixels[idx+0] / 255.f,
+            pixels[idx+1] / 255.f,
+            pixels[idx+2] / 255.f
         );
     };
 };

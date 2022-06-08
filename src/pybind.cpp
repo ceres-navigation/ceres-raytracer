@@ -5,10 +5,11 @@
 #include "crt/rotations.hpp"
 #include "crt/transform.hpp"
 
+#include <lodepng/lodepng.h>
+
 #include "crt/cameras.hpp"
 #include "crt/entity.hpp"
-#include "crt/scene.hpp"
-#include "crt/render.hpp"
+#include "crt/ceres_ray_tracer.hpp"
 #include "crt/lighting.hpp"
 
 #include "crt/obj_temp/obj.hpp"
@@ -39,12 +40,28 @@ PointLight<Scalar> create_pointlight(Scalar intensity){
     return PointLight<Scalar>(intensity);
 }
 
-Entity<Scalar> create_entity(std::string path_to_model, bool smooth_shading, pybind11::list color_list){
+Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, pybind11::list color_list){
     Color color;
     color[0] = color_list[0].cast<Scalar>();
     color[1] = color_list[1].cast<Scalar>();
     color[2] = color_list[2].cast<Scalar>();
-    return Entity<Scalar>(path_to_model, smooth_shading, color);
+    Entity<Scalar>* new_entity = new Entity<Scalar>(path_to_model, smooth_shading, color);
+    return new_entity;
+}
+
+CRT<Scalar> create_crt(int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
+
+    return CRT<Scalar>(min_samples, max_samples, noise_threshold, num_bounces);
+}
+
+std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(PinholeCamera<Scalar> camera){
+    auto camera_copy = std::make_unique<PinholeCamera<Scalar>>(camera);
+    return camera_copy;
+}
+
+std::unique_ptr<Light<Scalar>> copy_light_unique(PointLight<Scalar> light){
+    auto light_copy = std::make_unique<PointLight<Scalar>>(light);
+    return light_copy;
 }
 
 // Definition of the python wrapper module:
@@ -191,4 +208,22 @@ PYBIND11_MODULE(ceres_rt, crt) {
                          }
                          self.set_rotation(rotation_arr);
         });
+    py::class_<CRT<Scalar>>(crt, "CRT")
+    .def(py::init(&create_crt))
+    .def("render", [](CRT<Scalar> &self, PinholeCamera<Scalar> &camera_in, PointLight<Scalar> &light_in, Entity<Scalar>* entity_in) {
+            auto camera_use = copy_camera_unique(camera_in);
+            auto light_use = copy_light_unique(light_in);
+            auto pixels = self.render(camera_use, light_use, entity_in);
+
+            int width  = (size_t) floor(camera_in.get_resolutionX());
+            int height = (size_t) floor(camera_in.get_resolutionY());
+            auto result = pybind11::array_t<uint8_t>({height,width,4});
+            
+            auto raw = result.mutable_data();
+            for (int i = 0; i < height*width*4; i++) {
+                raw[i] = pixels[i];
+            }
+
+            return result;
+    });
 }

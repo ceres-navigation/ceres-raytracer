@@ -16,17 +16,20 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 - Modeling solar radiation and albedo radiation pressure on spacecraft
 
 ## Installation
-**Dependencies:**
-- ImageMagick version 7
 
-**If using Ubuntu** please [compile ImageMagick from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)
+### Using PIP (RECOMMENDED):
+*Coming Soon*
 
-### Linux/MacOS:
+### Build from Source (Linux/MacOS):
 - `mkdir build; cd build; cmake ..`
 - `make`
 
-### Windows
+### Windows:
 *Coming Soon*
+
+**NOTE:** Unfortunately, OpenMP is not properly supported by Windows and so parallel tracing is not yet supported in Windows native.  If you wish to compile from source on a Windows machine, we recommend using the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about).
+
+## Python Examples
 
 ## INI Examples
 *NOTE: All of these examples assume that `render` is run from within the build directory.*
@@ -40,19 +43,19 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 - [ ] Improve the adaptive sampling noise calculation
 - [ ] Triangular meshes
   - [ ] Add vertex color support
-  - [ ] Add parent object support
+  - [x] Add parent object support
   - [ ] Add parsers for more mesh type (.PLY, .GLTF/.GLB)
   - [ ] Add texture mapping and normal maps
-- [ ] Refactor
-  - [ ] Reorganize code into classes
-  - [ ] Move INI parser out of `main.cpp`
-  - [ ] Add python interface
-  - [ ] Animation/sequence support
+- [x] Python Refactor
+  - [x] Reorganize code into classes
+  - [x] Move INI parser out of `main.cpp`
+  - [x] Add python interface
+  - [x] Animation/sequence support
 - [ ] Importance Sampling
   - [ ] Implement Malley's method for cosine importance
   - [ ] Investigate alternative importance sampling method for planetary bodies (where primary indirect contribution is near horizon)
 - [ ] Lighting
-  - [ ] Add output intensity to light objects
+  - [x] Add output intensity to light objects
   - [ ] Resolve placement issue with square lights
   - [ ] Add circular area lights
   - [ ] Add emissive mesh geometries

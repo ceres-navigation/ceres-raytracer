@@ -45,6 +45,12 @@ class PointLight: public Light<Scalar>  {
             this -> intensity = intensity;
         };
 
+        // Copy constructor:
+        PointLight(const PointLight<Scalar> &rhs) {
+            this -> intensity = rhs.intensity;
+            this -> position = rhs.position;
+        }
+
         bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){
             bvh::Vector3<Scalar> light_direction = bvh::normalize(this->position - origin);
             return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(this->position - origin));
