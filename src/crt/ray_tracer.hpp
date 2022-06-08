@@ -41,20 +41,17 @@ Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Interse
 
 
 template <typename Scalar>
-std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::unique_ptr<Light<Scalar>> &light, Entity<Scalar>*entity,
+std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<std::unique_ptr<Light<Scalar>>> &lights, std::vector<Entity<Scalar>*> entities,
                             int min_samples, int max_samples, Scalar noise_threshold, int num_bounces) {
     min_samples = min_samples;
     max_samples = max_samples;
     noise_threshold = noise_threshold;
     num_bounces = num_bounces;
-    std::vector<Entity<Scalar>*> entities;
     std::vector<bvh::Triangle<Scalar>> triangles;
-    std::vector<std::unique_ptr<Light<Scalar>>> lights;
 
-    // TODO Format this so that std::vector<> of each can be passed in instead...
-    lights.push_back(std::move(light));
-    triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
-    entities.push_back(entity);
+    for (auto entity : entities) {
+        triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+    }
 
     size_t width  = (size_t) floor(camera->get_resolutionX());
     size_t height = (size_t) floor(camera->get_resolutionY());
@@ -70,7 +67,8 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::u
     using namespace std::chrono;
     auto start = high_resolution_clock::now();
 
-    auto bboxes_and_centers = bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
+    auto tri_data = triangles.data();
+    auto bboxes_and_centers = bvh::compute_bounding_boxes_and_centers(tri_data, triangles.size());
     auto bboxes = bboxes_and_centers.first.get(); 
     auto centers = bboxes_and_centers.second.get(); 
     
@@ -95,25 +93,19 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::u
     // RBGA
     auto pixels = std::make_unique<float[]>(4 * width * height);
     
-#ifdef _OPENMP
-    #pragma omp parallel
-    {
-        #pragma omp single
-        std::cout << "Rendering image on " << omp_get_num_threads() << " threads..." << std::endl;
-    }
-#else
-    std::cout << "Rendering image on single thread..." << std::endl;
-#endif
+    // Run parallel if OPENMP is available:
+    #ifdef _OPENMP
+        #pragma omp parallel
+        {
+            #pragma omp single
+            std::cout << "Rendering image on " << omp_get_num_threads() << " threads..." << std::endl;
+        }
+    #else
+        std::cout << "Rendering image on single thread..." << std::endl;
+    #endif
 
-
-    // Perform rendering:
+    // Start the rendering process:
     start = high_resolution_clock::now();
-    // do_render(max_samples, min_samples, noise_threshold, num_bounces, *camera_in, lights, bvh, triangles.data(), pixels.get());
-    // camera -> camera_in;
-    // triangles -> triangles.data()
-    // pixels -> pixel.get();
-
-    auto tri_data = triangles.data();
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, tri_data);
     bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh, tri_data);
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
@@ -124,9 +116,7 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::u
     std::uniform_real_distribution<Scalar> distr(-0.5, 0.5);
     std::uniform_real_distribution<Scalar> dist1(0.0, 1.0);
 
-    // size_t width  = (size_t) floor(camera->get_resolutionX());
-    // size_t height = (size_t) floor(camera->get_resolutionY());
-
+    #pragma omp parallel for
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             size_t index = 4 * (width * j + i);
@@ -234,7 +224,6 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::u
             pixels[index + 3] = 1;
         }
     }
-
 
     stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(stop - start);

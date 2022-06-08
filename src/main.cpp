@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
         auto config = SceneConfig<double>(argv[1]);
 
         // Render the scene:
-        auto pixels = render<double>(config.camera, config.light, config.entity,
+        auto pixels = render<double>(config.camera, config.lights, config.entities,
                                      config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
         size_t width  = (size_t) floor(config.camera->get_resolutionX());
         size_t height = (size_t) floor(config.camera->get_resolutionY());
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
         auto config = SceneConfig<float>(argv[1]);
 
         // Render the scene:
-        auto pixels = render<float>(config.camera, config.light, config.entity,
+        auto pixels = render<float>(config.camera, config.lights, config.entities,
                                     config.min_samples, config.max_samples, config.noise_threshold, config.num_bounces);
         size_t width  = (size_t) floor(config.camera->get_resolutionX());
         size_t height = (size_t) floor(config.camera->get_resolutionY());

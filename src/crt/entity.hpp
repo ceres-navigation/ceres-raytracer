@@ -42,7 +42,7 @@ class Entity {
             else { 
                 std::cout << "file type of " << extension << " is not a valid.  ceres-rt only supports .obj/.OBJ\n";
             }
-            std::cout << "File " << path_to_model << " provided " << new_triangles.size() << " triangles\n";
+            std::cout << new_triangles.size() << " triangles loaded from " << path_to_model << "\n";
 
             // Set current entity as the parent object for all input triangles:
             for (auto &tri : new_triangles) {
@@ -55,11 +55,24 @@ class Entity {
             //TODO: REMOVE ALL OF THE HARDCODED STUFF HERE:
             this->materials.emplace_back(new ColoredLambertianMaterial<Scalar>(color));
             this->material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
+
+            // Default values for all pose information:
+            this -> scale = 1;
+            this -> position = bvh::Vector3<Scalar>(0,0,0);
+            this -> rotation[0][0] = 1;
+            this -> rotation[0][1] = 0;
+            this -> rotation[0][2] = 0;
+            this -> rotation[1][0] = 0;
+            this -> rotation[1][1] = 1;
+            this -> rotation[1][2] = 0;
+            this -> rotation[2][0] = 0;
+            this -> rotation[2][1] = 0;
+            this -> rotation[2][2] = 1;
         }
 
         void set_scale(Scalar scale){
             this -> scale = scale;
-            resize_triangles(this->triangles, scale);
+            resize_triangles(this->triangles, scale, this->position);
         }
 
         void set_position(bvh::Vector3<Scalar> position) {
@@ -75,14 +88,12 @@ class Entity {
             }
 
             // Apply rotation (remove and re-apply translation)
-            translate_triangles(this->triangles, -this->position);
-            rotate_triangles(this->triangles, rotation);
-            translate_triangles(this->triangles, this->position);
+            rotate_triangles(this->triangles, rotation, this->position);
         }
 
         void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
-            set_position(position);
             set_rotation(rotation);
+            set_position(position);
         }
 
         const std::vector<bvh::Triangle<Scalar>> get_triangles() {

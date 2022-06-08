@@ -23,7 +23,7 @@ using Scalar = double;
 using Vector3 = bvh::Vector3<Scalar>;
 
 // Wrapper functions to handle type casting?  This seems weird to do it this way....
-PinholeCamera<Scalar> create_pinhole(Scalar focal_length, pybind11::list resolution_list, pybind11::list sensor_size_list) {
+PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_list, py::list sensor_size_list) {
     Scalar resolution[2];
     Scalar sensor_size[2];
 
@@ -40,7 +40,7 @@ PointLight<Scalar> create_pointlight(Scalar intensity){
     return PointLight<Scalar>(intensity);
 }
 
-Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, pybind11::list color_list){
+Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, py::list color_list){
     Color color;
     color[0] = color_list[0].cast<Scalar>();
     color[1] = color_list[1].cast<Scalar>();
@@ -52,11 +52,6 @@ Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, py
 std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(PinholeCamera<Scalar> camera){
     auto camera_copy = std::make_unique<PinholeCamera<Scalar>>(camera);
     return camera_copy;
-}
-
-std::unique_ptr<Light<Scalar>> copy_light_unique(PointLight<Scalar> light){
-    auto light_copy = std::make_unique<PointLight<Scalar>>(light);
-    return light_copy;
 }
 
 // Definition of the python wrapper module:
@@ -143,6 +138,9 @@ PYBIND11_MODULE(ceres_rt, crt) {
 
     py::class_<Entity<Scalar>>(crt, "Entity")
         .def(py::init(&create_entity))
+        .def("set_scale",    [](Entity<Scalar> &self, Scalar scale){ 
+            self.set_scale(scale);
+        })
         .def("set_position", [](Entity<Scalar> &self, py::array_t<Scalar> position){
                              py::buffer_info buffer = position.request();
                              Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
@@ -203,17 +201,34 @@ PYBIND11_MODULE(ceres_rt, crt) {
                          }
                          self.set_rotation(rotation_arr);
         });
-    crt.def("render", [](PinholeCamera<Scalar> &camera_in, PointLight<Scalar> &light_in, Entity<Scalar>* entity_in,
-                         int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
+        crt.def("render", [](PinholeCamera<Scalar> &camera_in, py::list lights_list, py::list entity_list,
+                          int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
+
+        // Duplicate camera to obtain unique_ptr:
         auto camera_use = copy_camera_unique(camera_in);
-        auto light_use = copy_light_unique(light_in);
-        auto pixels = render(camera_use, light_use, entity_in,
+
+        // Convert py::list of lights to std::vector
+        std::vector<std::unique_ptr<Light<Scalar>>> lights;
+        for (auto light_handle : lights_list) { 
+            PointLight<Scalar> light = light_handle.cast<PointLight<Scalar>>();
+            lights.push_back(std::make_unique<PointLight<Scalar>>(light));
+        }
+
+        // Convert py::list of entities to std::vector
+        std::vector<Entity<Scalar>*> entities;
+        for (auto entity_handle : entity_list) {
+            Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();
+            entities.emplace_back(entity);
+        }
+
+        // Call the rendering function:
+        auto pixels = render(camera_use, lights, entities,
                              min_samples, max_samples, noise_threshold, num_bounces);
 
+        // Format the output image:
         int width  = (size_t) floor(camera_in.get_resolutionX());
         int height = (size_t) floor(camera_in.get_resolutionY());
-        auto result = pybind11::array_t<uint8_t>({height,width,4});
-        
+        auto result = py::array_t<uint8_t>({height,width,4});
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width*4; i++) {
             raw[i] = pixels[i];

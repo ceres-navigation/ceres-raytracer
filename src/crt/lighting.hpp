@@ -94,8 +94,6 @@ class SquareLight: public Light<Scalar> {
             // Transform the point to world coordinates:
             this->sampled_point = transform(point_on_light, this->rotation, this->position, scale);
 
-            // std::cout<<sampled_point[0]<<" "<<sampled_point[1]<<" "<<sampled_point[2]<<"\n";
-
             // Generate the ray:
             bvh::Vector3<Scalar> light_direction = bvh::normalize(this->sampled_point - origin);
             return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(this->sampled_point - origin));

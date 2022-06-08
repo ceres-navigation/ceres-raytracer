@@ -19,11 +19,12 @@ class SceneConfig {
         int num_bounces;
 
         std::unique_ptr<CameraModel<Scalar>> camera;
-        std::unique_ptr<Light<Scalar>> light;
-        Entity<Scalar>* entity;
+        std::vector<std::unique_ptr<Light<Scalar>>> lights;
+        std::vector<Entity<Scalar>*> entities;
 
         SceneConfig(std::string config_file){
             INIReader reader(config_file);
+
             // Load the settings:
             this->output = reader.Get("settings", "output", "render.png");
             this->max_samples = reader.GetInteger("settings","max_samples",1);
@@ -35,16 +36,14 @@ class SceneConfig {
             this->camera = std::move(load_camera(reader));
 
             // Load the lights:
-            this->light = load_light(reader);
+            this->lights = load_lights(reader);
 
             // Load the entities:
-            this->entity = load_entity(reader);
+            this->entities = load_entities(reader);
         }
 
         // Static method for loading the camera model:
         static std::unique_ptr<CameraModel<Scalar>> load_camera(INIReader &reader) {
-            std::cout << "Loading camera model...\n";
-
             bvh::Vector3<Scalar> position;
             Scalar rotation[3][3];
             Scalar focal_length;
@@ -83,12 +82,6 @@ class SceneConfig {
                 idx = idx +1;
             }
 
-            // Print if desired:
-            std::cout << "  " << name << "\n";
-            std::cout << "    focal_length   : " << focal_length << "\n";
-            std::cout << "    resolution     : [" << resolution[0] << ", " << resolution[1] << "]\n";
-            std::cout << "    sensor_size    : [" << sensor_size[0] << ", " << sensor_size[1] << "]\n";
-
             // Get the pose information:
             get_position(reader, "camera", position);
             get_rotation(reader, "camera", rotation);
@@ -102,33 +95,31 @@ class SceneConfig {
         }
 
         // Static method for loading lights:
-        static std::unique_ptr<Light<Scalar>> load_light(INIReader &reader) {
+        static std::vector<std::unique_ptr<Light<Scalar>>> load_lights(INIReader &reader) {
             // Get the sections:
             auto sections = reader.Sections();
 
             // Create the vector:
+            std::vector<std::unique_ptr<Light<Scalar>>> lights;
             bvh::Vector3<Scalar> position;
             Scalar rotation[3][3];
             Scalar size[2];
 
-            std::cout << "Loading lights...\n";
             for (auto it = sections.begin(); it != sections.end(); ++it) {
                 if (!strcmp((*it).substr(0,3).c_str(), "lgt")) {
                     std::string type = reader.Get((*it), "type", "UNKNOWN");
 
                     // Load the point lights:
                     if (!strcmp(type.c_str(),"PointLight")){
-                        std::cout << "  " << type.c_str() << ":\n";
                         get_position(reader, (*it).c_str(), position);
                         Scalar intensity = get_intensity(reader, (*it).c_str());
                         auto light = new PointLight<Scalar>(intensity);
                         light->set_position(position);
-                        return std::unique_ptr<Light<Scalar>>(light);
+                        lights.push_back(std::unique_ptr<Light<Scalar>>(light));
                     }
 
                     // Load the square lights:
                     else if (!strcmp(type.c_str(),"SquareLight")){
-                        std::cout << "  " << type.c_str() << ":\n";
                         Scalar intensity = get_intensity(reader, (*it).c_str());
                         get_size(reader, (*it).c_str(), size);
                         get_position(reader, (*it).c_str(), position);
@@ -136,19 +127,18 @@ class SceneConfig {
                         auto light = new SquareLight<Scalar>(size, intensity);
                         light->set_position(position);
                         light->set_rotation(rotation);
-                        return std::unique_ptr<Light<Scalar>>(light);
+                        lights.push_back(std::unique_ptr<Light<Scalar>>(light));
                     }
                 }
             }
-            return nullptr;
+            return lights;
         }
 
         // Static method for loading entities:
-        static Entity<Scalar>* load_entity(INIReader &reader) {
-            std::cout << "Loading 3d-models...\n";
-
+        static std::vector<Entity<Scalar>*> load_entities(INIReader &reader) {
             auto sections = reader.Sections();
 
+            std::vector<Entity<Scalar>*> entities;
             Scalar scale;
             bvh::Vector3<Scalar> position;
             Scalar rotation[3][3];
@@ -171,12 +161,11 @@ class SceneConfig {
                     new_entity->set_rotation(rotation);
 
                     // Insert to vector of entities:
-                    // entities.emplace_back(new_entity);
-                    return new_entity;
+                    entities.emplace_back(new_entity);
                 }
             }
 
-            return nullptr;
+            return entities;
         }
 
 
@@ -196,7 +185,6 @@ class SceneConfig {
                 size[idx] = std::stod(segment);
                 idx = idx +1;
             }
-            std::cout << "    size           : [" << size[0] << ", " << size[1] << "]\n";
         }
 
         // Static method to get the position:
@@ -214,20 +202,17 @@ class SceneConfig {
                 position[idx] = std::stod(segment);
                 idx = idx +1;
             }
-            std::cout << "    position       : [" << position[0] << ", " << position[1] << ", " << position[2] << "]\n";
         }
 
         // Static method to get the intensity
         static Scalar get_intensity(INIReader &reader, const char* object_name) {
             auto intensity = reader.GetReal(object_name, "intensity", 1);
-            std::cout << "    intensity      : " << intensity << "\n";
             return intensity;
         }
 
         // Static method to get the scale
         static void get_scale(INIReader &reader, const char* object_name, Scalar &scale) {
             scale = reader.GetReal(object_name, "scale", 1);
-            std::cout << "    scale          : " << scale << "\n";
         }
 
         // Static method to get the color
@@ -287,14 +272,6 @@ class SceneConfig {
             else {
                 // If no euler angles provided, default to the quaternion:
                 quaternion_to_rotation<Scalar>(quaternion, rotation);
-            }
-
-            if (strcmp(value_str.c_str(),"UNKNOWN")) {
-                std::cout << "    euler_sequence : " << euler_sequence[0] << "-" << euler_sequence[1] << "-" << euler_sequence[2] <<"\n";
-                std::cout << "    euler_angles   : [" << euler_angles[0] << ", " << euler_angles[1] << ", " << euler_angles[2]  <<"]\n\n";
-            }
-            else {
-                std::cout << "    quaternion     : [" << quaternion[0] << ", " << quaternion[1] << ", " << quaternion[2] << ", " << quaternion[3] <<"]\n\n";
             }
         }
 
