@@ -18,6 +18,8 @@ std::vector<uint8_t> path_trace(std::unique_ptr<CameraModel<Scalar>> &camera,
                                 std::vector<bvh::Triangle<Scalar>> triangles,
                                 int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
 
+    start = high_resolution_clock::now();
+
     auto tri_data = triangles.data();
 
     // RBGA
@@ -168,6 +170,10 @@ std::vector<uint8_t> path_trace(std::unique_ptr<CameraModel<Scalar>> &camera,
             image[4 * width * y + 4 * x + 3] = (uint8_t) std::clamp(pixels[i+3] * 256, 0.0f, 255.0f);
         }
     }
+
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "    Path tracing completed in " << duration.count()/1000000.0 << " seconds\n\n";
 
     return image;
 }

@@ -86,17 +86,12 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
     std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
     // Start the rendering process:
-    start = high_resolution_clock::now();
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, tri_data);
     bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh, tri_data);
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
 
     // Call the path tracer:
     auto image = path_trace(camera, lights, traverser, closest_intersector, any_int, triangles, min_samples, max_samples, noise_threshold, num_bounces);
-    
-    stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(stop - start);
-    std::cout << "    Tracing completed in " << duration.count()/1000000.0 << " seconds\n\n";
 
     return image;
 };
