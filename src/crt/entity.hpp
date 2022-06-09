@@ -25,6 +25,7 @@ class Entity {
         bvh::Vector3<Scalar> position;
         Scalar rotation[3][3];
         Scalar scale;
+        uint32_t id;
 
         std::vector<bvh::Triangle<Scalar>> triangles;
         std::vector<std::shared_ptr<Material<Scalar>>> materials;
@@ -68,6 +69,10 @@ class Entity {
             this -> rotation[2][0] = 0;
             this -> rotation[2][1] = 0;
             this -> rotation[2][2] = 1;
+        }
+
+        void set_id(uint32_t id){
+            this->id = id;
         }
 
         void set_scale(Scalar scale){

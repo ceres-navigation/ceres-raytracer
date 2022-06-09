@@ -149,6 +149,7 @@ class SceneConfig {
             Scalar rotation[3][3];
             Color color;
 
+            uint32_t id = 1;
             for (auto it = sections.begin(); it != sections.end(); ++it) {
                 if (!strcmp((*it).substr(0,3).c_str(), "obj")) {
                     // Get the configurations for the model:
@@ -164,6 +165,8 @@ class SceneConfig {
                     new_entity->set_scale(scale);
                     new_entity->set_position(position);
                     new_entity->set_rotation(rotation);
+                    new_entity->set_id(id);
+                    id++;
 
                     // Insert to vector of entities:
                     entities.emplace_back(new_entity);

@@ -69,7 +69,11 @@ cd cornell_box/
 python cornell_box.py
 ```
 
-Doing so will yield two images named `cornell_box.png` and `cornell_box_depth.png` which should look like the following:
+Doing so will produce four images:
+- `cornell_box.png`: The rendered image
+- `cornell_box_depth.png`: A mask containing the distance to each ray intersection
+- `cornell_box_instance.png`: A mask where each color indicates a different object
+- `cornell_box_normals.png`: A mask where each pixel is colored by the normal vector of the intersected point
 
 ![](cornell_box/data/cornell_output.png)
 
