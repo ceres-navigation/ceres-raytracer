@@ -22,8 +22,10 @@ CRT uses `pybind11` to generate python bindings to the core C++ code.  Because o
 pip install pybind11
 ```
 
-Once `pybind11` is installed, compiling is done via:
+Once `pybind11` is installed, compiling is done via clong the repository and building using cmake and make:
 ```
+git clone https://github.com/ceres-navigation/ceres-raytracer.git
+cd ceres-raytracer
 mkdir build
 cd build
 cmake ..
@@ -40,15 +42,15 @@ make -j
 
 ## Usage
 ### Using the python API to render a simple scene:
-To run the example python file: 
+To run the example python file, navigate to the root directory of the cloned `ceres-raytracer` repository and simply run: 
 ```
 cd cornell_box/
 python cornell_box.py
 ```
 
-Doing so will yield an image named `cornell_box_py.png` which is shown below:
+Doing so will yield an image named `cornell_box_py.png` which should look like the following image:
 
-![](cornell_box/cornell_box_py.png)
+![](cornell_box/data/cornell_box.png)
 
 ### Using the compiled C++ binary to render a simple scene:
 For development purposes (to ensure that the C++ library remains functional beyond the python bindings), the compilation process also produces an executable named `ceres-rt`.  This executable needs to be given a configuration `.INI` file which defines the layout of the scene.
