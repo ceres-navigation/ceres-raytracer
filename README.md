@@ -1,5 +1,5 @@
 # CERES Ray Tracer (CRT)
-![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake.yml/badge.svg)
+[![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions)
 [![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer?include_prereleases)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
 [![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
 [![GitHub Contributers](https://img.shields.io/github/contributors/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/graphs/contributors)
