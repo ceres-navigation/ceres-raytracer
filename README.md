@@ -17,8 +17,18 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 
 ## Installation
 ### Build from Source (Linux/MacOS):
-- `mkdir build; cd build; cmake ..`
-- `make`
+CRT uses `pybind11` to generate python bindings to the core C++ code.  Because of this, you must have `pybind11` installed on your machine.  We recommend using `pip`:
+- `pip install pybind11`
+
+Once `pybind11` is installed, compiling is done via:
+```
+mkdir build
+cd build
+cmake ..
+make -j
+```
+
+*NOTE: the `-j` argument to `make` allows for parallel usage of all available cores for compiling, dramatically speeding up compile times.  If you do not want a parallel compilation, you can simply run `make` with no arguments.*
 
 ### Windows:
 *Coming Soon*
@@ -29,18 +39,22 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 ## Usage
 ### Using the python API to render a simple scene:
 To run the example python file: 
-- `cd cornell_box/`
-- `python cornell_box.py`
+```
+cd cornell_box/
+python cornell_box.py
+```
 
 Doing so will yield an image named `cornell_box_py.png` which is shown below:
 
 ![](cornell_box/cornell_box_py.png)
 
-### Using the compiled c++ binary to render a simple scene:
+### Using the compiled C++ binary to render a simple scene:
 For development purposes (to ensure that the C++ library remains functional beyond the python bindings), the compilation process also produces an executable named `ceres-rt`.  This executable needs to be given a configuration `.INI` file which defines the layout of the scene.
-- `cp build/ceres-rt cornell_box/`
-- `cd cornell_box`
-- `./ceres-rt cornell_box/cornell_box.ini`
+```
+cp build/ceres-rt cornell_box/
+cd cornell_box/
+./ceres-rt cornell_box/cornell_box.ini
+```
 
 *NOTE: `ceres-rt` is not intended for use beyond development purposes.  Please use the python API.*
 
