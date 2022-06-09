@@ -11,8 +11,29 @@
 template <typename Scalar>
 class Light {
     public:
+        Scalar intensity;
+        bvh::Vector3<Scalar> position;
+        Scalar rotation[3][3];
+
         virtual bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin) = 0;
-        virtual Scalar get_intensity() = 0;
+        virtual Scalar get_intensity(bvh::Vector3<Scalar> point) = 0;
+
+        void set_position(bvh::Vector3<Scalar> position) {
+            this -> position = position;
+        }
+
+        void set_rotation(Scalar rotation[3][3]) {
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j <3; j++){
+                    this -> rotation[i][j] = rotation[i][j];
+                }
+            }
+        }
+
+        void set_pose(bvh::Vector3<Scalar>  position, Scalar rotation[3][3]){
+            set_position(position);
+            set_rotation(rotation);
+        }
 };
 
 
@@ -20,43 +41,37 @@ class Light {
 template <typename Scalar>
 class PointLight: public Light<Scalar>  {
     public:
-        bvh::Vector3<Scalar> position;
-        Scalar intensity;
-
-        PointLight(bvh::Vector3<Scalar> position, Scalar intensity = 1.0) 
-        : position(position), intensity(intensity) { };
-
-        bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){
-            bvh::Vector3<Scalar> light_direction = bvh::normalize(position - origin);
-            return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(position - origin));
+        PointLight(Scalar intensity = 1.0) { 
+            this -> intensity = intensity;
         };
 
-        Scalar get_intensity() { return intensity; }
-        Scalar get_intensity(bvh::Vector3<Scalar> point) { 
-            return std::min(intensity / bvh::dot(point - position, point - position), Scalar(10000));
+        // Copy constructor:
+        PointLight(const PointLight<Scalar> &rhs) {
+            this -> intensity = rhs.intensity;
+            this -> position = rhs.position;
         }
+
+        bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){
+            bvh::Vector3<Scalar> light_direction = bvh::normalize(this->position - origin);
+            return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(this->position - origin));
+        };
+
+        Scalar get_intensity(bvh::Vector3<Scalar> point) { 
+            return std::min(this->intensity / bvh::dot(point - this->position, point - this->position), Scalar(10000));
+        };
 };
 
 template <typename Scalar>
 class SquareLight: public Light<Scalar> {
     public:
-        bvh::Vector3<Scalar> position;
-        Scalar rotation[3][3];
         Scalar size[2];
-        Scalar intensity;
         bvh::Vector3<Scalar> sampled_point;
 
         std::mt19937 generator;
         std::uniform_real_distribution<Scalar> distr_x;
         std::uniform_real_distribution<Scalar> distr_y;
 
-        SquareLight(bvh::Vector3<Scalar> position, Scalar rotation[3][3], Scalar size[2], Scalar intensity = 1.) {
-            this->position = position;
-            for (int i = 0; i < 3; ++i){
-                for (int j = 0; j < 3; ++j) {
-                    this -> rotation[i][j] = rotation[i][j];
-                };
-            };
+        SquareLight(Scalar size[2], Scalar intensity = 1.) {
             this->size[0] = size[0];
             this->size[1] = size[1];
 
@@ -79,19 +94,13 @@ class SquareLight: public Light<Scalar> {
             // Transform the point to world coordinates:
             this->sampled_point = transform(point_on_light, this->rotation, this->position, scale);
 
-            // std::cout<<sampled_point[0]<<" "<<sampled_point[1]<<" "<<sampled_point[2]<<"\n";
-
             // Generate the ray:
             bvh::Vector3<Scalar> light_direction = bvh::normalize(this->sampled_point - origin);
             return bvh::Ray<Scalar>(origin, light_direction, 0, bvh::length(this->sampled_point - origin));
         };
 
-        Scalar get_intensity() {
-            return intensity; 
-        };
-
         Scalar get_intensity(bvh::Vector3<Scalar> point) { 
-            return intensity / bvh::dot(point - this->sampled_point, point - this->sampled_point);
+            return this->intensity / bvh::dot(point - this->sampled_point, point - this->sampled_point);
         };
 };
 

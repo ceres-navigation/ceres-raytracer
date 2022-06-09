@@ -65,9 +65,6 @@ load_from_stream(std::istream& is) {
     std::vector<bvh::Triangle<Scalar> > triangles;
     std::vector<bvh::Vector3<Scalar> > normals;
     std::vector<std::tuple<size_t, size_t, size_t> > tri_idx;
-    // std::vector<std::array<bvh::Vector3<Scalar>, 3> > tri_norms;
-
-
 
     while (is.getline(line, max_line)) {
         char* ptr = strip_spaces(line);
@@ -112,7 +109,7 @@ load_from_stream(std::istream& is) {
 
     int count = 0;
     for (auto [x, y, z] : tri_idx) {
-        triangles[count].add_vetex_normals(normals[x], normals[y], normals[z]);
+        triangles[count].update_vertex_normals(normals[x], normals[y], normals[z]);
         count = count+1;
     }
 

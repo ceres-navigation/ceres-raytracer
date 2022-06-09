@@ -1,157 +1,106 @@
 #ifndef __ENTITY_H
 #define __ENTITY_H
 
+#include <filesystem>
 #include <memory>
 #include <vector>
 #include <random>
-
-#include <Magick++.h>
 
 #include "bvh/bvh.hpp"
 #include "bvh/triangle.hpp"
 #include "bvh/vector.hpp"
 
-#include "happly.hpp"
+#include "model_loaders/happly.hpp"
+#include "model_loaders/tiny_obj_loader.hpp"
+
 #include "rotations.hpp"
 #include "transform.hpp"
 
-#include "model_loaders/obj.hpp"
+#include "obj_temp/obj.hpp"
 #include "materials/material.hpp"
 
 template <typename Scalar>
 class Entity {
-    using Triangle = bvh::Triangle<Scalar>;
-    using Vector3 = bvh::Vector3<Scalar>;
+    public:
+        bvh::Vector3<Scalar> position;
+        Scalar rotation[3][3];
+        Scalar scale;
 
-    private:        
-
-        std::vector<Triangle> triangles;
+        std::vector<bvh::Triangle<Scalar>> triangles;
         std::vector<std::shared_ptr<Material<Scalar>>> materials;
         std::shared_ptr<UVMap<size_t>> material_map;
+        bool smooth_shading;
 
-    public:
-        const bool interp_normals;
-
-        Entity() = delete;
-
-
-        Entity(std::string path, std::vector<std::shared_ptr<Material<Scalar>>> materials, std::shared_ptr<UVMap<size_t>> material_map, bool smooth=true) 
-        : materials(materials), material_map(material_map), interp_normals(smooth) {
-            bool is_ply = path.size() > 4 && 0 == path.compare(path.size() - 4, 4, ".ply");
-            
-            if (!is_ply) {
-                auto tris = obj::load_from_file<Scalar>(path);
-                
-                for (auto &tri : tris) {
-                    Triangle t(tri.p0, tri.p1(), tri.p2());
-                    t.set_parent(this);
-                    t.add_vetex_normals(tri.vn0, tri.vn1, tri.vn2);
-                    triangles.push_back(t);
-                }
-            } else {
-                // Construct the data object by reading from file
-                happly::PLYData plyIn(path);
-
-                // Get mesh-style data from the object
-                auto vPos = plyIn.getVertexPositions();
-                auto fInd = plyIn.getFaceIndices<size_t>();
-                bool color = plyIn.getElement("vertex").hasProperty("red");
-                auto vColor = color ? plyIn.getVertexColors() : std::vector<std::array<unsigned char, 3>>();
-                bool tex = plyIn.getElement("vertex").hasProperty("s");
-                auto texX = tex ? plyIn.getElement("vertex").getProperty<float>("s") : std::vector<float>();
-                auto texY = tex ? plyIn.getElement("vertex").getProperty<float>("t") : std::vector<float>();
-
-                std::vector<bvh::Vector3<Scalar> > normals(vPos.size(), bvh::Vector3<Scalar>(0,0,0));    
-
-                for (auto face : fInd) {
-                    if (face.size() != 3) {
-                        throw std::invalid_argument("PLY not triangulated!");
-                    }
-
-                    triangles.emplace_back(
-                        bvh::Vector3<Scalar>(vPos[face[0]]), 
-                        bvh::Vector3<Scalar>(vPos[face[1]]),
-                        bvh::Vector3<Scalar>(vPos[face[2]])
-                    );
-                    auto &norm = triangles.rbegin()->n;
-                    normals[face[0]] += norm;
-                    normals[face[1]] += norm;
-                    normals[face[2]] += norm;        
-                }
-
-
-                for (auto &n : normals) {
-                    n = bvh::normalize(n);
-                }
-
-                int count = 0;
-                for (auto face : fInd) {
-                    if (face.size() != 3) {
-                        throw std::invalid_argument("PLY not triangulated on SECOND PASS?!");
-                    }
-                    triangles[count].add_vetex_normals(normals[face[0]], normals[face[1]], normals[face[2]]);
-                    triangles[count].set_parent(this);
-                    if (color) {
-                        triangles[count].add_vertex_colors(vColor[face[0]], vColor[face[1]], vColor[face[2]], 1./255.);
-                    }
-                    if (tex) {
-                        triangles[count].add_vertex_uv(
-                            bvh::Vector<float, 2>(texX[face[0]], 1-texY[face[0]]),
-                            bvh::Vector<float, 2>(texX[face[1]], 1-texY[face[1]]),
-                            bvh::Vector<float, 2>(texX[face[2]], 1-texY[face[2]])
-                        );
-                    }
-                    count++;
-                }
+        Entity(std::string path_to_model, bool smooth_shading, Color color){
+            // Load the mesh geometry:
+            std::vector<bvh::Triangle<Scalar>> new_triangles;
+            std::string extension = std::filesystem::path(path_to_model).extension();
+            std::transform(extension.begin(), extension.end(), extension.begin(), static_cast<int(*)(int)>(std::tolower));
+            if (extension.compare(".obj") == 0) {
+                new_triangles = obj::load_from_file<Scalar>(path_to_model);
+            } 
+            else { 
+                std::cout << "file type of " << extension << " is not a valid.  ceres-rt only supports .obj/.OBJ\n";
             }
+            std::cout << new_triangles.size() << " triangles loaded from " << path_to_model << "\n";
+
+            // Set current entity as the parent object for all input triangles:
+            for (auto &tri : new_triangles) {
+                tri.set_parent(this);
+                this -> triangles.push_back(tri);
+            }
+
+            this->smooth_shading = smooth_shading;
+
+            //TODO: REMOVE ALL OF THE HARDCODED STUFF HERE:
+            this->materials.emplace_back(new ColoredLambertianMaterial<Scalar>(color));
+            this->material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
+
+            // Default values for all pose information:
+            this -> scale = 1;
+            this -> position = bvh::Vector3<Scalar>(0,0,0);
+            this -> rotation[0][0] = 1;
+            this -> rotation[0][1] = 0;
+            this -> rotation[0][2] = 0;
+            this -> rotation[1][0] = 0;
+            this -> rotation[1][1] = 1;
+            this -> rotation[1][2] = 0;
+            this -> rotation[2][0] = 0;
+            this -> rotation[2][1] = 0;
+            this -> rotation[2][2] = 1;
         }
 
-        Entity(std::string path, std::shared_ptr<Material<Scalar>> material, bool smooth=true) :
-        Entity(
-            path, 
-            {material}, 
-            std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0)), 
-            smooth
-        ) { }
-
-        Entity(std::string path, std::string texture = "", Color color=Color(0.5, 0.5, 0.5), bool smooth=true) :
-        Entity(path, {}, nullptr, smooth) {
-
-            material_map = std::shared_ptr<UVMap<size_t>>(new ConstantUVMap<size_t>(0));
-            
-            if (!texture.empty()) {
-                materials.emplace_back(
-                    new TexturedBlinnPhongMaterial<Scalar>(
-                        std::shared_ptr<UVMap<Color>>(new ImageUVMap(texture)), 
-                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
-                        32
-                    )
-                );
-            } else { 
-                materials.emplace_back(
-                    new TexturedBlinnPhongMaterial<Scalar>(
-                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(color)), 
-                        std::shared_ptr<UVMap<Color>>(new ConstantUVMap<Color>(Color(0,0.5,0.8))),
-                        32
-                    )
-                );
-            }
+        void set_scale(Scalar scale){
+            this -> scale = scale;
+            resize_triangles(this->triangles, scale, this->position);
         }
 
+        void set_position(bvh::Vector3<Scalar> position) {
+            this -> position = position;
+            translate_triangles(this->triangles, position);
+        }
 
+        void set_rotation(Scalar rotation[3][3]) {
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j <3; j++){
+                    this -> rotation[i][j] = rotation[i][j];
+                }
+            }
 
-        // Entity(const Entity<Scalar> &other) 
-        // : triangles(other.triangles), materials(other.materials), material_map(other.material_map) {
-        // };
+            // Apply rotation (remove and re-apply translation)
+            rotate_triangles(this->triangles, rotation, this->position);
+        }
 
-        Entity(const Entity<Scalar>&) = default;
-        Entity(Entity<Scalar>&&) = default;
+        void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
+            set_rotation(rotation);
+            set_position(position);
+        }
 
-        const std::vector<Triangle> get_triangles() {
+        const std::vector<bvh::Triangle<Scalar>> get_triangles() {
             return triangles;
         }
 
-        Material<Scalar> *get_material(float u, float v) {
+        Material<Scalar>* get_material(float u, float v) {
             return materials[(*material_map)(u, v)].get();
         }
 

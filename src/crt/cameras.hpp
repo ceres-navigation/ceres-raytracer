@@ -4,16 +4,6 @@
 #include <bvh/bvh.hpp>
 
 template <typename Scalar>
-struct CameraStruct {
-    std::string name;
-    bvh::Vector3<Scalar> position;
-    Scalar rotation[3][3];
-    Scalar focal_length;
-    Scalar resolution[2];
-    Scalar sensor_size[2];
-} ;
-
-template <typename Scalar>
 class CameraModel {
     using Vector3 =  bvh::Vector3<Scalar>;
     public:
@@ -31,39 +21,40 @@ class CameraModel {
 
         virtual Scalar get_resolutionX() = 0;
         virtual Scalar get_resolutionY() = 0;
+
+        void set_position(Vector3 position) {
+            this -> position = position;
+        }
+
+        void set_rotation(Scalar rotation[3][3]) {
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j <3; j++){
+                    this -> rotation[i][j] = rotation[i][j];
+                }
+            }
+        }
+
+        void set_pose(Vector3 position, Scalar rotation[3][3]){
+            set_position(position);
+            set_rotation(rotation);
+        }
 };
 
 template <typename Scalar>
 class PinholeCamera: public CameraModel<Scalar> {
     using Vector3 =  bvh::Vector3<Scalar>;
     public:
-        Vector3 position;
-        Scalar rotation[3][3];
-
-        Scalar focal_length;
-        Scalar resolution[2];
-        Scalar sensor_size[2];
-        
+        // Specific properties for pinhole camera projection:       
         Scalar center[2];
         Scalar scale[2];
         Scalar K[3][3];
 
-        PinholeCamera(CameraStruct<Scalar> camera_struct) {
-            this -> position = Vector3(camera_struct.position[0],
-                                       camera_struct.position[1],
-                                       camera_struct.position[2]);
-
-            for (int i = 0; i < 3; i++){
-                for (int j = 0; j <3; j++){
-                    this -> rotation[i][j] = camera_struct.rotation[i][j];
-                }
-            }
-
-            this -> focal_length = camera_struct.focal_length;
-            this -> resolution[0] = camera_struct.resolution[0];
-            this -> resolution[1] = camera_struct.resolution[1];
-            this -> sensor_size[0] = camera_struct.sensor_size[0];
-            this -> sensor_size[1] = camera_struct.sensor_size[1];
+        PinholeCamera(Scalar focal_length, Scalar resolution[2], Scalar sensor_size[2]) {
+            this -> focal_length = focal_length;
+            this -> resolution[0] = resolution[0];
+            this -> resolution[1] = resolution[1];
+            this -> sensor_size[0] = sensor_size[0];
+            this -> sensor_size[1] = sensor_size[1];
 
             center[0] = resolution[0]/2.0;
             center[1] = resolution[1]/2.0;
@@ -78,30 +69,66 @@ class PinholeCamera: public CameraModel<Scalar> {
             K[2][0] = 0;
             K[2][1] = 0;
             K[2][2] = 1;
+
+            // Default pose information:
+            this -> position = Vector3(0,0,0);
+            this -> rotation[0][0] = 1;
+            this -> rotation[0][1] = 0;
+            this -> rotation[0][2] = 0;
+            this -> rotation[1][0] = 0;
+            this -> rotation[1][1] = 1;
+            this -> rotation[1][2] = 0;
+            this -> rotation[2][0] = 0;
+            this -> rotation[2][1] = 0;
+            this -> rotation[2][2] = 1;
+        }
+
+        // Copy constructor:
+        PinholeCamera(const PinholeCamera<Scalar> &rhs) {
+            this -> focal_length = rhs.focal_length;
+            this -> resolution[0]   = rhs.resolution[0];
+            this -> resolution[1]   = rhs.resolution[1];
+            this -> sensor_size[0]  = rhs.sensor_size[0];
+            this -> sensor_size[1]  = rhs.sensor_size[1];
+            this -> center[0] = rhs.center[0];
+            this -> center[1] = rhs.center[1];
+            this -> scale[0]  = rhs.scale[0];
+            this -> scale[1]  = rhs.scale[1];
+            this -> position = rhs.position;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++) {
+                    this->K[i][j] = rhs.K[i][j];
+                }
+            }
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++) {
+                    this->rotation[i][j] = rhs.rotation[i][j];
+                }
+            }
         }
 
         Scalar get_resolutionX() {
-            return resolution[0];
+            return this->resolution[0];
         }
 
         Scalar get_resolutionY() {
-            return resolution[1];
+            return this->resolution[1];
         }
 
         bvh::Ray<Scalar> pixel_to_ray(Scalar u, Scalar v) {
             // Generate rays in the camera frame:
-            Vector3 dir = bvh::normalize(Vector3((-center[0]+u)/scale[0], (center[1]-v)/scale[1], -focal_length));
+            Vector3 dir = bvh::normalize(Vector3((-center[0]+u)/scale[0], (center[1]-v)/scale[1], -this->focal_length));
 
             // Rotate rays to the world frame (NOTE: the TRANSPOSE of the provided rotation is used for this)
             Vector3 temp;
-            temp[0] = rotation[0][0]*dir[0] + rotation[1][0]*dir[1] + rotation[2][0]*dir[2];
-            temp[1] = rotation[0][1]*dir[0] + rotation[1][1]*dir[1] + rotation[2][1]*dir[2];
-            temp[2] = rotation[0][2]*dir[0] + rotation[1][2]*dir[1] + rotation[2][2]*dir[2];
+            temp[0] = this->rotation[0][0]*dir[0] + this->rotation[1][0]*dir[1] + this->rotation[2][0]*dir[2];
+            temp[1] = this->rotation[0][1]*dir[0] + this->rotation[1][1]*dir[1] + this->rotation[2][1]*dir[2];
+            temp[2] = this->rotation[0][2]*dir[0] + this->rotation[1][2]*dir[1] + this->rotation[2][2]*dir[2];
             dir = temp;
             // std::cout << dir[0] << " " << dir[1] << " " << dir[2] << "\n";
 
             // Return the ray object:
-            bvh::Ray<Scalar> ray(position, dir);
+            bvh::Ray<Scalar> ray(this->position, dir);
             return ray;
         }
 };

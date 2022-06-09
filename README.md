@@ -16,43 +16,48 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 - Modeling solar radiation and albedo radiation pressure on spacecraft
 
 ## Installation
-**Dependencies:**
-- ImageMagick version 7
-
-**If using Ubuntu** please [compile ImageMagick from source](https://techpiezo.com/linux/install-imagemagick-in-ubuntu-20-04-lts/?fbclid=IwAR2hNrUM9hzWnNpgkxlSfit2x1CHfmSO1hW5hNPpzcgzhcWFhsBXg4jz0Pc)
-
-### Linux/MacOS:
+### Build from Source (Linux/MacOS):
 - `mkdir build; cd build; cmake ..`
 - `make`
 
-### Windows
+### Windows:
 *Coming Soon*
 
-## INI Examples
-*NOTE: All of these examples assume that `render` is run from within the build directory.*
+**NOTE:** Unfortunately, OpenMP is not properly supported by Windows and so parallel tracing is not yet supported in Windows native.  If you wish to compile from source on a Windows machine, we recommend using the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about).
 
-### Cornell Box
-- Simple "Cornell Box" scene" : `./render ../examples/cornell_box.ini`
-![](examples/cornell_box.png)
 
-# Tasks:
+## Usage
+### Using the python API to render a simple scene:
+To run the example python file, simply navigate to the `cornell_box/` directory and run `python cornell_box.py`.  Below is what the output should look like
+![](cornell_box/cornell_box_py.png)
+
+### Using the compiled c++ binary to render a simple scene:
+For development purposes (to ensure that the C++ library remains functional beyond the python bindings), the compilation process also produces an executable named `ceres-rt`.  This executable needs to be given a configuration `.INI` file which defines the layout of the scene.
+- `cp build/ceres-rt cornell_box/`
+- `cd cornell_box`
+- `./ceres-rt cornell_box/cornell_box.ini`
+
+*NOTE: `ceres-rt` is not intended for use beyond development purposes.  Please use the python API*
+
+
+## Tasks:
 - [ ] Implement physically based radiance tracking for paths
 - [ ] Improve the adaptive sampling noise calculation
 - [ ] Triangular meshes
   - [ ] Add vertex color support
-  - [ ] Add parent object support
+  - [x] Add parent object support
   - [ ] Add parsers for more mesh type (.PLY, .GLTF/.GLB)
   - [ ] Add texture mapping and normal maps
-- [ ] Refactor
-  - [ ] Reorganize code into classes
-  - [ ] Move INI parser out of `main.cpp`
-  - [ ] Add python interface
-  - [ ] Animation/sequence support
+- [x] Python Refactor
+  - [x] Reorganize code into classes
+  - [x] Move INI parser out of `main.cpp`
+  - [x] Add python interface
+  - [x] Animation/sequence support
 - [ ] Importance Sampling
   - [ ] Implement Malley's method for cosine importance
   - [ ] Investigate alternative importance sampling method for planetary bodies (where primary indirect contribution is near horizon)
 - [ ] Lighting
-  - [ ] Add output intensity to light objects
+  - [x] Add output intensity to light objects
   - [ ] Resolve placement issue with square lights
   - [ ] Add circular area lights
   - [ ] Add emissive mesh geometries
@@ -61,12 +66,12 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 - [ ] Attitude (Orientation)
   - [ ] Fix euler angle sequencing issue
 
-# Attributions
+## Attributions
 ## madmann91's Modern C++ BVH Construction and Traversal Library
 This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume heirarchy used in this project.  Their originaly source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
 
 ## National Science Foundation Graduate Research Fellowship
 This material is based upon work supported by the [National Science Foundation Graduate Research Fellowship](https://www.nsfgrfp.org/) under Grant No. 2020305048.  NSF GRFP gave Chris Gnam the flexibility and resources required to complete his research in spacecraft navigaiton, and this project is meant to serve as an open source implementation of his dissertation.
 
-# Contact
+## Contact
 All questionsm, comments, and concerns should be directed to Chris Gnam: crgnam@buffalo.edu
