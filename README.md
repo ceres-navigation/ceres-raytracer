@@ -1,13 +1,22 @@
 # CERES Ray Tracer (CRT)
-[![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions)
 [![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer?include_prereleases)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
 [![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
 [![GitHub Contributers](https://img.shields.io/github/contributors/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/graphs/contributors)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+### Available Environments
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
-<!-- ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) -->
+![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
 <!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
+
+| Environment   | Build         |  Notes  |
+| ------------- |:-------------:| :-------:|
+| Ubuntu 20.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | WSL2 supported |
+| Ubuntu 18.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | WSL2 supported |
+| macOS 11      | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
+| macOS 10.15   | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
+
+
 
 This proejct was developed for [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
 - Rendering photo-real images
