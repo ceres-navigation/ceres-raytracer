@@ -4,6 +4,12 @@
 [![GitHub Contributers](https://img.shields.io/github/contributors/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/graphs/contributors)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+
+This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
+- Rendering photo-real images
+- Simulating multi-bounce behavior accounting for wavelength and polarization
+- Modeling solar radiation and albedo radiation pressure on spacecraft
+
 ### Available Environments
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
@@ -11,23 +17,27 @@
 
 | Environment   | Build         |  Notes  |
 | ------------- |:-------------:| :-------:|
-| Ubuntu 20.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | WSL2 supported |
-| Ubuntu 18.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | WSL2 supported |
+| Ubuntu 20.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |   |
+| Ubuntu 18.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | Using `export CXX="g++-9" CC="gcc-9"` |
 | macOS 11      | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
 | macOS 10.15   | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
 
 
-
-This proejct was developed for [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
-- Rendering photo-real images
-- Simulating multi-bounce behavior accounting for wavelength and polarization
-- Modeling solar radiation and albedo radiation pressure on spacecraft
-
 ## Installation
-### Build from Source (Linux/MacOS):
+### Install via pip (RECOMMENDED):
+*Coming Soon*
+
+### Build from source (Ubuntu 20.04/18.04):
 CRT uses `pybind11` to generate python bindings to the core C++ code.  Because of this, you must have `pybind11` installed on your machine.  We recommend using `pip`:
 ```
 pip install pybind11
+```
+**NOTE for 18.04 ONLY:** Because `std::filesystem` is not implemented in GNU libstdc++ prior to 9.1 and LLVM libc++ prior to 9.0, you must first upgrade your compiler.  Simply run:
+```
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install gcc-9 g++-9
+export CXX="g++-8" CC="gcc-8"
 ```
 
 Once `pybind11` is installed, compiling is done via clong the repository and building using cmake and make:
@@ -41,6 +51,9 @@ make -j
 ```
 
 *NOTE: the `-j` argument to `make` allows for parallel usage of all available cores for compiling, dramatically speeding up compile times.  If you do not want a parallel compilation, you can simply run `make` with no arguments.*
+
+### Build from source (MacOS 11 and MacOS 10.15):
+*Coming Soon*
 
 ### Windows:
 *Coming Soon*
@@ -99,10 +112,10 @@ cd cornell_box/
 
 ## Attributions
 ## madmann91's Modern C++ BVH Construction and Traversal Library
-This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume heirarchy used in this project.  Their originaly source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
+This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume hierarchy used in this project.  Their originaly source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
 
 ## National Science Foundation Graduate Research Fellowship
 This material is based upon work supported by the [National Science Foundation Graduate Research Fellowship](https://www.nsfgrfp.org/) under Grant No. 2020305048.  NSF GRFP gave Chris Gnam the flexibility and resources required to complete his research in spacecraft navigaiton, and this project is meant to serve as an open source implementation of his dissertation.
 
 ## Contact
-All questionsm, comments, and concerns should be directed to Chris Gnam: crgnam@buffalo.edu
+All questions, comments, and concerns should be directed to Chris Gnam: crgnam@buffalo.edu
