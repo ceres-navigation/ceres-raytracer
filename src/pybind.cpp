@@ -36,6 +36,15 @@ PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_li
     return PinholeCamera<Scalar>(focal_length, resolution, sensor_size);
 }
 
+SquareLight<Scalar> create_squarelight(Scalar intensity, py::list size_list){
+    Scalar size[2];
+
+    size[0] = size_list[0].cast<Scalar>();
+    size[1] = size_list[1].cast<Scalar>();
+    
+    return SquareLight<Scalar>(intensity, size);
+}
+
 PointLight<Scalar> create_pointlight(Scalar intensity){
     return PointLight<Scalar>(intensity);
 }
@@ -49,8 +58,15 @@ Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, py
     return new_entity;
 }
 
-std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(PinholeCamera<Scalar> camera){
-    auto camera_copy = std::make_unique<PinholeCamera<Scalar>>(camera);
+std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(py::handle camera){
+    std::unique_ptr<CameraModel<Scalar>> camera_copy;
+    if (py::isinstance<PinholeCamera<Scalar>>(camera)){
+        PinholeCamera<Scalar> camera_cast = camera.cast<PinholeCamera<Scalar>>();
+        camera_copy = std::make_unique<PinholeCamera<Scalar>>(camera_cast);
+    }
+    else {
+        // throw an exception
+    }
     return camera_copy;
 }
 
@@ -61,79 +77,141 @@ PYBIND11_MODULE(_ceresrt, crt) {
     py::class_<PinholeCamera<Scalar>>(crt, "PinholeCamera")
         .def(py::init(&create_pinhole))
         .def("set_position", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> position){
-                             py::buffer_info buffer = position.request();
-                             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
-                             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
-                             self.set_position(position_vector3);
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
         })
         .def("get_position", [](PinholeCamera<Scalar> &self){
-                             std::vector<Scalar> position_arr = {self.position[0],
-                                                                 self.position[1],
-                                                                 self.position[2]};
-                             py::array position_out = py::cast(position_arr);
-                             return position_out;
+            std::vector<Scalar> position_arr = {self.position[0],
+                                                self.position[1],
+                                                self.position[2]};
+            py::array position_out = py::cast(position_arr);
+            return position_out;
         })
         .def("set_rotation", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> rotation){
-                             py::buffer_info buffer = rotation.request();
-                             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
-                             Scalar rotation_arr[3][3];
-                             int idx = 0;
-                             for (auto i = 0; i < 3; i++){
-                                for (auto j = 0; j < 3; j++){
-                                    rotation_arr[i][j] = ptr[idx];
-                                    idx++;
-                                }
-                            }
-                             self.set_rotation(rotation_arr);
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
         })
         .def("get_rotation", [](PinholeCamera<Scalar> &self){
-                            auto rotation_arr = std::vector<std::vector<Scalar>>();
-                            for (auto i = 0; i < 3; i++) {
-                                rotation_arr.push_back(std::vector<Scalar>(3));
-                            }
-                            for (auto i = 0; i < 3; i++){
-                                for (auto j = 0; j < 3; j++){
-                                    rotation_arr[i][j] = self.rotation[i][j];
-                                }
-                            }
-                             py::array rotation_out = py::cast(rotation_arr);
-                             return rotation_out;
+            auto rotation_arr = std::vector<std::vector<Scalar>>();
+            for (auto i = 0; i < 3; i++) {
+                rotation_arr.push_back(std::vector<Scalar>(3));
+            }
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = self.rotation[i][j];
+                }
+            }
+            py::array rotation_out = py::cast(rotation_arr);
+            return rotation_out;
         })
         .def("set_pose", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
-                         // Set the position:
-                         py::buffer_info buffer_pos = position.request();
-                         Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
-                         auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
-                         self.set_position(position_vector3);
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
 
-                        // Set the rotation:
-                         py::buffer_info buffer_rot = rotation.request();
-                         Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
-                         Scalar rotation_arr[3][3];
-                         int idx = 0;
-                         for (auto i = 0; i < 3; i++){
-                            for (auto j = 0; j < 3; j++){
-                                rotation_arr[i][j] = ptr_rot[idx];
-                                idx++;
-                            }
-                         }
-                         self.set_rotation(rotation_arr);
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
         });
 
     py::class_<PointLight<Scalar>>(crt, "PointLight")
         .def(py::init(&create_pointlight))
         .def("set_position", [](PointLight<Scalar> &self, py::array_t<Scalar> position){
-                             py::buffer_info buffer = position.request();
-                             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
-                             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
-                             self.set_position(position_vector3);
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
         })
         .def("get_position", [](PointLight<Scalar> &self){
-                             std::vector<Scalar> position_arr = {self.position[0],
-                                                                 self.position[1],
-                                                                 self.position[2]};
-                             py::array position_out = py::cast(position_arr);
-                             return position_out;
+            std::vector<Scalar> position_arr = {self.position[0],
+                                                self.position[1],
+                                                self.position[2]};
+            py::array position_out = py::cast(position_arr);
+            return position_out;
+        });
+
+    py::class_<SquareLight<Scalar>>(crt, "SquareLight")
+        .def(py::init(&create_squarelight))
+        .def("set_position", [](SquareLight<Scalar> &self, py::array_t<Scalar> position){
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
+        })
+        .def("get_position", [](SquareLight<Scalar> &self){
+            std::vector<Scalar> position_arr = {self.position[0],
+                                                self.position[1],
+                                                self.position[2]};
+            py::array position_out = py::cast(position_arr);
+            return position_out;
+        })
+        .def("set_rotation", [](SquareLight<Scalar> &self, py::array_t<Scalar> rotation){
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+            for (auto j = 0; j < 3; j++){
+                rotation_arr[i][j] = ptr[idx];
+                idx++;
+            }
+        }
+            self.set_rotation(rotation_arr);
+        })
+        .def("get_rotation", [](SquareLight<Scalar> &self){
+            auto rotation_arr = std::vector<std::vector<Scalar>>();
+            for (auto i = 0; i < 3; i++) {
+                rotation_arr.push_back(std::vector<Scalar>(3));
+            }
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = self.rotation[i][j];
+                }
+            }
+                py::array rotation_out = py::cast(rotation_arr);
+                return rotation_out;
+        })
+        .def("set_pose", [](SquareLight<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
+
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
         });
 
     py::class_<Entity<Scalar>>(crt, "Entity")
@@ -142,76 +220,84 @@ PYBIND11_MODULE(_ceresrt, crt) {
             self.set_scale(scale);
         })
         .def("set_position", [](Entity<Scalar> &self, py::array_t<Scalar> position){
-                             py::buffer_info buffer = position.request();
-                             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
-                             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
-                             self.set_position(position_vector3);
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
         })
         .def("get_position", [](Entity<Scalar> &self){
-                             std::vector<Scalar> position_arr = {self.position[0],
-                                                                 self.position[1],
-                                                                 self.position[2]};
-                             py::array position_out = py::cast(position_arr);
-                             return position_out;
+            std::vector<Scalar> position_arr = {self.position[0],
+                                                self.position[1],
+                                                self.position[2]};
+            py::array position_out = py::cast(position_arr);
+            return position_out;
         })
 
         .def("set_rotation", [](Entity<Scalar> &self, py::array_t<Scalar> rotation){
-                             py::buffer_info buffer = rotation.request();
-                             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
-                             Scalar rotation_arr[3][3];
-                             int idx = 0;
-                             for (auto i = 0; i < 3; i++){
-                                for (auto j = 0; j < 3; j++){
-                                    rotation_arr[i][j] = ptr[idx];
-                                    idx++;
-                                }
-                            }
-                             self.set_rotation(rotation_arr);
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
         })
         .def("get_rotation", [](Entity<Scalar> &self){
-                            auto rotation_arr = std::vector<std::vector<Scalar>>();
-                            for (auto i = 0; i < 3; i++) {
-                                rotation_arr.push_back(std::vector<Scalar>(3));
-                            }
-                            for (auto i = 0; i < 3; i++){
-                                for (auto j = 0; j < 3; j++){
-                                    rotation_arr[i][j] = self.rotation[i][j];
-                                }
-                            }
-                             py::array rotation_out = py::cast(rotation_arr);
-                             return rotation_out;
+            auto rotation_arr = std::vector<std::vector<Scalar>>();
+            for (auto i = 0; i < 3; i++) {
+                rotation_arr.push_back(std::vector<Scalar>(3));
+            }
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = self.rotation[i][j];
+                }
+            }
+            py::array rotation_out = py::cast(rotation_arr);
+            return rotation_out;
         })
         .def("set_pose", [](Entity<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
-                         // Set the position:
-                         py::buffer_info buffer_pos = position.request();
-                         Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
-                         auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
-                         self.set_position(position_vector3);
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
 
-                        // Set the rotation:
-                         py::buffer_info buffer_rot = rotation.request();
-                         Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
-                         Scalar rotation_arr[3][3];
-                         int idx = 0;
-                         for (auto i = 0; i < 3; i++){
-                            for (auto j = 0; j < 3; j++){
-                                rotation_arr[i][j] = ptr_rot[idx];
-                                idx++;
-                            }
-                         }
-                         self.set_rotation(rotation_arr);
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
         });
-    crt.def("render", [](PinholeCamera<Scalar> &camera_in, py::list lights_list, py::list entity_list,
+
+    // PinholeCamera<Scalar> &
+    crt.def("render", [](py::handle camera, py::list lights_list, py::list entity_list,
                          int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
 
         // Duplicate camera to obtain unique_ptr:
-        auto camera_use = copy_camera_unique(camera_in);
+        auto camera_use = copy_camera_unique(camera);
 
         // Convert py::list of lights to std::vector
         std::vector<std::unique_ptr<Light<Scalar>>> lights;
-        for (auto light_handle : lights_list) { 
-            PointLight<Scalar> light = light_handle.cast<PointLight<Scalar>>();
-            lights.push_back(std::make_unique<PointLight<Scalar>>(light));
+        for (py::handle light : lights_list) { 
+            if (py::isinstance<PointLight<Scalar>>(light)){
+                PointLight<Scalar> light_new = light.cast<PointLight<Scalar>>();
+                lights.push_back(std::make_unique<PointLight<Scalar>>(light_new));
+            }
+            else if (py::isinstance<SquareLight<Scalar>>(light)){
+                SquareLight<Scalar> light_new = light.cast<SquareLight<Scalar>>();
+                lights.push_back(std::make_unique<SquareLight<Scalar>>(light_new));
+            }
         }
 
         // Convert py::list of entities to std::vector
@@ -226,8 +312,8 @@ PYBIND11_MODULE(_ceresrt, crt) {
                              min_samples, max_samples, noise_threshold, num_bounces);
 
         // Format the output image:
-        int width  = (size_t) floor(camera_in.get_resolutionX());
-        int height = (size_t) floor(camera_in.get_resolutionY());
+        int width  = (size_t) floor(camera_use->get_resolutionX());
+        int height = (size_t) floor(camera_use->get_resolutionY());
         auto result = py::array_t<uint8_t>({height,width,4});
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width*4; i++) {
@@ -235,9 +321,10 @@ PYBIND11_MODULE(_ceresrt, crt) {
         }
         return result;
     });
-    crt.def("get_intersections", [](PinholeCamera<Scalar> &camera_in, py::list entity_list){
+
+    crt.def("get_intersections", [](py::handle camera, py::list entity_list){
         // Duplicate camera to obtain unique_ptr:
-        auto camera_use = copy_camera_unique(camera_in);
+        auto camera_use = copy_camera_unique(camera);
 
         // Convert py::list of entities to std::vector
         std::vector<Entity<Scalar>*> entities;
@@ -250,8 +337,8 @@ PYBIND11_MODULE(_ceresrt, crt) {
         auto intersections = get_intersections(camera_use, entities);
 
         // Format the output array:
-        int width  = (size_t) floor(camera_in.get_resolutionX());
-        int height = (size_t) floor(camera_in.get_resolutionY());
+        int width  = (size_t) floor(camera_use->get_resolutionX());
+        int height = (size_t) floor(camera_use->get_resolutionY());
         auto result = py::array_t<Scalar>({height,width,3});
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width*3; i++){
