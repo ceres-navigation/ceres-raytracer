@@ -14,12 +14,13 @@
 #include "crt/transform.hpp"
 
 #include "crt/entity.hpp"
-#include "crt/ray_tracer.hpp"
+#include "crt/render.hpp"
+#include "crt/path_trace.hpp"
 #include "crt/lighting.hpp"
 
 #include "materials/material.hpp"
 
-#include "crt/sceneconfig.hpp"
+#include "crt/scene_config.hpp"
 
 //TODO REMOVE THIS:
 #include "obj_temp/obj.hpp"

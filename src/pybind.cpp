@@ -9,7 +9,8 @@
 
 #include "crt/cameras.hpp"
 #include "crt/entity.hpp"
-#include "crt/ray_tracer.hpp"
+#include "crt/render.hpp"
+#include "crt/path_trace.hpp"
 #include "crt/lighting.hpp"
 
 #include "crt/obj_temp/obj.hpp"

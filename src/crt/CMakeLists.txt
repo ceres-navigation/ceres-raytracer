@@ -4,9 +4,10 @@ add_library(
     transform.hpp
     cameras.hpp
     entity.hpp
-    ray_tracer.hpp
+    render.hpp
+    path_trace.hpp
     lighting.hpp
-    sceneconfig.hpp
+    scene_config.hpp
 )
 target_include_directories(crt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
