@@ -11,7 +11,8 @@
 
 // From old render.hpp
 #include <cstdint>
-#include <math.h>
+// #include <math.h>
+#include <cmath>
 #include <random>
 #include <iomanip>
 
@@ -47,15 +48,15 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
     max_samples = max_samples;
     noise_threshold = noise_threshold;
     num_bounces = num_bounces;
-    std::vector<bvh::Triangle<Scalar>> triangles;
-
-    for (auto entity : entities) {
-        triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
-    }
 
     size_t width  = (size_t) floor(camera->get_resolutionX());
     size_t height = (size_t) floor(camera->get_resolutionY());
 
+    // Store triangles locally:
+    std::vector<bvh::Triangle<Scalar>> triangles;
+    for (auto entity : entities) {
+        triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+    }
 
     // Build an acceleration data structure for this object set
     bvh::Bvh<Scalar> bvh;
@@ -250,4 +251,110 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
     return image;
 };
 
+template <typename Scalar> 
+std::vector<Scalar> get_intersections(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
+    // Get camera resolution dimensions:
+    size_t width  = (size_t) floor(camera->get_resolutionX());
+    size_t height = (size_t) floor(camera->get_resolutionY());
+
+    // Store triangles locally:
+    std::vector<bvh::Triangle<Scalar>> triangles;
+    for (auto entity : entities) {
+        triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+    }
+
+    // Build an acceleration data structure for this object set
+    bvh::Bvh<Scalar> bvh;
+
+    size_t reference_count = triangles.size();
+    std::unique_ptr<bvh::Triangle<Scalar>[]> shuffled_triangles;
+
+    std::cout << "\nBuilding BVH ( using SweepSahBuilder )... for " << triangles.size() << " triangles\n";
+    using namespace std::chrono;
+    auto start = high_resolution_clock::now();
+
+    auto tri_data = triangles.data();
+    auto bboxes_and_centers = bvh::compute_bounding_boxes_and_centers(tri_data, triangles.size());
+    auto bboxes = bboxes_and_centers.first.get(); 
+    auto centers = bboxes_and_centers.second.get(); 
+    
+    auto global_bbox = bvh::compute_bounding_boxes_union(bboxes, triangles.size());
+
+    bvh::SweepSahBuilder<bvh::Bvh<Scalar>> builder(bvh);
+    builder.build(global_bbox, bboxes, centers, reference_count);
+
+    bvh::ParallelReinsertionOptimizer<bvh::Bvh<Scalar>> pro_opt(bvh);
+    pro_opt.optimize();
+
+    bvh::NodeLayoutOptimizer<bvh::Bvh<Scalar>> nlo_opt(bvh);
+    nlo_opt.optimize();
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    std::cout << "    BVH of "
+        << bvh.node_count << " node(s) and "
+        << reference_count << " reference(s)\n";
+    std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
+
+    // Run parallel if OPENMP is available:
+    #ifdef _OPENMP
+        #pragma omp parallel
+        {
+            #pragma omp single
+            std::cout << "Calculating ray intersections on " << omp_get_num_threads() << " threads..." << std::endl;
+        }
+    #else
+        std::cout << "Calculating ray intersections on single thread..." << std::endl;
+    #endif
+
+    // Start the rendering process:
+    start = high_resolution_clock::now();
+    bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, tri_data);
+    bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh, tri_data);
+    bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
+
+    // Define the output array:
+    std::vector<Scalar> intersections;
+    intersections.reserve(3*width*height);
+
+    #pragma omp parallel for
+    for(size_t i = 0; i < width; ++i) {
+        for(size_t j = 0; j < height; ++j) {
+            // Cast ray:
+            bvh::Ray<Scalar> ray;
+            ray = camera->pixel_to_ray(i, j);
+
+            // Traverse ray through BVH:
+            auto hit = traverser.traverse(ray, closest_intersector);
+
+            // Store intersection point:
+            bvh::Vector3<Scalar> intersect_point;
+            if (hit) {
+                auto &tri = tri_data[hit->primitive_index];
+                auto u = hit->intersection.u;
+                auto v = hit->intersection.v;
+                intersect_point = bvh::Vector3<Scalar>(u*tri.p1() + v*tri.p2() + (1-u-v)*tri.p0);
+            }
+            else {
+                // Zeros are fine for now, but maybe consider making these inf/nan or something?
+                intersect_point = bvh::Vector3<Scalar>(0,0,0);
+            }
+
+            // Store the current intersection into the output array:
+            intersections[3*width*j + 3*i + 0] = (Scalar) intersect_point[0];
+            intersections[3*width*j + 3*i + 1] = (Scalar) intersect_point[1];
+            intersections[3*width*j + 3*i + 2] = (Scalar) intersect_point[2];
+        }
+    }
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "    Tracing intersections completed in " << duration.count()/1000000.0 << " seconds\n\n";
+
+    return intersections;
+};
+
+// template <typename Scalar>
+// std::vector<Scalar> trace_rays(std::vector<bvh::Ray<Scalar>> rays, std::vector<Entity<Scalar>*> entities){
+
+// };
 #endif

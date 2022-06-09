@@ -201,8 +201,8 @@ PYBIND11_MODULE(_ceresrt, crt) {
                          }
                          self.set_rotation(rotation_arr);
         });
-        crt.def("render", [](PinholeCamera<Scalar> &camera_in, py::list lights_list, py::list entity_list,
-                          int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
+    crt.def("render", [](PinholeCamera<Scalar> &camera_in, py::list lights_list, py::list entity_list,
+                         int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
 
         // Duplicate camera to obtain unique_ptr:
         auto camera_use = copy_camera_unique(camera_in);
@@ -232,6 +232,30 @@ PYBIND11_MODULE(_ceresrt, crt) {
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width*4; i++) {
             raw[i] = pixels[i];
+        }
+        return result;
+    });
+    crt.def("get_intersections", [](PinholeCamera<Scalar> &camera_in, py::list entity_list){
+        // Duplicate camera to obtain unique_ptr:
+        auto camera_use = copy_camera_unique(camera_in);
+
+        // Convert py::list of entities to std::vector
+        std::vector<Entity<Scalar>*> entities;
+        for (auto entity_handle : entity_list) {
+            Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();
+            entities.emplace_back(entity);
+        }
+
+        // Call the intersection tracing function:
+        auto intersections = get_intersections(camera_use, entities);
+
+        // Format the output array:
+        int width  = (size_t) floor(camera_in.get_resolutionX());
+        int height = (size_t) floor(camera_in.get_resolutionY());
+        auto result = py::array_t<Scalar>({height,width,3});
+        auto raw = result.mutable_data();
+        for (int i = 0; i < height*width*3; i++){
+            raw[i] = intersections[i];
         }
         return result;
     });

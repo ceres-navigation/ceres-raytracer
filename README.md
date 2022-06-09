@@ -69,9 +69,9 @@ cd cornell_box/
 python cornell_box.py
 ```
 
-Doing so will yield an image named `cornell_box_py.png` which should look like the following image:
+Doing so will yield two images named `cornell_box.png` and `cornell_box_depth.png` which should look like the following:
 
-![](cornell_box/data/cornell_box.png)
+![](cornell_box/data/cornell_output.png)
 
 ### Using the compiled C++ binary to render a simple scene:
 For development purposes (to ensure that the C++ library remains functional beyond the python bindings), the compilation process also produces an executable named `ceres-rt`.  This executable needs to be given a configuration `.INI` file which defines the layout of the scene.
