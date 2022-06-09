@@ -28,7 +28,12 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 
 ## Usage
 ### Using the python API to render a simple scene:
-To run the example python file, simply navigate to the `cornell_box/` directory and run `python cornell_box.py`.  Below is what the output should look like
+To run the example python file: 
+- `cd cornell_box/`
+- `python cornell_box.py`
+
+Doing so will yield an image named `cornell_box_py.png` which is shown below:
+
 ![](cornell_box/cornell_box_py.png)
 
 ### Using the compiled c++ binary to render a simple scene:
@@ -37,7 +42,7 @@ For development purposes (to ensure that the C++ library remains functional beyo
 - `cd cornell_box`
 - `./ceres-rt cornell_box/cornell_box.ini`
 
-*NOTE: `ceres-rt` is not intended for use beyond development purposes.  Please use the python API*
+*NOTE: `ceres-rt` is not intended for use beyond development purposes.  Please use the python API.*
 
 
 ## Tasks:
