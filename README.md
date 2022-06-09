@@ -40,7 +40,7 @@ sudo apt install gcc-9 g++-9
 export CXX="g++-8" CC="gcc-8"
 ```
 
-Once `pybind11` is installed, compiling is done via clong the repository and building using cmake and make:
+Once `pybind11` is installed, compiling is done via cloning the repository and building using cmake and make:
 ```
 git clone https://github.com/ceres-navigation/ceres-raytracer.git
 cd ceres-raytracer
@@ -69,9 +69,9 @@ cd cornell_box/
 python cornell_box.py
 ```
 
-Doing so will yield an image named `cornell_box_py.png` which should look like the following image:
+Doing so will yield two images named `cornell_box.png` and `cornell_box_depth.png` which should look like the following:
 
-![](cornell_box/data/cornell_box.png)
+![](cornell_box/data/cornell_output.png)
 
 ### Using the compiled C++ binary to render a simple scene:
 For development purposes (to ensure that the C++ library remains functional beyond the python bindings), the compilation process also produces an executable named `ceres-rt`.  This executable needs to be given a configuration `.INI` file which defines the layout of the scene.
@@ -112,10 +112,11 @@ cd cornell_box/
 
 ## Attributions
 ## madmann91's Modern C++ BVH Construction and Traversal Library
-This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume hierarchy used in this project.  Their originaly source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
+This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume hierarchy used in this project.  Their originally source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
+
 
 ## National Science Foundation Graduate Research Fellowship
-This material is based upon work supported by the [National Science Foundation Graduate Research Fellowship](https://www.nsfgrfp.org/) under Grant No. 2020305048.  NSF GRFP gave Chris Gnam the flexibility and resources required to complete his research in spacecraft navigaiton, and this project is meant to serve as an open source implementation of his dissertation.
+This material is based upon work supported by the [National Science Foundation Graduate Research Fellowship](https://www.nsfgrfp.org/) under Grant No. 2020305048.  NSF GRFP gave Chris Gnam the flexibility and resources required to complete his research in spacecraft navigation, and this project is meant to serve as an open source implementation of his dissertation.
 
 ## Contact
 All questions, comments, and concerns should be directed to Chris Gnam: crgnam@buffalo.edu
