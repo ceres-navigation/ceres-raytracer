@@ -124,10 +124,15 @@ class SceneConfig {
                         get_size(reader, (*it).c_str(), size);
                         get_position(reader, (*it).c_str(), position);
                         get_rotation(reader, (*it).c_str(), rotation);
-                        auto light = new SquareLight<Scalar>(size, intensity);
+                        auto light = new SquareLight<Scalar>(intensity, size);
                         light->set_position(position);
                         light->set_rotation(rotation);
                         lights.push_back(std::unique_ptr<Light<Scalar>>(light));
+                    }
+
+                    // Throw some error:
+                    else {
+                        
                     }
                 }
             }

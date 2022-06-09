@@ -11,10 +11,12 @@
 template <typename Scalar>
 class Light {
     public:
+        std::string type;
         Scalar intensity;
         bvh::Vector3<Scalar> position;
         Scalar rotation[3][3];
 
+        // Abstract methods:
         virtual bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin) = 0;
         virtual Scalar get_intensity(bvh::Vector3<Scalar> point) = 0;
 
@@ -34,6 +36,10 @@ class Light {
             set_position(position);
             set_rotation(rotation);
         }
+
+        std::string get_type(){
+            return type;
+        }
 };
 
 
@@ -41,14 +47,18 @@ class Light {
 template <typename Scalar>
 class PointLight: public Light<Scalar>  {
     public:
-        PointLight(Scalar intensity = 1.0) { 
+        PointLight(Scalar intensity) { 
             this -> intensity = intensity;
+            this -> type = "PointLight";
+
+            // Default pose information:
+            this -> position = bvh::Vector3<Scalar>(0,0,0);
         };
 
         // Copy constructor:
         PointLight(const PointLight<Scalar> &rhs) {
             this -> intensity = rhs.intensity;
-            this -> position = rhs.position;
+            this -> position  = rhs.position;
         }
 
         bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){
@@ -71,17 +81,40 @@ class SquareLight: public Light<Scalar> {
         std::uniform_real_distribution<Scalar> distr_x;
         std::uniform_real_distribution<Scalar> distr_y;
 
-        SquareLight(Scalar size[2], Scalar intensity = 1.) {
+        SquareLight(Scalar intensity, Scalar size[2]) {
+            this->intensity = intensity;
             this->size[0] = size[0];
             this->size[1] = size[1];
-
-            this->intensity = intensity;
+            this->type = "SquareLight";
 
             std::random_device rand_dev;
             std::mt19937 generator(rand_dev());
             std::uniform_real_distribution<Scalar> distr_x(0.0,1.0);
             std::uniform_real_distribution<Scalar> distr_y(0.0,1.0);
+
+            // Default pose information:
+            this -> position = bvh::Vector3<Scalar>(0,0,0);
+            this -> rotation[0][0] = 1;
+            this -> rotation[0][1] = 0;
+            this -> rotation[0][2] = 0;
+            this -> rotation[1][0] = 0;
+            this -> rotation[1][1] = 1;
+            this -> rotation[1][2] = 0;
+            this -> rotation[2][0] = 0;
+            this -> rotation[2][1] = 0;
+            this -> rotation[2][2] = 1;
         };
+
+        // Copy constructor:
+        SquareLight(const SquareLight<Scalar> &rhs) {
+            this -> intensity = rhs.intensity;
+            this -> position  = rhs.position;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    this -> rotation[i][j] = rhs.rotation[i][j];
+                }
+            }
+        }
 
         bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){
             // Select a random point on the light:
