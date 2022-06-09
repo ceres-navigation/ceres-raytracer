@@ -18,7 +18,9 @@ This proejct was developed for [CERES](https://ceresnavigation.org) and aims to 
 ## Installation
 ### Build from Source (Linux/MacOS):
 CRT uses `pybind11` to generate python bindings to the core C++ code.  Because of this, you must have `pybind11` installed on your machine.  We recommend using `pip`:
-- `pip install pybind11`
+```
+`pip install pybind11`
+```
 
 Once `pybind11` is installed, compiling is done via:
 ```
