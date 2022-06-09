@@ -55,7 +55,7 @@ std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(PinholeCamera<Scalar> ca
 }
 
 // Definition of the python wrapper module:
-PYBIND11_MODULE(ceres_rt, crt) {
+PYBIND11_MODULE(_ceresrt, crt) {
     crt.doc() = "ceres ray tracer";
 
     py::class_<PinholeCamera<Scalar>>(crt, "PinholeCamera")
