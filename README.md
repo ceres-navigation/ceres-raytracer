@@ -9,7 +9,7 @@
 <!-- ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) -->
 <!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
 
-This proejct was developed for [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
+This project was developed for [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
 - Rendering photo-real images
 - Simulating multi-bounce behavior accounting for wavelength and polarization
 - Modeling solar radiation and albedo radiation pressure on spacecraft
@@ -21,7 +21,7 @@ CRT uses `pybind11` to generate python bindings to the core C++ code.  Because o
 pip install pybind11
 ```
 
-Once `pybind11` is installed, compiling is done via clong the repository and building using cmake and make:
+Once `pybind11` is installed, compiling is done via cloning the repository and building using cmake and make:
 ```
 git clone https://github.com/ceres-navigation/ceres-raytracer.git
 cd ceres-raytracer
@@ -90,10 +90,10 @@ cd cornell_box/
 
 ## Attributions
 ## madmann91's Modern C++ BVH Construction and Traversal Library
-This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume heirarchy used in this project.  Their originaly source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
+This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume hierarchy used in this project.  Their originally source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
 
 ## National Science Foundation Graduate Research Fellowship
-This material is based upon work supported by the [National Science Foundation Graduate Research Fellowship](https://www.nsfgrfp.org/) under Grant No. 2020305048.  NSF GRFP gave Chris Gnam the flexibility and resources required to complete his research in spacecraft navigaiton, and this project is meant to serve as an open source implementation of his dissertation.
+This material is based upon work supported by the [National Science Foundation Graduate Research Fellowship](https://www.nsfgrfp.org/) under Grant No. 2020305048.  NSF GRFP gave Chris Gnam the flexibility and resources required to complete his research in spacecraft navigation, and this project is meant to serve as an open source implementation of his dissertation.
 
 ## Contact
-All questionsm, comments, and concerns should be directed to Chris Gnam: crgnam@buffalo.edu
+All questions, comments, and concerns should be directed to Chris Gnam: crgnam@buffalo.edu
