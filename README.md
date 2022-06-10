@@ -88,7 +88,8 @@ The file `demos/bunny.py` provides an example of how to setup a static scene.  S
 python bunny.py
 ```
 Doing so will produce the following image sequence:
-![](demos/data/bunny.mp4)
+
+![](demos/data/bunny.gif)
 
 
 ***
