@@ -117,19 +117,26 @@ class CMakeBuild(build_ext):
         subprocess.check_call(["cmake", ext.sourcedir] + cmake_args, cwd=build_temp)
         subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=build_temp)
 
+# read the contents of your README file
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
+__version__ = "0.5a"
 setup(
     name="ceres-raytracer",
-    version="0.0.1",
+    version=__version__,
     author="Chris Gnam",
     author_email="crgnam@buffalo.edu",
     description="CERES Ray Tracer",
-    long_description="",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=["crt"],
     ext_modules=[CMakeExtension("_crt")],
     cmdclass={"build_ext": CMakeBuild},
+    install_requires = ["numpy", "Pillow"],
     zip_safe=False,
     python_requires=">=3.6",
 )

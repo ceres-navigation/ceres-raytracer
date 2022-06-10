@@ -1,4 +1,7 @@
 include README.md LICENSE
-graft src
-graft lib
-global-include CMakeLists.txt *.cmake
+recursive-include src *.cpp
+recursive-include src *.hpp
+recursive-include lib *.hpp
+recursive-include lib *.h
+
+global-include CMakeLists.txt
