@@ -105,7 +105,7 @@ StaticScene<Scalar> create_static_scene(py::list static_entity_list) {
 }
 
 // Definition of the python wrapper module:
-PYBIND11_MODULE(_ceresrt, crt) {
+PYBIND11_MODULE(_crt, crt) {
     crt.doc() = "ceres ray tracer";
 
     py::class_<PinholeCamera<Scalar>>(crt, "PinholeCamera")

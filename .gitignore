@@ -1,3 +1,11 @@
+# Custom ignores:
+*.gif
+*.mp4
+*.avi
+*.m
+*.asv
+*.swp*
+
 # Image ignores:
 *.png
 *.ppm

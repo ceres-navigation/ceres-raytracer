@@ -1,0 +1,7 @@
+include README.md LICENSE
+recursive-include src *.cpp
+recursive-include src *.hpp
+recursive-include lib *.hpp
+recursive-include lib *.h
+
+global-include CMakeLists.txt

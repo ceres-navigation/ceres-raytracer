@@ -1,4 +1,5 @@
 # CERES Ray Tracer (CRT)
+[![PyPI version](https://img.shields.io/pypi/v/ceres-raytracer)](https://img.shields.io/pypi/v/ceres-raytracer)
 [![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer?include_prereleases)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
 [![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
 [![GitHub Contributers](https://img.shields.io/github/contributors/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/graphs/contributors)
@@ -12,26 +13,32 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 
 ### Available Environments
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
-![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
+<!-- ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) -->
 <!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
 
 | Environment   | Build         |  Notes  |
 | ------------- |:-------------:| :-------:|
 | Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |   |
 | Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | Using `export CXX="g++-9" CC="gcc-9"` |
-| macOS 11      | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
-| macOS 10.15   | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
+<!-- | macOS 11      | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
+| macOS 10.15   | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  | -->
 
 
 ***
-## Installation
-### Install via pip (RECOMMENDED):
-*Coming Soon*
-
-### Build from source (Ubuntu 20.04/18.04):
-CRT uses `pybind11` to generate python bindings to the core C++ code.  Because of this, you must have `pybind11` installed on your machine.  We recommend using `pip`:
+## Quick Start:
+### Install from PyPI:
 ```
-pip install pybind11
+pip install ceres-raytracer
+```
+
+***
+## Building from Source:
+
+### Build from source::
+
+```
+git clone https://github.com/ceres-navigation/ceres-raytracer.git
+pip install .
 ```
 **NOTE for 18.04 ONLY:** Because `std::filesystem` is not implemented in GNU libstdc++ prior to 9.1 and LLVM libc++ prior to 9.0, you must first upgrade your compiler.  Simply run:
 ```
@@ -41,55 +48,15 @@ sudo apt install gcc-9 g++-9
 export CXX="g++-8" CC="gcc-8"
 ```
 
-Once `pybind11` is installed, compiling is done via cloning the repository and building using cmake and make:
-```
-git clone https://github.com/ceres-navigation/ceres-raytracer.git
-cd ceres-raytracer
-mkdir build
-cd build
-cmake ..
-make -j
-```
-
-*NOTE: the `-j` argument to `make` allows for parallel usage of all available cores for compiling, dramatically speeding up compile times.  If you do not want a parallel compilation, you can simply run `make` with no arguments.*
-
-### Build from source (MacOS 11 and MacOS 10.15):
-*Coming Soon*
-
-### Windows:
-*Coming Soon*
-
-**NOTE:** Unfortunately, OpenMP is not properly supported by Windows and so parallel tracing is not yet supported in Windows native.  If you wish to compile from source on a Windows machine, we recommend using the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about).
-
-
 ***
-## Using the Python API:
-The python API allows for both "static" and "dynamic" scenes.
-- **Dynamic:** The BVH is constructed from scratch every time a frame needs to be rendered.  This increases the total rendering time however it allows you to modify each loaded 3d geometry in-between frame renderings.
-- **Static:** The BVH is constructed once allowing for faster overall render times.  The downside is that none of the geometries can be modified.
+## Demos:
+The follow demos can be found [ceres-raytracer-demos](https://github.com/ceres-navigation/ceres-raytracer-demos).  Simply clone the repository (after isntalling `ceres-raytracer`) and run any of the `.py` example files:
 
-### Dynamic Scene:
-The file `demos/cornell_box.py` provides an example of how to setup a dynamic scene. Simply navigate to the `demos/` directory of the cloned `ceres-raytracer` repository, and run: 
-```
-python cornell_box.py
-```
-Doing so will produce four images:
-- `cornell_box.png`: The rendered image
-- `cornell_box_depth.png`: A mask containing the distance to each ray intersection
-- `cornell_box_instance.png`: A mask where each color indicates a different object
-- `cornell_box_normals.png`: A mask where each pixel is colored by the normal vector of the intersected point
+### cornel__box.py
+![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/cornell.png)
 
-![](demos/data/cornell.png)
-
-
-### Static Scene:
-The file `demos/bunny.py` provides an example of how to setup a static scene.  Simply navigate to the `demos/` directory of the cloned `ceres-raytracer` repository, and run:
-```
-python bunny.py
-```
-Doing so will produce the following image sequence:
-
-![](demos/data/bunny.gif)
+### bunny.py
+![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/bunny.gif)
 
 
 ***
@@ -105,10 +72,10 @@ Doing so will produce the following image sequence:
   - [x] Reorganize code into classes
   - [x] Add python bindings with pybind11
   - [x] Animation/sequence support
-  - [ ] Add wrapper classes with keyword arguments and state handling
-  - [ ] Setup build system using setuptools (for pip install)
-  - [ ] Distribute on PyPI
-  - [x] Add Static BVH cacheing
+  - [x] Add wrapper classes with keyword arguments and state handling
+  - [x] Setup build system using setuptools (for pip install)
+  - [x] Distribute on PyPI
+  - [x] Add Static BVH caching
 - [ ] Importance Sampling
   - [ ] Implement Malley's method for cosine importance
   - [ ] Investigate alternative importance sampling method for planetary bodies (where primary indirect contribution is near horizon)
