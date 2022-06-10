@@ -49,7 +49,14 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
     for (auto entity : entities) {
-        triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+        // Apply current entity transofmrations:
+        auto entity_triangles = entity->triangles;
+        resize_triangles(entity_triangles, entity->scale);
+        rotate_triangles(entity_triangles, entity->rotation);
+        translate_triangles(entity_triangles, entity->position);
+
+        // Store into triangle vector:
+        triangles.insert(triangles.end(), entity_triangles.begin(), entity_triangles.end());
     }
 
     // Build an acceleration data structure for this object set
@@ -105,7 +112,14 @@ std::vector<Scalar> get_intersections(std::unique_ptr<CameraModel<Scalar>> &came
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
     for (auto entity : entities) {
-        triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+        // Apply current entity transofmrations:
+        auto entity_triangles = entity->triangles;
+        resize_triangles(entity_triangles, entity->scale);
+        rotate_triangles(entity_triangles, entity->rotation);
+        translate_triangles(entity_triangles, entity->position);
+
+        // Store into triangle vector:
+        triangles.insert(triangles.end(), entity_triangles.begin(), entity_triangles.end());
     }
 
     // Build an acceleration data structure for this object set
@@ -207,7 +221,14 @@ std::vector<uint32_t> get_instances(std::unique_ptr<CameraModel<Scalar>> &camera
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
     for (auto entity : entities) {
-        triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+        // Apply current entity transofmrations:
+        auto entity_triangles = entity->triangles;
+        resize_triangles(entity_triangles, entity->scale);
+        rotate_triangles(entity_triangles, entity->rotation);
+        translate_triangles(entity_triangles, entity->position);
+
+        // Store into triangle vector:
+        triangles.insert(triangles.end(), entity_triangles.begin(), entity_triangles.end());
     }
 
     // Build an acceleration data structure for this object set
