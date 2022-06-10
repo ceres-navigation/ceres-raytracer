@@ -6,6 +6,7 @@ add_library(
     entity.hpp
     render.hpp
     path_trace.hpp
+    static_scene.hpp
     lighting.hpp
     scene_config.hpp
 )

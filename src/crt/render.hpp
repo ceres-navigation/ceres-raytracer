@@ -59,8 +59,8 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
     std::unique_ptr<bvh::Triangle<Scalar>[]> shuffled_triangles;
 
     std::cout << "\nBuilding BVH ( using SweepSahBuilder )... for " << triangles.size() << " triangles\n";
-    using namespace std::chrono;
-    auto start = high_resolution_clock::now();
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     auto tri_data = triangles.data();
     auto bboxes_and_centers = bvh::compute_bounding_boxes_and_centers(tri_data, triangles.size());
@@ -78,8 +78,8 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
     bvh::NodeLayoutOptimizer<bvh::Bvh<Scalar>> nlo_opt(bvh);
     nlo_opt.optimize();
 
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     std::cout << "    BVH of "
         << bvh.node_count << " node(s) and "
         << reference_count << " reference(s)\n";
@@ -91,7 +91,7 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
     bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh);
 
     // Call the path tracer:
-    auto image = path_trace(camera, lights, traverser, closest_intersector, any_int, triangles, min_samples, max_samples, noise_threshold, num_bounces);
+    auto image = path_trace(camera, lights, bvh, triangles, min_samples, max_samples, noise_threshold, num_bounces);
 
     return image;
 };

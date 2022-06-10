@@ -1,5 +1,5 @@
-#ifndef __SCENE_H
-#define __SCENE_H
+#ifndef __TRACE_H
+#define __TRACE_H
 
 #include "bvh/bvh.hpp"
 #include "bvh/single_ray_traverser.hpp"
@@ -12,15 +12,16 @@
 template <typename Scalar>
 std::vector<uint8_t> path_trace(std::unique_ptr<CameraModel<Scalar>> &camera, 
                                 std::vector<std::unique_ptr<Light<Scalar>>> &lights,
-                                bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, 
-                                bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &closest_intersector,
-                                bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &any_int, 
+                                bvh::Bvh<Scalar> &bvh_cache,
                                 std::vector<bvh::Triangle<Scalar>> triangles,
                                 int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
 
-    start = high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
     auto tri_data = triangles.data();
+    bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh_cache, tri_data);
+    bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh_cache, tri_data);
+    bvh::SingleRayTraverser<bvh::Bvh<Scalar>> traverser(bvh_cache);
 
     // RBGA
     size_t width  = (size_t) floor(camera->get_resolutionX());
@@ -171,8 +172,8 @@ std::vector<uint8_t> path_trace(std::unique_ptr<CameraModel<Scalar>> &camera,
         }
     }
 
-    stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(stop - start);
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     std::cout << "    Path tracing completed in " << duration.count()/1000000.0 << " seconds\n\n";
 
     return image;

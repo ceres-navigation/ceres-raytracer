@@ -13,6 +13,8 @@
 #include "crt/path_trace.hpp"
 #include "crt/lighting.hpp"
 
+#include "crt/static_scene.hpp"
+
 #include "crt/obj_temp/obj.hpp"
 #include "crt/materials/material.hpp"
 
@@ -69,6 +71,17 @@ std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(py::handle camera){
         // throw an exception
     }
     return camera_copy;
+}
+
+StaticScene<Scalar> create_static_scene(py::list entity_list) {
+    // Convert py::list of entities to std::vector
+    std::vector<Entity<Scalar>*> entities;
+    for (auto entity_handle : entity_list) {
+        Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();
+        entities.emplace_back(entity);
+    }
+
+    return StaticScene(entities);
 }
 
 // Definition of the python wrapper module:
@@ -279,6 +292,41 @@ PYBIND11_MODULE(_ceresrt, crt) {
                 }
             }
             self.set_rotation(rotation_arr);
+        });
+
+    py::class_<StaticScene<Scalar>>(crt, "StaticScene")
+        .def(py::init(&create_static_scene))
+        .def("render",    [](StaticScene<Scalar> &self, py::handle camera, py::list lights_list,
+                             int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){ 
+
+            // Duplicate camera to obtain unique_ptr:
+            auto camera_use = copy_camera_unique(camera);
+
+            // Convert py::list of lights to std::vector
+            std::vector<std::unique_ptr<Light<Scalar>>> lights;
+            for (py::handle light : lights_list) { 
+                if (py::isinstance<PointLight<Scalar>>(light)){
+                    PointLight<Scalar> light_new = light.cast<PointLight<Scalar>>();
+                    lights.push_back(std::make_unique<PointLight<Scalar>>(light_new));
+                }
+                else if (py::isinstance<SquareLight<Scalar>>(light)){
+                    SquareLight<Scalar> light_new = light.cast<SquareLight<Scalar>>();
+                    lights.push_back(std::make_unique<SquareLight<Scalar>>(light_new));
+                }
+            }
+
+            // Call the render method:
+            auto pixels = self.render(camera_use, lights, min_samples, max_samples, noise_threshold, num_bounces);
+
+            // Format the output image:
+            int width  = (size_t) floor(camera_use->get_resolutionX());
+            int height = (size_t) floor(camera_use->get_resolutionY());
+            auto result = py::array_t<uint8_t>({height,width,4});
+            auto raw = result.mutable_data();
+            for (int i = 0; i < height*width*4; i++) {
+                raw[i] = pixels[i];
+            }
+            return result;
         });
 
     // PinholeCamera<Scalar> &

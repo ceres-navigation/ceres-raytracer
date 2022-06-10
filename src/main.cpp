@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
         if(error) {
             std::cout << "PNG error " << error << ": "<< lodepng_error_text(error) << std::endl;
         }
-        }
+    }
     else {
         std::cout << "Using SINGLE precision\n\n";
 
