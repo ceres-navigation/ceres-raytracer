@@ -28,7 +28,12 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 ### Install via pip (RECOMMENDED):
 *Coming Soon*
 
-### Build from source (Ubuntu 20.04/18.04):
+### Build from source (Python setuptools):
+```
+pip install .
+```
+
+### Build from source (CMake on Ubuntu 20.04/18.04):
 CRT uses `pybind11` to generate python bindings to the core C++ code.  Because of this, you must have `pybind11` installed on your machine.  We recommend using `pip`:
 ```
 pip install pybind11
