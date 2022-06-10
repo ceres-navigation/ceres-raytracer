@@ -8,7 +8,6 @@ add_library(
     path_trace.hpp
     static_scene.hpp
     lighting.hpp
-    scene_config.hpp
 )
 target_include_directories(crt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
