@@ -79,7 +79,7 @@ Doing so will produce four images:
 - `cornell_box_instance.png`: A mask where each color indicates a different object
 - `cornell_box_normals.png`: A mask where each pixel is colored by the normal vector of the intersected point
 
-![](demos/data/cornell_output.png)
+![](demos/data/cornell.png)
 
 
 ### Static Scene:
@@ -103,21 +103,29 @@ Doing so will produce the following image sequence:
   - [ ] Add texture mapping and normal maps
 - [x] Python Refactor
   - [x] Reorganize code into classes
-  - [x] Move INI parser out of `main.cpp`
-  - [x] Add python interface
+  - [x] Add python bindings with pybind11
   - [x] Animation/sequence support
+  - [ ] Add wrapper classes with keyword arguments and state handling
+  - [ ] Setup build system using setuptools (for pip install)
+  - [ ] Distribute on PyPI
+  - [x] Add Static BVH cacheing
 - [ ] Importance Sampling
   - [ ] Implement Malley's method for cosine importance
   - [ ] Investigate alternative importance sampling method for planetary bodies (where primary indirect contribution is near horizon)
 - [ ] Lighting
   - [x] Add output intensity to light objects
-  - [ ] Resolve placement issue with square lights
   - [ ] Add circular area lights
   - [ ] Add emissive mesh geometries
   - [ ] Add polarized light
   - [ ] Add specific wavelength support
-- [ ] Attitude (Orientation)
-  - [ ] Fix euler angle sequencing issue
+- [ ] Cameras
+  - [ ] Add linear pushbroom camera model
+  - [ ] Add calibrated camera model
+- [ ] Materials
+  - [ ] Add McEwen BRDF
+  - [ ] Add PBR textures
+- [ ] Simulation
+  - [ ] Add radiation pressure modeling
 
 ***
 ## Attributions
