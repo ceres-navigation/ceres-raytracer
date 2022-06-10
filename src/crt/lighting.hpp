@@ -11,7 +11,6 @@
 template <typename Scalar>
 class Light {
     public:
-        std::string type;
         Scalar intensity;
         bvh::Vector3<Scalar> position;
         Scalar rotation[3][3];
@@ -36,10 +35,6 @@ class Light {
             set_position(position);
             set_rotation(rotation);
         }
-
-        std::string get_type(){
-            return type;
-        }
 };
 
 
@@ -49,7 +44,6 @@ class PointLight: public Light<Scalar>  {
     public:
         PointLight(Scalar intensity) { 
             this -> intensity = intensity;
-            this -> type = "PointLight";
 
             // Default pose information:
             this -> position = bvh::Vector3<Scalar>(0,0,0);
@@ -85,7 +79,6 @@ class SquareLight: public Light<Scalar> {
             this->intensity = intensity;
             this->size[0] = size[0];
             this->size[1] = size[1];
-            this->type = "SquareLight";
 
             std::random_device rand_dev;
             std::mt19937 generator(rand_dev());

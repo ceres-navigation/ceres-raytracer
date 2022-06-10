@@ -75,27 +75,20 @@ class Entity {
             this->id = id;
         }
 
+        // Pose setting methods:
         void set_scale(Scalar scale){
             this -> scale = scale;
-            resize_triangles(this->triangles, scale, this->position);
         }
-
         void set_position(bvh::Vector3<Scalar> position) {
             this -> position = position;
-            translate_triangles(this->triangles, position);
         }
-
         void set_rotation(Scalar rotation[3][3]) {
             for (int i = 0; i < 3; i++){
                 for (int j = 0; j <3; j++){
                     this -> rotation[i][j] = rotation[i][j];
                 }
             }
-
-            // Apply rotation (remove and re-apply translation)
-            rotate_triangles(this->triangles, rotation, this->position);
         }
-
         void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
             set_rotation(rotation);
             set_position(position);

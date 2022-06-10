@@ -40,22 +40,12 @@ bvh::Vector3<Scalar> transform(bvh::Vector3<Scalar> vector, Scalar rotation[3][3
 }
 
 template <typename Scalar>
-void resize_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar scale, bvh::Vector3<Scalar> position){
+void resize_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar scale){
     for (auto &tri : triangles) {
-        // Undo position:
-        auto p0 = translate(tri.p0,   -position);
-        auto p1 = translate(tri.p1(), -position);
-        auto p2 = translate(tri.p2(), -position);
-
         // Scale each of the vertices:
-        p0 = resize(p0, scale);
-        p1 = resize(p1, scale);
-        p2 = resize(p2, scale);
-
-        // Reapply position:
-        p0 = translate(p0, position);
-        p1 = translate(p1, position);
-        p2 = translate(p2, position);
+        auto p0 = resize(tri.p0,   scale);
+        auto p1 = resize(tri.p1(), scale);
+        auto p2 = resize(tri.p2(), scale);
 
         // Update the triangle:
         tri.update_vertices(p0,p1,p2);
@@ -76,22 +66,12 @@ void translate_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, bvh::Vec
 }
 
 template <typename Scalar>
-void rotate_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar rotation[3][3], bvh::Vector3<Scalar> position){
+void rotate_triangles(std::vector<bvh::Triangle<Scalar>> &triangles, Scalar rotation[3][3]){
     for (auto &tri : triangles) {
-        // Undo position:
-        auto p0 = translate(tri.p0,   -position);
-        auto p1 = translate(tri.p1(), -position);
-        auto p2 = translate(tri.p2(), -position);
-
         // Rotate each of the vertices:
-        p0 = rotate(p0, rotation);
-        p1 = rotate(p1, rotation);
-        p2 = rotate(p2, rotation);
-
-        // Reapply position:
-        p0 = translate(p0, position);
-        p1 = translate(p1, position);
-        p2 = translate(p2, position);
+        auto p0 = rotate(tri.p0,   rotation);
+        auto p1 = rotate(tri.p1(), rotation);
+        auto p2 = rotate(tri.p2(), rotation);
 
         // Transform each of the vertex normals:
         auto vn0 = rotate(tri.vn0, rotation);
