@@ -28,24 +28,23 @@ std::vector<uint8_t> path_trace(std::unique_ptr<CameraModel<Scalar>> &camera,
     size_t height = (size_t) floor(camera->get_resolutionY());
     auto pixels = std::make_unique<float[]>(4 * width * height);
 
-    // Run parallel if OPENMP is available:
-    #ifdef _OPENMP
-        #pragma omp parallel
-        {
-            #pragma omp single
-            std::cout << "Rendering image on " << omp_get_num_threads() << " threads..." << std::endl;
-        }
-    #else
-        std::cout << "Rendering image on single thread..." << std::endl;
-    #endif
-
     // Initialize random number generator:
     std::random_device rd;
     std::minstd_rand eng(rd());
     std::uniform_real_distribution<Scalar> distr(-0.5, 0.5);
     std::uniform_real_distribution<Scalar> dist1(0.0, 1.0);
 
-    #pragma omp parallel for
+    // Run parallel if available:
+    #ifdef _OPENMP
+        #pragma omp parallel 
+        {   
+            #pragma omp single
+            std::cout << "Path tracing on " << omp_get_num_threads() << " threads..." << std::endl;
+        }
+        #pragma omp parallel for
+    #else
+        std::cout << "Path tracing on single thread..." << std::endl;
+    #endif
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             size_t index = 4 * (width * j + i);

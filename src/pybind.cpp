@@ -52,6 +52,15 @@ PointLight<Scalar> create_pointlight(Scalar intensity){
     return PointLight<Scalar>(intensity);
 }
 
+StaticEntity<Scalar> create_static_entity(std::string path_to_model, bool smooth_shading, py::list color_list){
+    Color color;
+    color[0] = color_list[0].cast<Scalar>();
+    color[1] = color_list[1].cast<Scalar>();
+    color[2] = color_list[2].cast<Scalar>();
+    
+    return StaticEntity<Scalar>(path_to_model, smooth_shading, color);
+}
+
 Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, py::list color_list){
     Color color;
     color[0] = color_list[0].cast<Scalar>();
@@ -73,12 +82,23 @@ std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(py::handle camera){
     return camera_copy;
 }
 
-StaticScene<Scalar> create_static_scene(py::list entity_list) {
+StaticScene<Scalar> create_static_scene(py::list static_entity_list) {
     // Convert py::list of entities to std::vector
     std::vector<Entity<Scalar>*> entities;
-    for (auto entity_handle : entity_list) {
-        Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();
-        entities.emplace_back(entity);
+    uint32_t id = 1;
+    for (auto static_entity_handle : static_entity_list) {
+        StaticEntity<Scalar> static_entity = static_entity_handle.cast<StaticEntity<Scalar>>();
+
+        //Create the new entities:
+        Entity<Scalar>* new_entity = new Entity<Scalar>(static_entity.path_to_model, static_entity.smooth_shading, static_entity.color);
+        new_entity->set_scale(static_entity.scale);
+        new_entity->set_position(static_entity.position);
+        new_entity->set_rotation(static_entity.rotation);
+        new_entity->set_id(id);
+        id++;
+
+        // Add new entity to vector:
+        entities.emplace_back(new_entity);
     }
 
     return StaticScene(entities);
@@ -96,13 +116,6 @@ PYBIND11_MODULE(_ceresrt, crt) {
             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
             self.set_position(position_vector3);
         })
-        .def("get_position", [](PinholeCamera<Scalar> &self){
-            std::vector<Scalar> position_arr = {self.position[0],
-                                                self.position[1],
-                                                self.position[2]};
-            py::array position_out = py::cast(position_arr);
-            return position_out;
-        })
         .def("set_rotation", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> rotation){
             py::buffer_info buffer = rotation.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
@@ -115,19 +128,6 @@ PYBIND11_MODULE(_ceresrt, crt) {
                 }
             }
             self.set_rotation(rotation_arr);
-        })
-        .def("get_rotation", [](PinholeCamera<Scalar> &self){
-            auto rotation_arr = std::vector<std::vector<Scalar>>();
-            for (auto i = 0; i < 3; i++) {
-                rotation_arr.push_back(std::vector<Scalar>(3));
-            }
-            for (auto i = 0; i < 3; i++){
-                for (auto j = 0; j < 3; j++){
-                    rotation_arr[i][j] = self.rotation[i][j];
-                }
-            }
-            py::array rotation_out = py::cast(rotation_arr);
-            return rotation_out;
         })
         .def("set_pose", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
             // Set the position:
@@ -157,13 +157,6 @@ PYBIND11_MODULE(_ceresrt, crt) {
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
             self.set_position(position_vector3);
-        })
-        .def("get_position", [](PointLight<Scalar> &self){
-            std::vector<Scalar> position_arr = {self.position[0],
-                                                self.position[1],
-                                                self.position[2]};
-            py::array position_out = py::cast(position_arr);
-            return position_out;
         });
 
     py::class_<SquareLight<Scalar>>(crt, "SquareLight")
@@ -174,38 +167,18 @@ PYBIND11_MODULE(_ceresrt, crt) {
             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
             self.set_position(position_vector3);
         })
-        .def("get_position", [](SquareLight<Scalar> &self){
-            std::vector<Scalar> position_arr = {self.position[0],
-                                                self.position[1],
-                                                self.position[2]};
-            py::array position_out = py::cast(position_arr);
-            return position_out;
-        })
         .def("set_rotation", [](SquareLight<Scalar> &self, py::array_t<Scalar> rotation){
             py::buffer_info buffer = rotation.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             Scalar rotation_arr[3][3];
             int idx = 0;
             for (auto i = 0; i < 3; i++){
-            for (auto j = 0; j < 3; j++){
-                rotation_arr[i][j] = ptr[idx];
-                idx++;
-            }
-        }
-            self.set_rotation(rotation_arr);
-        })
-        .def("get_rotation", [](SquareLight<Scalar> &self){
-            auto rotation_arr = std::vector<std::vector<Scalar>>();
-            for (auto i = 0; i < 3; i++) {
-                rotation_arr.push_back(std::vector<Scalar>(3));
-            }
-            for (auto i = 0; i < 3; i++){
                 for (auto j = 0; j < 3; j++){
-                    rotation_arr[i][j] = self.rotation[i][j];
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
                 }
             }
-                py::array rotation_out = py::cast(rotation_arr);
-                return rotation_out;
+            self.set_rotation(rotation_arr);
         })
         .def("set_pose", [](SquareLight<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
             // Set the position:
@@ -239,14 +212,6 @@ PYBIND11_MODULE(_ceresrt, crt) {
             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
             self.set_position(position_vector3);
         })
-        .def("get_position", [](Entity<Scalar> &self){
-            std::vector<Scalar> position_arr = {self.position[0],
-                                                self.position[1],
-                                                self.position[2]};
-            py::array position_out = py::cast(position_arr);
-            return position_out;
-        })
-
         .def("set_rotation", [](Entity<Scalar> &self, py::array_t<Scalar> rotation){
             py::buffer_info buffer = rotation.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
@@ -260,20 +225,52 @@ PYBIND11_MODULE(_ceresrt, crt) {
             }
             self.set_rotation(rotation_arr);
         })
-        .def("get_rotation", [](Entity<Scalar> &self){
-            auto rotation_arr = std::vector<std::vector<Scalar>>();
-            for (auto i = 0; i < 3; i++) {
-                rotation_arr.push_back(std::vector<Scalar>(3));
-            }
+        .def("set_pose", [](Entity<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
+
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
             for (auto i = 0; i < 3; i++){
                 for (auto j = 0; j < 3; j++){
-                    rotation_arr[i][j] = self.rotation[i][j];
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
                 }
             }
-            py::array rotation_out = py::cast(rotation_arr);
-            return rotation_out;
+            self.set_rotation(rotation_arr);
+        });
+
+    py::class_<StaticEntity<Scalar>>(crt, "StaticEntity")
+        .def(py::init(&create_static_entity))
+        .def("set_scale",    [](StaticEntity<Scalar> &self, Scalar scale){ 
+            self.set_scale(scale);
         })
-        .def("set_pose", [](Entity<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+        .def("set_position", [](StaticEntity<Scalar> &self, py::array_t<Scalar> position){
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
+        })
+        .def("set_rotation", [](StaticEntity<Scalar> &self, py::array_t<Scalar> rotation){
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("set_pose", [](StaticEntity<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
             // Set the position:
             py::buffer_info buffer_pos = position.request();
             Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
@@ -401,7 +398,7 @@ PYBIND11_MODULE(_ceresrt, crt) {
         auto camera_use = copy_camera_unique(camera);
 
         // Convert py::list of entities to std::vector
-        uint32_t id;
+        uint32_t id = 1;
         std::vector<Entity<Scalar>*> entities;
         for (auto entity_handle : entity_list) {
             Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();

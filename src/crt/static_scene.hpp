@@ -6,10 +6,6 @@
 #include <vector>
 #include <random>
 
-#include "bvh/bvh.hpp"
-#include "bvh/triangle.hpp"
-#include "bvh/vector.hpp"
-
 #include <bvh/binned_sah_builder.hpp>
 #include <bvh/sweep_sah_builder.hpp>
 #include <bvh/parallel_reinsertion_optimizer.hpp>
@@ -19,6 +15,7 @@
 #include "bvh/single_ray_traverser.hpp"
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
+#include "bvh/vector.hpp"
 
 #include "model_loaders/happly.hpp"
 #include "model_loaders/tiny_obj_loader.hpp"
@@ -44,7 +41,14 @@ class StaticScene {
         StaticScene(std::vector<Entity<Scalar>*> entities){
             // Store triangles locally:
             for (auto entity : entities) {
-                triangles.insert(triangles.end(), entity->triangles.begin(), entity->triangles.end());
+                // Apply current entity transofmrations:
+                auto entity_triangles = entity->triangles;
+                resize_triangles(entity_triangles, entity->scale);
+                rotate_triangles(entity_triangles, entity->rotation);
+                translate_triangles(entity_triangles, entity->position);
+
+                // Store into triangle vector:
+                triangles.insert(triangles.end(), entity_triangles.begin(), entity_triangles.end());
             }
 
             // Build an acceleration data structure for this object set
@@ -87,6 +91,56 @@ class StaticScene {
             return image;
         }
         
+};
+
+template <typename Scalar>
+class StaticEntity {
+    public:
+        std::string path_to_model;
+        bool smooth_shading;
+        Color color;
+
+        bvh::Vector3<Scalar> position;
+        Scalar rotation[3][3];
+        Scalar scale;
+
+        StaticEntity(std::string path_to_model, bool smooth_shading, Color color){
+            this->path_to_model = path_to_model;
+            this->smooth_shading = smooth_shading;
+            this->color = color;
+
+            // Default values for all pose information:
+            this -> scale = 1;
+            this -> position = bvh::Vector3<Scalar>(0,0,0);
+            this -> rotation[0][0] = 1;
+            this -> rotation[0][1] = 0;
+            this -> rotation[0][2] = 0;
+            this -> rotation[1][0] = 0;
+            this -> rotation[1][1] = 1;
+            this -> rotation[1][2] = 0;
+            this -> rotation[2][0] = 0;
+            this -> rotation[2][1] = 0;
+            this -> rotation[2][2] = 1;
+        }
+
+        // Pose setting methods:
+        void set_scale(Scalar scale){
+            this -> scale = scale;
+        }
+        void set_position(bvh::Vector3<Scalar> position) {
+            this -> position = position;
+        }
+        void set_rotation(Scalar rotation[3][3]) {
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j <3; j++){
+                    this -> rotation[i][j] = rotation[i][j];
+                }
+            }
+        }
+        void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
+            set_rotation(rotation);
+            set_position(position);
+        }
 };
 
 #endif

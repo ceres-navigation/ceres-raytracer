@@ -105,9 +105,6 @@ std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::v
 
 template <typename Scalar> 
 std::vector<Scalar> get_intersections(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
-    // Get camera resolution dimensions:
-    size_t width  = (size_t) floor(camera->get_resolutionX());
-    size_t height = (size_t) floor(camera->get_resolutionY());
 
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
@@ -155,17 +152,6 @@ std::vector<Scalar> get_intersections(std::unique_ptr<CameraModel<Scalar>> &came
         << reference_count << " reference(s)\n";
     std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
-    // Run parallel if OPENMP is available:
-    #ifdef _OPENMP
-        #pragma omp parallel
-        {
-            #pragma omp single
-            std::cout << "Calculating ray intersections on " << omp_get_num_threads() << " threads..." << std::endl;
-        }
-    #else
-        std::cout << "Calculating ray intersections on single thread..." << std::endl;
-    #endif
-
     // Start the rendering process:
     start = high_resolution_clock::now();
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, tri_data);
@@ -174,9 +160,21 @@ std::vector<Scalar> get_intersections(std::unique_ptr<CameraModel<Scalar>> &came
 
     // Define the output array:
     std::vector<Scalar> intersections;
+    size_t width  = (size_t) floor(camera->get_resolutionX());
+    size_t height = (size_t) floor(camera->get_resolutionY());
     intersections.reserve(3*width*height);
 
-    #pragma omp parallel for
+    // Run parallel if available:
+    #ifdef _OPENMP
+        #pragma omp parallel
+        {   
+            #pragma omp single
+            std::cout << "Calculating intersections intersected on " << omp_get_num_threads() << " threads..." << std::endl;
+        }
+        #pragma omp parallel for
+    #else
+        std::cout << "Calculating intersections intersected on single thread..." << std::endl;
+    #endif
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             // Cast ray:
@@ -214,9 +212,6 @@ std::vector<Scalar> get_intersections(std::unique_ptr<CameraModel<Scalar>> &came
 
 template <typename Scalar>
 std::vector<uint32_t> get_instances(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
-    // Get camera resolution dimensions:
-    size_t width  = (size_t) floor(camera->get_resolutionX());
-    size_t height = (size_t) floor(camera->get_resolutionY());
 
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
@@ -264,17 +259,6 @@ std::vector<uint32_t> get_instances(std::unique_ptr<CameraModel<Scalar>> &camera
         << reference_count << " reference(s)\n";
     std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
-    // Run parallel if OPENMP is available:
-    #ifdef _OPENMP
-        #pragma omp parallel
-        {
-            #pragma omp single
-            std::cout << "Calculating instances intersected on " << omp_get_num_threads() << " threads..." << std::endl;
-        }
-    #else
-        std::cout << "Calculating instances intersected on single thread..." << std::endl;
-    #endif
-
     // Start the rendering process:
     start = high_resolution_clock::now();
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh, tri_data);
@@ -283,9 +267,21 @@ std::vector<uint32_t> get_instances(std::unique_ptr<CameraModel<Scalar>> &camera
 
     // Define the output array:
     std::vector<uint32_t> instances;
+    size_t width  = (size_t) floor(camera->get_resolutionX());
+    size_t height = (size_t) floor(camera->get_resolutionY());
     instances.reserve(width*height);
 
-    #pragma omp parallel for
+    // Run parallel if available:
+    #ifdef _OPENMP
+        #pragma omp parallel 
+        {   
+            #pragma omp single
+            std::cout << "Calculating instances intersected on " << omp_get_num_threads() << " threads..." << std::endl;
+        }
+        #pragma omp parallel for
+    #else
+        std::cout << "Calculating instances intersected on single thread..." << std::endl;
+    #endif
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
             // Cast ray:
@@ -317,8 +313,4 @@ std::vector<uint32_t> get_instances(std::unique_ptr<CameraModel<Scalar>> &camera
     return instances;
 }
 
-// template <typename Scalar>
-// std::vector<Scalar> trace_rays(std::vector<bvh::Ray<Scalar>> rays, std::vector<Entity<Scalar>*> entities){
-
-// };
 #endif

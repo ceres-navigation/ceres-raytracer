@@ -17,12 +17,13 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 
 | Environment   | Build         |  Notes  |
 | ------------- |:-------------:| :-------:|
-| Ubuntu 20.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |   |
-| Ubuntu 18.04  | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | Using `export CXX="g++-9" CC="gcc-9"` |
-| macOS 11      | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
-| macOS 10.15   | [![Build Passing](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
+| Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |   |
+| Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | Using `export CXX="g++-9" CC="gcc-9"` |
+| macOS 11      | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
+| macOS 10.15   | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
 
 
+***
 ## Installation
 ### Install via pip (RECOMMENDED):
 *Coming Soon*
@@ -61,33 +62,36 @@ make -j
 **NOTE:** Unfortunately, OpenMP is not properly supported by Windows and so parallel tracing is not yet supported in Windows native.  If you wish to compile from source on a Windows machine, we recommend using the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/about).
 
 
-## Usage
-### Using the python API to render a simple scene:
-To run the example python file, navigate to the root directory of the cloned `ceres-raytracer` repository and simply run: 
+***
+## Using the Python API:
+The python API allows for both "static" and "dynamic" scenes.
+- **Dynamic:** The BVH is constructed from scratch every time a frame needs to be rendered.  This increases the total rendering time however it allows you to modify each loaded 3d geometry in-between frame renderings.
+- **Static:** The BVH is constructed once allowing for faster overall render times.  The downside is that none of the geometries can be modified.
+
+### Dynamic Scene:
+The file `demos/cornell_box.py` provides an example of how to setup a dynamic scene. Simply navigate to the `demos/` directory of the cloned `ceres-raytracer` repository, and run: 
 ```
-cd cornell_box/
 python cornell_box.py
 ```
-
 Doing so will produce four images:
 - `cornell_box.png`: The rendered image
 - `cornell_box_depth.png`: A mask containing the distance to each ray intersection
 - `cornell_box_instance.png`: A mask where each color indicates a different object
 - `cornell_box_normals.png`: A mask where each pixel is colored by the normal vector of the intersected point
 
-![](cornell_box/data/cornell_output.png)
+![](demos/data/cornell_output.png)
 
-### Using the compiled C++ binary to render a simple scene:
-For development purposes (to ensure that the C++ library remains functional beyond the python bindings), the compilation process also produces an executable named `ceres-rt`.  This executable needs to be given a configuration `.INI` file which defines the layout of the scene.
+
+### Static Scene:
+The file `demos/bunny.py` provides an example of how to setup a static scene.  Simply navigate to the `demos/` directory of the cloned `ceres-raytracer` repository, and run:
 ```
-cp build/ceres-rt cornell_box/
-cd cornell_box/
-./ceres-rt cornell_box/cornell_box.ini
+python bunny.py
 ```
+Doing so will produce the following image sequence:
+![](demos/data/bunny.mp4)
 
-*NOTE: `ceres-rt` is not intended for use beyond development purposes.  Please use the python API.*
 
-
+***
 ## Tasks:
 - [ ] Implement physically based radiance tracking for paths
 - [ ] Improve the adaptive sampling noise calculation
@@ -114,13 +118,15 @@ cd cornell_box/
 - [ ] Attitude (Orientation)
   - [ ] Fix euler angle sequencing issue
 
+***
 ## Attributions
-## madmann91's Modern C++ BVH Construction and Traversal Library
+### madmann91's Modern C++ BVH Construction and Traversal Library
 This project utilizes a BVH construction and traversal library built by [madmann91](https://github.com/madmann91).  While we have made some modifications to their implementation, their work forms most of the basis of the bounding volume hierarchy used in this project.  Their originally source code can be found in the [bvh repository](https://github.com/madmann91/bvh)
 
 
-## National Science Foundation Graduate Research Fellowship
+### National Science Foundation Graduate Research Fellowship
 This material is based upon work supported by the [National Science Foundation Graduate Research Fellowship](https://www.nsfgrfp.org/) under Grant No. 2020305048.  NSF GRFP gave Chris Gnam the flexibility and resources required to complete his research in spacecraft navigation, and this project is meant to serve as an open source implementation of his dissertation.
 
+***
 ## Contact
 All questions, comments, and concerns should be directed to Chris Gnam: crgnam@buffalo.edu
