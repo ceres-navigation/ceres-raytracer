@@ -124,7 +124,7 @@ long_description = (this_directory / "README.md").read_text()
 
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
-__version__ = "0.5a"
+__version__ = "0.5a1"
 setup(
     name="ceres-raytracer",
     version=__version__,

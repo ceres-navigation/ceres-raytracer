@@ -16,7 +16,7 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 <!-- ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) -->
 <!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
 
-[![](https://codecov.io/gh/ceres-navigation/ceres-raytracer/branch/main/graph/badge.svg?token=BX07Q0PITB)](https://github.com/ceres-navigation/ceres-raytracer/actions)
+[![](https://codecov.io/gh/ceres-navigation/ceres-raytracer/branch/main/graph/badge.svg?token=BX07Q0PITB)](https://app.codecov.io/gh/ceres-navigation/ceres-raytracer)
 | Environment   | Build Python Binding | Install from PyPI |
 | ------------- |:--------------------:|:-----------------:|
 | Ubuntu 22.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu22.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu22.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_ubuntu22.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_test_ubuntu22.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions)
