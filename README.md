@@ -16,10 +16,10 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 <!-- ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) -->
 <!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
 
-| Environment   | Build         |  Tests  |
-| ------------- |:-------------:|:-------:|
-| Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |
-| Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |
+| Environment   | Build Python Binding | Install from PyPI |
+| ------------- |:--------------------:|:-----------------:|
+| Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_test_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions)
+| Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_test_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions)
 
 
 ***
