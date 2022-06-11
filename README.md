@@ -4,7 +4,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
 [![GitHub Contributers](https://img.shields.io/github/contributors/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/graphs/contributors)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+[![](https://codecov.io/gh/ceres-navigation/ceres-raytracer/branch/main/graph/badge.svg?token=BX07Q0PITB)](https://github.com/ceres-navigation/ceres-raytracer/actions)
 
 This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
 - Rendering photo-real images
@@ -17,11 +17,9 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 <!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
 
 | Environment   | Build         |  Tests  |
-| ------------- |:-------------:| :-------:|
-| Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |   |
-| Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
-<!-- | macOS 11      | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
-| macOS 10.15   | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  | -->
+| ------------- |:-------------:|:-------:|
+| Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |
+| Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |
 
 
 ***

@@ -29,7 +29,6 @@
 #include "materials/brdfs.hpp"
 
 
-
 template <typename Scalar, typename Intersector>
 Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Intersector &intersector, 
                                   float u, float v, const bvh::Ray<Scalar> &light_ray, 
