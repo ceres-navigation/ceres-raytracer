@@ -16,10 +16,10 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 <!-- ![Mac OS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) -->
 <!-- ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white) -->
 
-| Environment   | Build         |  Notes  |
+| Environment   | Build         |  Tests  |
 | ------------- |:-------------:| :-------:|
 | Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |   |
-| Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | Using `export CXX="g++-9" CC="gcc-9"` |
+| Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
 <!-- | macOS 11      | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos11.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  |
 | macOS 10.15   | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/cmake_macos10.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) |  | -->
 
@@ -40,17 +40,14 @@ pip install ceres-raytracer
 git clone https://github.com/ceres-navigation/ceres-raytracer.git
 pip install .
 ```
-**NOTE for 18.04 ONLY:** Because `std::filesystem` is not implemented in GNU libstdc++ prior to 9.1 and LLVM libc++ prior to 9.0, you must first upgrade your compiler.  Simply run:
-```
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt update
-sudo apt install gcc-9 g++-9
-export CXX="g++-8" CC="gcc-8"
-```
 
 ***
 ## Demos:
-The follow demos can be found [ceres-raytracer-demos](https://github.com/ceres-navigation/ceres-raytracer-demos).  Simply clone the repository (after isntalling `ceres-raytracer`) and run any of the `.py` example files:
+After installing `ceres-raytracer`, simply clone the [ceres-raytracer-demos](https://github.com/ceres-navigation/ceres-raytracer-demos):
+```
+git clonehttps://github.com/ceres-navigation/ceres-raytracer-demos.git
+```
+and run any of the included `.py` example files:
 
 ### cornel__box.py
 ![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/cornell.png)

@@ -52,21 +52,21 @@ PointLight<Scalar> create_pointlight(Scalar intensity){
     return PointLight<Scalar>(intensity);
 }
 
-StaticEntity<Scalar> create_static_entity(std::string path_to_model, bool smooth_shading, py::list color_list){
+StaticEntity<Scalar> create_static_entity(std::string geometry_path, std::string geometry_type, bool smooth_shading, py::list color_list){
     Color color;
     color[0] = color_list[0].cast<Scalar>();
     color[1] = color_list[1].cast<Scalar>();
     color[2] = color_list[2].cast<Scalar>();
     
-    return StaticEntity<Scalar>(path_to_model, smooth_shading, color);
+    return StaticEntity<Scalar>(geometry_path, geometry_type, smooth_shading, color);
 }
 
-Entity<Scalar>* create_entity(std::string path_to_model, bool smooth_shading, py::list color_list){
+Entity<Scalar>* create_entity(std::string geometry_path, std::string geometry_type, bool smooth_shading, py::list color_list){
     Color color;
     color[0] = color_list[0].cast<Scalar>();
     color[1] = color_list[1].cast<Scalar>();
     color[2] = color_list[2].cast<Scalar>();
-    Entity<Scalar>* new_entity = new Entity<Scalar>(path_to_model, smooth_shading, color);
+    Entity<Scalar>* new_entity = new Entity<Scalar>(geometry_path, geometry_type, smooth_shading, color);
     return new_entity;
 }
 
@@ -90,7 +90,7 @@ StaticScene<Scalar> create_static_scene(py::list static_entity_list) {
         StaticEntity<Scalar> static_entity = static_entity_handle.cast<StaticEntity<Scalar>>();
 
         //Create the new entities:
-        Entity<Scalar>* new_entity = new Entity<Scalar>(static_entity.path_to_model, static_entity.smooth_shading, static_entity.color);
+        Entity<Scalar>* new_entity = new Entity<Scalar>(static_entity.geometry_path, static_entity.geometry_type, static_entity.smooth_shading, static_entity.color);
         new_entity->set_scale(static_entity.scale);
         new_entity->set_position(static_entity.position);
         new_entity->set_rotation(static_entity.rotation);

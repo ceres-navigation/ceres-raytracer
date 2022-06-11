@@ -1,6 +1,7 @@
 #ifndef __TRACE_H
 #define __TRACE_H
 
+#include <chrono>
 #include "bvh/bvh.hpp"
 #include "bvh/single_ray_traverser.hpp"
 #include "bvh/primitive_intersectors.hpp"

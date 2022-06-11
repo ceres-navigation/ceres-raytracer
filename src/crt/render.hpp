@@ -2,6 +2,7 @@
 #define __RENDER_H
 
 // From old scene.hpp
+#include <chrono>
 #include "entity.hpp"
 
 #include "path_trace.hpp"

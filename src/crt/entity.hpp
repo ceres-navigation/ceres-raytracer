@@ -1,7 +1,6 @@
 #ifndef __ENTITY_H
 #define __ENTITY_H
 
-#include <filesystem>
 #include <memory>
 #include <vector>
 #include <random>
@@ -32,18 +31,17 @@ class Entity {
         std::shared_ptr<UVMap<size_t>> material_map;
         bool smooth_shading;
 
-        Entity(std::string path_to_model, bool smooth_shading, Color color){
+        Entity(std::string geometry_path, std::string geometry_type, bool smooth_shading, Color color){
             // Load the mesh geometry:
             std::vector<bvh::Triangle<Scalar>> new_triangles;
-            std::string extension = std::filesystem::path(path_to_model).extension();
-            std::transform(extension.begin(), extension.end(), extension.begin(), static_cast<int(*)(int)>(std::tolower));
-            if (extension.compare(".obj") == 0) {
-                new_triangles = obj::load_from_file<Scalar>(path_to_model);
+            std::transform(geometry_type.begin(), geometry_type.end(), geometry_type.begin(), static_cast<int(*)(int)>(std::tolower));
+            if (geometry_type.compare("obj") == 0) {
+                new_triangles = obj::load_from_file<Scalar>(geometry_path);
             } 
             else { 
-                std::cout << "file type of " << extension << " is not a valid.  ceres-rt only supports .obj/.OBJ\n";
+                std::cout << "file type of " << geometry_type << " is not a valid.  crt currently supports obj\n";
             }
-            std::cout << new_triangles.size() << " triangles loaded from " << path_to_model << "\n";
+            std::cout << new_triangles.size() << " triangles loaded from " << geometry_path << "\n";
 
             // Set current entity as the parent object for all input triangles:
             for (auto &tri : new_triangles) {
