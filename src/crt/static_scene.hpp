@@ -1,7 +1,6 @@
 #ifndef __SCENE_H
 #define __SCENE_H
 
-#include <filesystem>
 #include <memory>
 #include <vector>
 #include <random>
