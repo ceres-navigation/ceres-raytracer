@@ -1,7 +1,6 @@
 #ifndef __SCENE_H
 #define __SCENE_H
 
-#include <filesystem>
 #include <memory>
 #include <vector>
 #include <random>
@@ -96,7 +95,8 @@ class StaticScene {
 template <typename Scalar>
 class StaticEntity {
     public:
-        std::string path_to_model;
+        std::string geometry_path;
+        std::string geometry_type;
         bool smooth_shading;
         Color color;
 
@@ -104,8 +104,9 @@ class StaticEntity {
         Scalar rotation[3][3];
         Scalar scale;
 
-        StaticEntity(std::string path_to_model, bool smooth_shading, Color color){
-            this->path_to_model = path_to_model;
+        StaticEntity(std::string geometry_path, std::string geometry_type, bool smooth_shading, Color color){
+            this->geometry_path = geometry_path;
+            this->geometry_type = geometry_type;
             this->smooth_shading = smooth_shading;
             this->color = color;
 
