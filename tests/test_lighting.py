@@ -1,4 +1,4 @@
-from crt.lighting import PointLight, SquareLight
+from crt.lights import PointLight, SquareLight
 import numpy as np
 
 # Default values:

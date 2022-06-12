@@ -147,7 +147,7 @@ setup(
     zip_safe=False,
     python_requires=">=3.6",
     project_urls={
-        'Documentation': 'docs.crt.ceresnavigation.org',
+        'Documentation': 'https://docs.crt.ceresnavigation.org',
         'Source': 'https://github.com/ceres-navigation/ceres-raytracer',
         'Tracker': 'https://github.com/ceres-navigation/ceres-raytracer/issues'
     }
