@@ -1,15 +1,18 @@
 # CERES Ray Tracer (CRT)
-[![PyPI version](https://img.shields.io/pypi/v/ceres-raytracer)](https://img.shields.io/pypi/v/ceres-raytracer)
-[![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer?include_prereleases)](https://github.com/ceres-navigation/ceres-pathtracer/releases)
-[![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-pathtracer/issues)
+[![PyPI version](https://img.shields.io/pypi/v/ceres-raytracer)](https://pypi.org/project/ceres-raytracer/)
+[![GitHub Release](https://img.shields.io/github/v/release/ceres-navigation/ceres-raytracer?include_prereleases)](https://github.com/ceres-navigation/ceres-raytracer/releases)
+[![GitHub issues](https://img.shields.io/github/issues/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/issues)
 [![GitHub Contributers](https://img.shields.io/github/contributors/ceres-navigation/ceres-raytracer)](https://github.com/ceres-navigation/ceres-raytracer/graphs/contributors)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Size](https://img.shields.io/github/repo-size/ceres-navigation/ceres-raytracer)
 
-This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for:
-- Rendering photo-real images
-- Simulating multi-bounce behavior accounting for wavelength and polarization
-- Modeling solar radiation and albedo radiation pressure on spacecraft
+This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for rendering images, simulating LiDAR, and modeling radiation pressure.
+
+- [Website](https://ceresnavigation.org)
+- [API Documentation](https://docs.crt.ceresnavigation.org)
+- [Source code](https://github.com/ceres-navigation/ceres-raytracer)
+- [Bug Reports](https://github.com/ceres-navigation/ceres-raytracer/issues)
+
 
 ### Available Environments
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
@@ -23,10 +26,9 @@ This project was developed as part of [CERES](https://ceresnavigation.org) and a
 | Ubuntu 20.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_test_ubuntu20.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions)
 | Ubuntu 18.04  | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/build_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/test_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) | [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions) <br /> [![](https://github.com/ceres-navigation/ceres-raytracer/actions/workflows/pypi_test_ubuntu18.yml/badge.svg)](https://github.com/ceres-navigation/ceres-raytracer/actions)
 
-
 ***
-## Quick Start:
-### Install from PyPI:
+## Installation:
+It is recommended to install directly from the Python Package Index (PyPI):
 ```
 pip install ceres-raytracer
 ```
@@ -34,11 +36,17 @@ pip install ceres-raytracer
 ***
 ## Building from Source:
 
-### Build from source::
-
 ```
 git clone https://github.com/ceres-navigation/ceres-raytracer.git
 pip install .
+```
+
+[sphinx](https://www.sphinx-doc.org/en/master/) is used to build documentation for the python API.  To build documentation:
+```
+cd doc
+rm -rf build/
+sphinx-apidoc -o build/ ../crt/ --force
+make html
 ```
 
 ***

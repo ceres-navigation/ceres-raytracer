@@ -13,6 +13,8 @@
 
 # Build ignores
 build/
+doc/build/
+*.html
 
 # CMake Ignores:
 CMakeLists.txt.user

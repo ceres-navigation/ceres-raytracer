@@ -122,12 +122,19 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
+# Get the version :
+from setuptools import setup
+from distutils.util import convert_path
+main_ns = {}
+ver_path = convert_path('crt/_version.py')
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), main_ns)
+
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
-__version__ = "0.5a1"
 setup(
     name="ceres-raytracer",
-    version=__version__,
+    version=main_ns['__version__'],
     author="Chris Gnam",
     author_email="crgnam@buffalo.edu",
     description="CERES Ray Tracer",
@@ -139,4 +146,9 @@ setup(
     install_requires = ["numpy", "Pillow"],
     zip_safe=False,
     python_requires=">=3.6",
+    project_urls={
+        'Documentation': 'docs.crt.ceresnavigation.org',
+        'Source': 'https://github.com/ceres-navigation/ceres-raytracer',
+        'Tracker': 'https://github.com/ceres-navigation/ceres-raytracer/issues'
+    }
 )
