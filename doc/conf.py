@@ -14,7 +14,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../crt/'))
 import crt
-from crt import __version__
+from crt._version import __version__
 
 
 # -- Project information -----------------------------------------------------
