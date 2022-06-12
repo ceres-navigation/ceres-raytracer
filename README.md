@@ -53,7 +53,7 @@ make html
 ## Demos:
 After installing `ceres-raytracer`, simply clone the [ceres-raytracer-demos](https://github.com/ceres-navigation/ceres-raytracer-demos):
 ```
-git clonehttps://github.com/ceres-navigation/ceres-raytracer-demos.git
+git clone https://github.com/ceres-navigation/ceres-raytracer-demos.git
 ```
 and run any of the included `.py` example files:
 
