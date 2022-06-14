@@ -89,6 +89,8 @@ class StaticScene {
 
             return image;
         }
+
+        // std::vector<uint8_t>
         
 };
 

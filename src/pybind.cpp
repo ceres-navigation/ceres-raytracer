@@ -12,6 +12,7 @@
 #include "crt/render.hpp"
 #include "crt/path_trace.hpp"
 #include "crt/lighting.hpp"
+#include "crt/passes.hpp"
 
 #include "crt/static_scene.hpp"
 
@@ -368,7 +369,7 @@ PYBIND11_MODULE(_crt, crt) {
         return result;
     });
 
-    crt.def("get_intersections", [](py::handle camera, py::list entity_list){
+    crt.def("intersection_pass", [](py::handle camera, py::list entity_list){
         // Duplicate camera to obtain unique_ptr:
         auto camera_use = copy_camera_unique(camera);
 
@@ -380,7 +381,7 @@ PYBIND11_MODULE(_crt, crt) {
         }
 
         // Call the intersection tracing function:
-        auto intersections = get_intersections(camera_use, entities);
+        auto intersections = intersection_pass(camera_use, entities);
 
         // Format the output array:
         int width  = (size_t) floor(camera_use->get_resolutionX());
@@ -393,7 +394,7 @@ PYBIND11_MODULE(_crt, crt) {
         return result;
     });
 
-    crt.def("get_instances", [](py::handle camera, py::list entity_list){
+    crt.def("instance_pass", [](py::handle camera, py::list entity_list){
         // Duplicate camera to obtain unique_ptr:
         auto camera_use = copy_camera_unique(camera);
 
@@ -408,7 +409,7 @@ PYBIND11_MODULE(_crt, crt) {
         }
 
         // Call the intersection tracing function:
-        auto instances = get_instances(camera_use, entities);
+        auto instances = instance_pass(camera_use, entities);
 
         // Format the output array:
         int width  = (size_t) floor(camera_use->get_resolutionX());
@@ -418,6 +419,35 @@ PYBIND11_MODULE(_crt, crt) {
         for (int i = 0; i < height*width; i++){
             raw[i] = instances[i];
         }
+        return result;
+    });
+
+    crt.def("normal_pass", [](py::handle camera, py::list entity_list){
+        // Duplicate camera to obtain unique_ptr:
+        auto camera_use = copy_camera_unique(camera);
+
+        // Convert py::list of entities to std::vector
+        uint32_t id = 1;
+        std::vector<Entity<Scalar>*> entities;
+        for (auto entity_handle : entity_list) {
+            Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();
+            entity->set_id(id);
+            entities.emplace_back(entity);
+            id++;
+        }
+
+        // Call the intersection tracing function:
+        auto normals = normal_pass(camera_use, entities);
+
+        // Format the output array:
+        int width  = (size_t) floor(camera_use->get_resolutionX());
+        int height = (size_t) floor(camera_use->get_resolutionY());
+        auto result = py::array_t<Scalar>({height,width,3});
+        auto raw = result.mutable_data();
+        for (int i = 0; i < height*width*3; i++){
+            raw[i] = normals[i];
+        }
+
         return result;
     });
 }

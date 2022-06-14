@@ -5,6 +5,7 @@ add_library(
     cameras.hpp
     entity.hpp
     render.hpp
+    passes.hpp
     path_trace.hpp
     static_scene.hpp
     lighting.hpp

@@ -1,21 +1,25 @@
-from _crt import get_intersections, get_instances, render
-
+import _crt
 import numpy as np
 
-def normal_pass(camera, entities):
+def normal_pass(camera, entities, return_image=False):
     entities_cpp = []
     for entity in entities:
         entities_cpp.append(entity._cpp)
 
-    image = render(camera._cpp, [], entities_cpp, 1,1, 0, 0)
-    return image
+    normals = _crt.normal_pass(camera._cpp, entities_cpp)
 
-def depth_pass(camera, entities, return_image=False):
+    if return_image:
+        image = 255*np.abs(normals)
+        return normals, image
+
+    return normals
+
+def intersection_pass(camera, entities, return_image=False):
     entities_cpp = []
     for entity in entities:
         entities_cpp.append(entity._cpp)
 
-    intersections = get_intersections(camera._cpp, entities_cpp)
+    intersections = _crt.intersection_pass(camera._cpp, entities_cpp)
 
     if return_image:
         image = np.sqrt(intersections[:,:,0]**2 + intersections[:,:,1]**2 + intersections[:,:,2]**2)
@@ -30,7 +34,7 @@ def instance_pass(camera, entities, return_image=False):
     for entity in entities:
         entities_cpp.append(entity._cpp)
 
-    instances = get_instances(camera._cpp, entities_cpp)
+    instances = _crt.instance_pass(camera._cpp, entities_cpp)
     
     if return_image:
         unique_ids = np.unique(instances)
