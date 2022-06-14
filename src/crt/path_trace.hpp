@@ -65,19 +65,6 @@ std::vector<uint8_t> path_trace(std::unique_ptr<CameraModel<Scalar>> &camera,
                 Color path_radiance(0);
                 auto hit = traverser.traverse(ray, closest_intersector);
 
-                // If no bouncesm, return just the vertex normal as the color:
-                if (num_bounces == 0) {
-                    if (hit) {
-                        auto &tri = tri_data[hit->primitive_index];
-                        auto u = hit->intersection.u;
-                        auto v = hit->intersection.v;
-                        auto normal = tri.parent->smooth_shading ? bvh::normalize(u*tri.vn1 + v*tri.vn2 + (Scalar(1.0)-u-v)*tri.vn0) : bvh::normalize(tri.n);
-                        path_radiance[0] = std::abs(normal[0]);
-                        path_radiance[1] = std::abs(normal[1]);
-                        path_radiance[2] = std::abs(normal[2]);
-                    }
-                }
-
                 // Loop through all bounces
                 auto weight = Color(2*M_PI);
                 int bounce = 0;
