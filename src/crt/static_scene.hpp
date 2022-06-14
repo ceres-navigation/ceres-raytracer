@@ -16,6 +16,9 @@
 #include "bvh/triangle.hpp"
 #include "bvh/vector.hpp"
 
+#include "path_trace.hpp"
+#include "passes.hpp"
+
 #include "model_loaders/happly.hpp"
 #include "model_loaders/tiny_obj_loader.hpp"
 
@@ -90,7 +93,20 @@ class StaticScene {
             return image;
         }
 
-        // std::vector<uint8_t>
+        std::vector<Scalar> intersection_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
+            auto intersections = get_inetersections<Scalar>(camera, bvh_cache, triangles);
+            return intersections;
+        }
+
+        std::vector<uint32_t> instance_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
+            auto instances = get_instances<Scalar>(camera, bvh_cache, triangles);
+            return instances;
+        }
+
+        std::vector<Scalar> normal_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
+            auto normals = get_normals<Scalar>(camera, bvh_cache, triangles);
+            return normals;
+        }
         
 };
 

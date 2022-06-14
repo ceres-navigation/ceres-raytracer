@@ -325,6 +325,58 @@ PYBIND11_MODULE(_crt, crt) {
                 raw[i] = pixels[i];
             }
             return result;
+        })
+        .def("intersection_pass", [](StaticScene<Scalar> &self, py::handle camera){
+            // Duplicate camera to obtain unique_ptr:
+            auto camera_use = copy_camera_unique(camera);
+
+            // Call the intersection_pass method:
+            auto intersections = self.intersection_pass(camera_use);
+
+            // Format the output array:
+            int width  = (size_t) floor(camera_use->get_resolutionX());
+            int height = (size_t) floor(camera_use->get_resolutionY());
+            auto result = py::array_t<Scalar>({height,width,3});
+            auto raw = result.mutable_data();
+            for (int i = 0; i < height*width*3; i++){
+                raw[i] = intersections[i];
+            }
+            return result;
+
+        })
+        .def("instance_pass", [](StaticScene<Scalar> &self, py::handle camera){
+            // Duplicate camera to obtain unique_ptr:
+            auto camera_use = copy_camera_unique(camera);
+
+            // Call the instance_pass method:
+            auto instances = self.instance_pass(camera_use);
+
+            // Format the output array:
+            int width  = (size_t) floor(camera_use->get_resolutionX());
+            int height = (size_t) floor(camera_use->get_resolutionY());
+            auto result = py::array_t<uint32_t>({height,width});
+            auto raw = result.mutable_data();
+            for (int i = 0; i < height*width; i++){
+                raw[i] = instances[i];
+            }
+            return result;
+        })
+        .def("normal_pass", [](StaticScene<Scalar> &self, py::handle camera){
+            // Duplicate camera to obtain unique_ptr:
+            auto camera_use = copy_camera_unique(camera);
+
+            // Call the normal_pass method:
+            auto normals = self.normal_pass(camera_use);
+
+            // Format the output array:
+            int width  = (size_t) floor(camera_use->get_resolutionX());
+            int height = (size_t) floor(camera_use->get_resolutionY());
+            auto result = py::array_t<Scalar>({height,width,3});
+            auto raw = result.mutable_data();
+            for (int i = 0; i < height*width*3; i++){
+                raw[i] = normals[i];
+            }
+            return result;
         });
 
     // PinholeCamera<Scalar> &
