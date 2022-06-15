@@ -7,6 +7,8 @@ template <typename Scalar>
 class CameraModel {
     using Vector3 =  bvh::Vector3<Scalar>;
     public:
+        bool z_positive;
+
         Vector3 position;
         Scalar rotation[3][3];
 
@@ -53,12 +55,13 @@ class PinholeCamera: public CameraModel<Scalar> {
         Scalar scale[2];
         Scalar K[3][3];
 
-        PinholeCamera(Scalar focal_length, Scalar resolution[2], Scalar sensor_size[2]) {
+        PinholeCamera(Scalar focal_length, Scalar resolution[2], Scalar sensor_size[2], bool z_positive) {
             this -> focal_length = focal_length;
             this -> resolution[0] = resolution[0];
             this -> resolution[1] = resolution[1];
             this -> sensor_size[0] = sensor_size[0];
             this -> sensor_size[1] = sensor_size[1];
+            this -> z_positive = z_positive;
 
             center[0] = resolution[0]/2.0;
             center[1] = resolution[1]/2.0;
@@ -89,6 +92,7 @@ class PinholeCamera: public CameraModel<Scalar> {
 
         // Copy constructor:
         PinholeCamera(const PinholeCamera<Scalar> &rhs) {
+            this -> z_positive = rhs.z_positive;
             this -> focal_length = rhs.focal_length;
             this -> resolution[0]   = rhs.resolution[0];
             this -> resolution[1]   = rhs.resolution[1];
@@ -121,7 +125,13 @@ class PinholeCamera: public CameraModel<Scalar> {
 
         bvh::Ray<Scalar> pixel_to_ray(Scalar u, Scalar v) {
             // Generate rays in the camera frame:
-            Vector3 dir = bvh::normalize(Vector3((-center[0]+u)/scale[0], (center[1]-v)/scale[1], -this->focal_length));
+            Vector3 dir;
+            if (this->z_positive){
+                dir = bvh::normalize(Vector3((-center[0]+u)/scale[0], (center[1]-v)/scale[1], this->focal_length));
+            }
+            else {
+                dir = bvh::normalize(Vector3((-center[0]+u)/scale[0], (center[1]-v)/scale[1], -this->focal_length));
+            } 
 
             // Rotate rays to the world frame (NOTE: the TRANSPOSE of the provided rotation is used for this)
             Vector3 temp;

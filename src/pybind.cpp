@@ -26,7 +26,7 @@ using Scalar = double;
 using Vector3 = bvh::Vector3<Scalar>;
 
 // Wrapper functions to handle type casting?  This seems weird to do it this way....
-PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_list, py::list sensor_size_list) {
+PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_list, py::list sensor_size_list, bool z_positive) {
     Scalar resolution[2];
     Scalar sensor_size[2];
 
@@ -36,7 +36,7 @@ PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_li
     sensor_size[0] = sensor_size_list[0].cast<Scalar>();
     sensor_size[1] = sensor_size_list[1].cast<Scalar>();
 
-    return PinholeCamera<Scalar>(focal_length, resolution, sensor_size);
+    return PinholeCamera<Scalar>(focal_length, resolution, sensor_size, z_positive);
 }
 
 SquareLight<Scalar> create_squarelight(Scalar intensity, py::list size_list){
