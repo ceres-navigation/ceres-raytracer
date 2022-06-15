@@ -1,6 +1,5 @@
 add_library(
     crt
-    rotations.hpp
     transform.hpp
     cameras.hpp
     entity.hpp
@@ -8,7 +7,7 @@ add_library(
     passes.hpp
     path_trace.hpp
     static_scene.hpp
-    lighting.hpp
+    lights.hpp
 )
 target_include_directories(crt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

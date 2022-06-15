@@ -12,7 +12,6 @@
 #include "model_loaders/happly.hpp"
 #include "model_loaders/tiny_obj_loader.hpp"
 
-#include "rotations.hpp"
 #include "transform.hpp"
 
 #include "obj_temp/obj.hpp"

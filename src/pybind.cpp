@@ -2,7 +2,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include "crt/rotations.hpp"
 #include "crt/transform.hpp"
 
 #include <lodepng/lodepng.h>
@@ -11,7 +10,7 @@
 #include "crt/entity.hpp"
 #include "crt/render.hpp"
 #include "crt/path_trace.hpp"
-#include "crt/lighting.hpp"
+#include "crt/lights.hpp"
 #include "crt/passes.hpp"
 
 #include "crt/static_scene.hpp"
@@ -27,7 +26,7 @@ using Scalar = double;
 using Vector3 = bvh::Vector3<Scalar>;
 
 // Wrapper functions to handle type casting?  This seems weird to do it this way....
-PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_list, py::list sensor_size_list) {
+PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_list, py::list sensor_size_list, bool z_positive) {
     Scalar resolution[2];
     Scalar sensor_size[2];
 
@@ -37,7 +36,7 @@ PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_li
     sensor_size[0] = sensor_size_list[0].cast<Scalar>();
     sensor_size[1] = sensor_size_list[1].cast<Scalar>();
 
-    return PinholeCamera<Scalar>(focal_length, resolution, sensor_size);
+    return PinholeCamera<Scalar>(focal_length, resolution, sensor_size, z_positive);
 }
 
 SquareLight<Scalar> create_squarelight(Scalar intensity, py::list size_list){
@@ -130,7 +129,49 @@ PYBIND11_MODULE(_crt, crt) {
             }
             self.set_rotation(rotation_arr);
         })
-        .def("set_pose", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+        .def("set_pose", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> position, py::array_t<double, py::array::c_style | py::array::forcecast> rotation){
+            // Get the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+
+            // Get the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+            // Set the pose:
+            self.set_pose(position_vector3, rotation_arr);
+        });
+
+    py::class_<PointLight<Scalar>>(crt, "PointLight")
+        .def(py::init(&create_pointlight))
+        .def("set_position", [](PointLight<Scalar> &self, py::array_t<Scalar> position){
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
+        })
+        .def("set_rotation", [](PointLight<Scalar> &self, py::array_t<Scalar> rotation){
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("set_pose", [](PointLight<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
             // Set the position:
             py::buffer_info buffer_pos = position.request();
             Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
@@ -149,15 +190,6 @@ PYBIND11_MODULE(_crt, crt) {
                 }
             }
             self.set_rotation(rotation_arr);
-        });
-
-    py::class_<PointLight<Scalar>>(crt, "PointLight")
-        .def(py::init(&create_pointlight))
-        .def("set_position", [](PointLight<Scalar> &self, py::array_t<Scalar> position){
-            py::buffer_info buffer = position.request();
-            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
-            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
-            self.set_position(position_vector3);
         });
 
     py::class_<SquareLight<Scalar>>(crt, "SquareLight")
@@ -379,7 +411,6 @@ PYBIND11_MODULE(_crt, crt) {
             return result;
         });
 
-    // PinholeCamera<Scalar> &
     crt.def("render", [](py::handle camera, py::list lights_list, py::list entity_list,
                          int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
 

@@ -22,13 +22,12 @@
 #include "model_loaders/happly.hpp"
 #include "model_loaders/tiny_obj_loader.hpp"
 
-#include "rotations.hpp"
 #include "transform.hpp"
 
 #include "obj_temp/obj.hpp"
 #include "materials/material.hpp"
 
-#include "lighting.hpp"
+#include "lights.hpp"
 #include "cameras.hpp"
 
 #include "materials/brdfs.hpp"
@@ -38,6 +37,10 @@ class StaticScene {
     public:
         bvh::Bvh<Scalar> bvh_cache;
         std::vector<bvh::Triangle<Scalar>> triangles;
+
+        // Pose information
+        bvh::Vector3<Scalar> position;
+        Scalar rotation[3][3];
 
         // Constructor:
         StaticScene(std::vector<Entity<Scalar>*> entities){
@@ -83,13 +86,23 @@ class StaticScene {
                 << bvh_cache.node_count << " node(s) and "
                 << reference_count << " reference(s)\n";
             std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
+
+            // Default values for all pose information:
+            this -> position = bvh::Vector3<Scalar>(0,0,0);
+            this -> rotation[0][0] = 1;
+            this -> rotation[0][1] = 0;
+            this -> rotation[0][2] = 0;
+            this -> rotation[1][0] = 0;
+            this -> rotation[1][1] = 1;
+            this -> rotation[1][2] = 0;
+            this -> rotation[2][0] = 0;
+            this -> rotation[2][1] = 0;
+            this -> rotation[2][2] = 1;
         }
 
         std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<std::unique_ptr<Light<Scalar>>> &lights,
                                     int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
-
             auto image = path_trace(camera, lights, bvh_cache, triangles, min_samples, max_samples, noise_threshold, num_bounces);
-
             return image;
         }
 
