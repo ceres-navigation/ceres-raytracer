@@ -31,7 +31,6 @@
 #include "cameras.hpp"
 
 #include "materials/brdfs.hpp"
-#include "rotations.hpp"
 
 template <typename Scalar>
 class StaticScene {
@@ -101,73 +100,24 @@ class StaticScene {
             this -> rotation[2][2] = 1;
         }
 
-        void set_position(bvh::Vector3<Scalar> position) {
-            this -> position = position;
-        }
-        void set_rotation(Scalar rotation[3][3]) {
-            for (int i = 0; i < 3; i++){
-                for (int j = 0; j <3; j++){
-                    this -> rotation[i][j] = rotation[i][j];
-                }
-            }
-        }
-        void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
-            set_rotation(rotation);
-            set_position(position);
-        }
-
         std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<std::unique_ptr<Light<Scalar>>> &lights,
                                     int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
-            // Apply inverse transformation to camera and light objects:
-            Scalar cam_rel_rot[3][3];
-            bvh::Vector3<Scalar> cam_rel_pos;
-            multiply_rotations(this->rotation, camera->rotation, cam_rel_rot);
-            rotate_vector(cam_rel_rot, camera->position - this->position, cam_rel_pos);
-            camera->set_pose(cam_rel_pos, cam_rel_rot);
-
-            for (auto &light : lights){
-                Scalar light_rel_rot[3][3];
-                bvh::Vector3<Scalar> light_rel_pos;
-                multiply_rotations(this->rotation, light->rotation, light_rel_rot);
-                rotate_vector(light_rel_rot, light->position - this->position, light_rel_pos);
-                light->set_pose(light_rel_pos, light_rel_rot);
-            }
-
-            // Render:
             auto image = path_trace(camera, lights, bvh_cache, triangles, min_samples, max_samples, noise_threshold, num_bounces);
             return image;
         }
 
         std::vector<Scalar> intersection_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
-            // Apply inverse transformation to camera object:
-            // camera->translate(-this->position);
-            // camera->rotate_about_origin(transpose(this->rotation));
-
             auto intersections = get_inetersections<Scalar>(camera, bvh_cache, triangles);
-
-            // Apply transformation to intersections:
-            // intersections = rotate_vectors(this->rotation, intersections);
             return intersections;
         }
 
         std::vector<uint32_t> instance_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
-            // Apply inverse transformation to camera object:
-            // camera->translate(-this->position);
-            // camera->rotate_about_origin(transpose(this->rotation));
-
             auto instances = get_instances<Scalar>(camera, bvh_cache, triangles);
             return instances;
         }
 
         std::vector<Scalar> normal_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
-            // Apply inverse transformation to camera object:
-            // camera->translate(-this->position);
-            // camera->rotate_about_origin(transpose(this->rotation));
-
             auto normals = get_normals<Scalar>(camera, bvh_cache, triangles);
-
-            // Apply transformation to normals:
-            
             return normals;
         }
         

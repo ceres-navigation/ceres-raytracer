@@ -2,7 +2,6 @@
 #define __CAMERAS_H
 
 #include <bvh/bvh.hpp>
-#include "rotations.hpp"
 
 template <typename Scalar>
 class CameraModel {
@@ -23,30 +22,25 @@ class CameraModel {
         virtual Scalar get_resolutionX() = 0;
         virtual Scalar get_resolutionY() = 0;
 
-        void set_position(Vector3 position) {
-            this -> position = position;
+        void set_position(Vector3 new_position) {
+            this -> position = new_position;
         }
 
-        void set_rotation(Scalar rotation[3][3]) {
+        void set_rotation(Scalar new_rotation[3][3]) {
             for (int i = 0; i < 3; i++){
                 for (int j = 0; j <3; j++){
-                    this -> rotation[i][j] = rotation[i][j];
+                    this -> rotation[i][j] = new_rotation[i][j];
                 }
             }
         }
 
-        void set_pose(Vector3 position, Scalar rotation[3][3]){
-            set_position(position);
-            set_rotation(rotation);
-        }
-
-        void translate(bvh::Vector3<Scalar> translation){
-            this -> position = position + translation;
-        }
-
-        void rotate_about_origin(Scalar applied_rotation[3][3]){
-            this -> rotation = multiply_rotations(this->rotation, applied_rotation);
-            this -> position = rotate_vector(this->position, applied_rotation);
+        void set_pose(Vector3 new_position, Scalar new_rotation[3][3]){
+            this -> position = new_position;
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j <3; j++){
+                    this -> rotation[i][j] = new_rotation[i][j];
+                }
+            }
         }
 };
 
@@ -135,7 +129,6 @@ class PinholeCamera: public CameraModel<Scalar> {
             temp[1] = this->rotation[0][1]*dir[0] + this->rotation[1][1]*dir[1] + this->rotation[2][1]*dir[2];
             temp[2] = this->rotation[0][2]*dir[0] + this->rotation[1][2]*dir[1] + this->rotation[2][2]*dir[2];
             dir = temp;
-            // std::cout << dir[0] << " " << dir[1] << " " << dir[2] << "\n";
 
             // Return the ray object:
             bvh::Ray<Scalar> ray(this->position, dir);

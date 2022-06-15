@@ -6,7 +6,6 @@
 #include <bvh/bvh.hpp>
 
 #include "transform.hpp"
-#include "rotations.hpp"
 
 // Abstract light class:
 template <typename Scalar>
