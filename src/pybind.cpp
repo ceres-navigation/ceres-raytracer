@@ -2,7 +2,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include "crt/rotations.hpp"
 #include "crt/transform.hpp"
 
 #include <lodepng/lodepng.h>
@@ -11,7 +10,7 @@
 #include "crt/entity.hpp"
 #include "crt/render.hpp"
 #include "crt/path_trace.hpp"
-#include "crt/lighting.hpp"
+#include "crt/lights.hpp"
 #include "crt/passes.hpp"
 
 #include "crt/static_scene.hpp"

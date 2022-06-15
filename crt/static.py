@@ -2,7 +2,7 @@ import _crt
 import numpy as np
 
 class StaticScene:
-    def __init__(self, entities):
+    def __init__(self, entities, position=np.zeros(3), rotation=np.eye(3)):
         self.entities = entities
 
         entities_cpp = []
@@ -10,6 +10,22 @@ class StaticScene:
             entities_cpp.append(entity._cpp)
 
         self._cpp = _crt.StaticScene(entities_cpp)
+
+        position = position
+        rotation = rotation
+
+    def set_position(self, position):
+        self.position = position
+        self._cpp.set_position(position)
+
+    def set_rotation(self, rotation):
+        self.rotation = rotation
+        self._cpp.set_rotation(rotation)
+
+    def set_pose(self, position, rotation):
+        self.position = position
+        self.rotation = rotation
+        self._cpp.set_pose(position, rotation)
 
     def render(self, camera, lights, min_samples=1, max_samples=1, noise_threshold=1, num_bounces=1):
         lights_cpp = []

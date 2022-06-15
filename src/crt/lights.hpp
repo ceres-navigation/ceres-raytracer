@@ -6,6 +6,7 @@
 #include <bvh/bvh.hpp>
 
 #include "transform.hpp"
+#include "rotations.hpp"
 
 // Abstract light class:
 template <typename Scalar>
@@ -35,6 +36,15 @@ class Light {
             set_position(position);
             set_rotation(rotation);
         }
+
+        void translate(bvh::Vector3<Scalar> translation){
+            this -> position = position + translation;
+        }
+
+        void rotate_about_origin(Scalar new_rotation[3][3]){
+            this -> rotation = multiply_rotations(this->rotation, new_rotation);
+            this -> position = rotate_vector(this->position, new_rotation);
+        }
 };
 
 
@@ -53,6 +63,16 @@ class PointLight: public Light<Scalar>  {
         PointLight(const PointLight<Scalar> &rhs) {
             this -> intensity = rhs.intensity;
             this -> position  = rhs.position;
+
+            this -> rotation[0][0] = 1;
+            this -> rotation[0][1] = 0;
+            this -> rotation[0][2] = 0;
+            this -> rotation[1][0] = 0;
+            this -> rotation[1][1] = 1;
+            this -> rotation[1][2] = 0;
+            this -> rotation[2][0] = 0;
+            this -> rotation[2][1] = 0;
+            this -> rotation[2][2] = 1;
         }
 
         bvh::Ray<Scalar> sample_ray(bvh::Vector3<Scalar> origin){

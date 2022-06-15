@@ -7,7 +7,7 @@
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
 
-#include "lighting.hpp"
+#include "lights.hpp"
 #include "cameras.hpp"
 
 template <typename Scalar>

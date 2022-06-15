@@ -2,6 +2,7 @@
 #define __CAMERAS_H
 
 #include <bvh/bvh.hpp>
+#include "rotations.hpp"
 
 template <typename Scalar>
 class CameraModel {
@@ -37,6 +38,15 @@ class CameraModel {
         void set_pose(Vector3 position, Scalar rotation[3][3]){
             set_position(position);
             set_rotation(rotation);
+        }
+
+        void translate(bvh::Vector3<Scalar> translation){
+            this -> position = position + translation;
+        }
+
+        void rotate_about_origin(Scalar applied_rotation[3][3]){
+            this -> rotation = multiply_rotations(this->rotation, applied_rotation);
+            this -> position = rotate_vector(this->position, applied_rotation);
         }
 };
 
