@@ -16,21 +16,15 @@
 #include "bvh/triangle.hpp"
 #include "bvh/vector.hpp"
 
-#include "path_trace.hpp"
+#include "path_tracing/path_trace.hpp"
 #include "passes.hpp"
 
-#include "model_loaders/happly.hpp"
-#include "model_loaders/tiny_obj_loader.hpp"
-
 #include "transform.hpp"
-
-#include "obj_temp/obj.hpp"
-#include "materials/material.hpp"
 
 #include "lights.hpp"
 #include "cameras.hpp"
 
-#include "materials/brdfs.hpp"
+
 
 template <typename Scalar>
 class StaticScene {

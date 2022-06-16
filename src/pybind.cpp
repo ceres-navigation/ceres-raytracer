@@ -9,7 +9,7 @@
 #include "crt/cameras.hpp"
 #include "crt/entity.hpp"
 #include "crt/render.hpp"
-#include "crt/path_trace.hpp"
+
 #include "crt/lights.hpp"
 #include "crt/passes.hpp"
 

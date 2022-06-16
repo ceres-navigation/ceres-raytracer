@@ -5,7 +5,7 @@
 #include <chrono>
 #include "entity.hpp"
 
-#include "path_trace.hpp"
+#include "path_tracing/path_trace.hpp"
 
 #include <bvh/binned_sah_builder.hpp>
 #include <bvh/sweep_sah_builder.hpp>
