@@ -13,7 +13,7 @@
 #include "crt/lights.hpp"
 #include "crt/passes.hpp"
 
-#include "crt/static_scene.hpp"
+#include "crt/body_fixed.hpp"
 
 #include "crt/obj_temp/obj.hpp"
 #include "crt/materials/material.hpp"
@@ -52,13 +52,13 @@ PointLight<Scalar> create_pointlight(Scalar intensity){
     return PointLight<Scalar>(intensity);
 }
 
-StaticEntity<Scalar> create_static_entity(std::string geometry_path, std::string geometry_type, bool smooth_shading, py::list color_list){
+BodyFixedEntity<Scalar> create_body_fixed_entity(std::string geometry_path, std::string geometry_type, bool smooth_shading, py::list color_list){
     Color color;
     color[0] = color_list[0].cast<Scalar>();
     color[1] = color_list[1].cast<Scalar>();
     color[2] = color_list[2].cast<Scalar>();
     
-    return StaticEntity<Scalar>(geometry_path, geometry_type, smooth_shading, color);
+    return BodyFixedEntity<Scalar>(geometry_path, geometry_type, smooth_shading, color);
 }
 
 Entity<Scalar>* create_entity(std::string geometry_path, std::string geometry_type, bool smooth_shading, py::list color_list){
@@ -82,18 +82,18 @@ std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(py::handle camera){
     return camera_copy;
 }
 
-StaticScene<Scalar> create_static_scene(py::list static_entity_list) {
+BodyFixedGroup<Scalar> create_body_fixed_group(py::list body_fixed_entity_list) {
     // Convert py::list of entities to std::vector
     std::vector<Entity<Scalar>*> entities;
     uint32_t id = 1;
-    for (auto static_entity_handle : static_entity_list) {
-        StaticEntity<Scalar> static_entity = static_entity_handle.cast<StaticEntity<Scalar>>();
+    for (auto body_fixed_entity_handle : body_fixed_entity_list) {
+        BodyFixedEntity<Scalar> body_fixed_entity = body_fixed_entity_handle.cast<BodyFixedEntity<Scalar>>();
 
         //Create the new entities:
-        Entity<Scalar>* new_entity = new Entity<Scalar>(static_entity.geometry_path, static_entity.geometry_type, static_entity.smooth_shading, static_entity.color);
-        new_entity->set_scale(static_entity.scale);
-        new_entity->set_position(static_entity.position);
-        new_entity->set_rotation(static_entity.rotation);
+        Entity<Scalar>* new_entity = new Entity<Scalar>(body_fixed_entity.geometry_path, body_fixed_entity.geometry_type, body_fixed_entity.smooth_shading, body_fixed_entity.color);
+        new_entity->set_scale(body_fixed_entity.scale);
+        new_entity->set_position(body_fixed_entity.position);
+        new_entity->set_rotation(body_fixed_entity.rotation);
         new_entity->set_id(id);
         id++;
 
@@ -101,7 +101,7 @@ StaticScene<Scalar> create_static_scene(py::list static_entity_list) {
         entities.emplace_back(new_entity);
     }
 
-    return StaticScene(entities);
+    return BodyFixedGroup(entities);
 }
 
 // Definition of the python wrapper module:
@@ -279,18 +279,18 @@ PYBIND11_MODULE(_crt, crt) {
             self.set_rotation(rotation_arr);
         });
 
-    py::class_<StaticEntity<Scalar>>(crt, "StaticEntity")
-        .def(py::init(&create_static_entity))
-        .def("set_scale",    [](StaticEntity<Scalar> &self, Scalar scale){ 
+    py::class_<BodyFixedEntity<Scalar>>(crt, "BodyFixedEntity")
+        .def(py::init(&create_body_fixed_entity))
+        .def("set_scale",    [](BodyFixedEntity<Scalar> &self, Scalar scale){ 
             self.set_scale(scale);
         })
-        .def("set_position", [](StaticEntity<Scalar> &self, py::array_t<Scalar> position){
+        .def("set_position", [](BodyFixedEntity<Scalar> &self, py::array_t<Scalar> position){
             py::buffer_info buffer = position.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
             self.set_position(position_vector3);
         })
-        .def("set_rotation", [](StaticEntity<Scalar> &self, py::array_t<Scalar> rotation){
+        .def("set_rotation", [](BodyFixedEntity<Scalar> &self, py::array_t<Scalar> rotation){
             py::buffer_info buffer = rotation.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             Scalar rotation_arr[3][3];
@@ -303,7 +303,7 @@ PYBIND11_MODULE(_crt, crt) {
             }
             self.set_rotation(rotation_arr);
         })
-        .def("set_pose", [](StaticEntity<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+        .def("set_pose", [](BodyFixedEntity<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
             // Set the position:
             py::buffer_info buffer_pos = position.request();
             Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
@@ -324,9 +324,9 @@ PYBIND11_MODULE(_crt, crt) {
             self.set_rotation(rotation_arr);
         });
 
-    py::class_<StaticScene<Scalar>>(crt, "StaticScene")
-        .def(py::init(&create_static_scene))
-        .def("render",    [](StaticScene<Scalar> &self, py::handle camera, py::list lights_list,
+    py::class_<BodyFixedGroup<Scalar>>(crt, "BodyFixedGroup")
+        .def(py::init(&create_body_fixed_group))
+        .def("render",    [](BodyFixedGroup<Scalar> &self, py::handle camera, py::list lights_list,
                              int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){ 
 
             // Duplicate camera to obtain unique_ptr:
@@ -358,7 +358,7 @@ PYBIND11_MODULE(_crt, crt) {
             }
             return result;
         })
-        .def("intersection_pass", [](StaticScene<Scalar> &self, py::handle camera){
+        .def("intersection_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
             // Duplicate camera to obtain unique_ptr:
             auto camera_use = copy_camera_unique(camera);
 
@@ -376,7 +376,7 @@ PYBIND11_MODULE(_crt, crt) {
             return result;
 
         })
-        .def("instance_pass", [](StaticScene<Scalar> &self, py::handle camera){
+        .def("instance_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
             // Duplicate camera to obtain unique_ptr:
             auto camera_use = copy_camera_unique(camera);
 
@@ -393,7 +393,7 @@ PYBIND11_MODULE(_crt, crt) {
             }
             return result;
         })
-        .def("normal_pass", [](StaticScene<Scalar> &self, py::handle camera){
+        .def("normal_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
             // Duplicate camera to obtain unique_ptr:
             auto camera_use = copy_camera_unique(camera);
 

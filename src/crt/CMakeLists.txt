@@ -6,7 +6,7 @@ add_library(
     render.hpp
     passes.hpp
     path_trace.hpp
-    static_scene.hpp
+    body_fixed.hpp
     lights.hpp
 )
 target_include_directories(crt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
