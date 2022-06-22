@@ -41,10 +41,10 @@ git clone https://github.com/ceres-navigation/ceres-raytracer.git
 pip install .
 ```
 
-[sphinx](https://www.sphinx-doc.org/en/master/) is used to build documentation for the python API.  To build documentation:
+[sphinx](https://www.sphinx-doc.org/en/master/) is used to build documentation for the python API.  To build documentation on Linux systems, simply run:
 ```
 cd doc
-rm -rf build/
+rm -rf build
 sphinx-apidoc -o build/ ../crt/ --force
 make html
 ```
@@ -66,38 +66,41 @@ and run any of the included `.py` example files:
 
 ***
 ## Tasks:
-- [ ] Implement physically based radiance tracking for paths
-- [ ] Improve the adaptive sampling noise calculation
-- [ ] Triangular meshes
-  - [ ] Add vertex color support
-  - [x] Add parent object support
-  - [ ] Add parsers for more mesh type (.PLY, .GLTF/.GLB)
-  - [ ] Add texture mapping and normal maps
-- [x] Python Refactor
-  - [x] Reorganize code into classes
-  - [x] Add python bindings with pybind11
-  - [x] Animation/sequence support
-  - [x] Add wrapper classes with keyword arguments and state handling
-  - [x] Setup build system using setuptools (for pip install)
-  - [x] Distribute on PyPI
-  - [x] Add Static BVH caching
+- [ ] Python Interface
+  - [x] Python bindings with pybind11
+  - [ ] Add support for SPICE
+  - [ ] Validate vector and rotation inputs
+- [ ] Rendering
+  - [ ] Improve the adaptive sampling noise calculation
+  - [x] Implement normal vector render pass
+  - [x] Implement intersection/depth render pass
+  - [x] Implement instance render pass
+  - [ ] Implement bidirectional path tracing
+  - [ ] Implement Primary Sample Space Metropolis Light Transport
 - [ ] Importance Sampling
   - [ ] Implement Malley's method for cosine importance
-  - [ ] Investigate alternative importance sampling method for planetary bodies (where primary indirect contribution is near horizon)
+  - [ ] Alternative importance sampling method for planetary bodies
 - [ ] Lighting
   - [x] Add output intensity to light objects
   - [ ] Add circular area lights
   - [ ] Add emissive mesh geometries
   - [ ] Add polarized light
   - [ ] Add specific wavelength support
+  - [ ] Add spectral power density
+  - [ ] Implement physically based radiance tracking for paths
 - [ ] Cameras
   - [ ] Add linear pushbroom camera model
   - [ ] Add calibrated camera model
+- [ ] Entities
+  - [x] Add parent object pointer to triangular meshes
+  - [ ] Add parsers for more mesh type (.PLY, .GLTF/.GLB)
 - [ ] Materials
+  - [ ] Refactor materials module to allow texturing
   - [ ] Add McEwen BRDF
-  - [ ] Add PBR textures
+  - [ ] Add PBR texture support
 - [ ] Simulation
   - [ ] Add radiation pressure modeling
+  - [ ] Add solar panel flux modeling
 
 ***
 ## Attributions
