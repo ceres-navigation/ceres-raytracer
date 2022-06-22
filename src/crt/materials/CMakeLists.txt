@@ -2,6 +2,7 @@ add_library(
     materials
     brdfs.hpp
     btdfs.hpp
+    sampling.hpp
     material.hpp
     uvmaps.hpp
 )

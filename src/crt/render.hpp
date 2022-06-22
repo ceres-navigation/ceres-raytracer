@@ -12,7 +12,6 @@
 #include <bvh/parallel_reinsertion_optimizer.hpp>
 #include <bvh/node_layout_optimizer.hpp>
 
-// From old render.hpp
 #include <cstdint>
 #include <cmath>
 #include <iomanip>

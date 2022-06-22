@@ -1,5 +1,5 @@
-#ifndef __TRACE_H
-#define __TRACE_H
+#ifndef __PATH_TRACE_H
+#define __PATH_TRACE_H
 
 #include <chrono>
 #include "bvh/bvh.hpp"
