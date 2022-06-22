@@ -1,33 +1,18 @@
 import _crt
 import numpy as np
 
-from crt._sanitize import sanitize_array as SA
+from crt._rigid_body import RigidBody
+from crt._pybind_convert import validate_entities
 
-class StaticScene:
+class BodyFixedGroup(RigidBody):
     def __init__(self, entities, position=np.zeros(3), rotation=np.eye(3)):
-        self.entities = entities
+        entities_cpp = validate_entities(entities)
 
-        entities_cpp = []
-        for entity in entities:
-            entities_cpp.append(entity._cpp)
-
-        self._cpp = _crt.StaticScene(entities_cpp)
-
-        self.position = position
-        self.rotation = rotation
-
-    def set_position(self, position):
-        self.position = position
-
-    def set_rotation(self, rotation):
-        self.rotation = rotation
-
-    def set_pose(self, position, rotation):
-        self.position = position
-        self.rotation = rotation
+        self._cpp = _crt.BodyFixedGroup(entities_cpp)
+        self.set_pose(position, rotation, cpp=False)
 
     def render(self, camera, lights, min_samples=1, max_samples=1, noise_threshold=1, num_bounces=1):
-        # Transform camera into StaticScene frame:
+        # Transform camera into BodyFixedGroupd frame:
         cam_rel_pos = camera.position - self.position
         cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
         cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
@@ -46,7 +31,7 @@ class StaticScene:
         return image
 
     def normal_pass(self, camera, return_image = False):
-        # Transform camera into StaticScene frame:
+        # Transform camera into BodyFixedGroup frame:
         cam_rel_pos = camera.position - self.position
         cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
         cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
@@ -59,7 +44,7 @@ class StaticScene:
         return normals
 
     def intersection_pass(self, camera, return_image=False):
-        # Transform camera into StaticScene frame:
+        # Transform camera into BodyFixedGroup frame:
         cam_rel_pos = camera.position - self.position
         cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
         cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
@@ -74,7 +59,7 @@ class StaticScene:
         return intersections
 
     def instance_pass(self, camera, return_image=False):
-        # Transform camera into StaticScene frame:
+        # Transform camera into BodyFixedGroup frame:
         cam_rel_pos = camera.position - self.position
         cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
         cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
@@ -92,16 +77,13 @@ class StaticScene:
         return instances
             
 
-class StaticEntity:
+class BodyFixedEntity(RigidBody):
     def __init__(self, geometry_path, color=[1,1,1], geometry_type="obj", smooth_shading=False, scale=1, position=np.zeros(3), rotation=np.eye(3)):
         self.geometry_path = geometry_path
         self.geometry_type = geometry_type
         self.color = color
         self.smooth_shading = smooth_shading
-        self.scale = scale
-        self.position = position
-        self.rotation = rotation
 
-        self._cpp = _crt.StaticEntity(self.geometry_path, self.geometry_type, self.smooth_shading, self.color)
-        self._cpp.set_pose(self.position, self.rotation)
-        self._cpp.set_scale(self.scale)
+        self._cpp = _crt.BodyFixedEntity(self.geometry_path, self.geometry_type, self.smooth_shading, self.color)
+        self.set_pose(position, rotation)
+        self.set_scale(scale)
