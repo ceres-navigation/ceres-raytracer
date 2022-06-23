@@ -1,29 +1,39 @@
 import _crt
 import numpy as np
 
-from crt._rigid_body import RigidBody
+from crt.rigid_body import RigidBody
 from crt._pybind_convert import validate_entities
 
 class BodyFixedGroup(RigidBody):
-    def __init__(self, entities, position=np.zeros(3), rotation=np.eye(3)):
+    def __init__(self, entities, **kwargs):
+        super(BodyFixedGroup, self).__init__(**kwargs)
+
         entities_cpp = validate_entities(entities)
 
+        # Create corresponding C++ object:
         self._cpp = _crt.BodyFixedGroup(entities_cpp)
-        self.set_pose(position, rotation, cpp=False)
+        self.set_pose(self.position, self.rotation, cpp=False)
+        self.set_scale(self.scale, cpp=False)
+
+    def transform_to_body(self, position, rotation):
+        relative_position = position - self.position
+        relative_position = np.matmul(self.rotation, relative_position)
+        relative_rotation = np.matmul(self.rotation, rotation.T).T
+        return relative_position, relative_rotation
+
+    # def transform_from_body(self, relative_position, relative_rotation):
+    #     # TODO: Implement this
+    #     return position, rotation
 
     def render(self, camera, lights, min_samples=1, max_samples=1, noise_threshold=1, num_bounces=1):
         # Transform camera into BodyFixedGroupd frame:
-        cam_rel_pos = camera.position - self.position
-        cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
-        cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
-        camera.set_pose(cam_rel_pos, cam_rel_rot)
+        relative_position, relative_rotation = self.transform_to_body(camera.position, camera.rotation)
+        camera.set_pose(relative_position, relative_rotation)
 
         lights_cpp = []
         for light in lights:
-            light_rel_pos = light.position - self.position
-            light_rel_pos = np.matmul(self.rotation, light_rel_pos)
-            light_rel_rot = np.matmul(self.rotation, light.rotation.T).T
-            light.set_pose(light_rel_pos, light_rel_rot)
+            relative_position, relative_rotation = self.transform_to_body(light.position, light.rotation)
+            light.set_pose(relative_position, relative_rotation)
             lights_cpp.append(light._cpp)
 
         image = self._cpp.render(camera._cpp, lights_cpp,
@@ -32,10 +42,8 @@ class BodyFixedGroup(RigidBody):
 
     def normal_pass(self, camera, return_image = False):
         # Transform camera into BodyFixedGroup frame:
-        cam_rel_pos = camera.position - self.position
-        cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
-        cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
-        camera.set_pose(cam_rel_pos, cam_rel_rot)
+        relative_position, relative_rotation = self.transform_to_body(camera.position, camera.rotation)
+        camera.set_pose(relative_position, relative_rotation)
 
         normals = self._cpp.normal_pass(camera._cpp)
         if return_image:
@@ -45,10 +53,8 @@ class BodyFixedGroup(RigidBody):
 
     def intersection_pass(self, camera, return_image=False):
         # Transform camera into BodyFixedGroup frame:
-        cam_rel_pos = camera.position - self.position
-        cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
-        cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
-        camera.set_pose(cam_rel_pos, cam_rel_rot)
+        relative_position, relative_rotation = self.transform_to_body(camera.position, camera.rotation)
+        camera.set_pose(relative_position, relative_rotation)
 
         intersections = self._cpp.intersection_pass(camera._cpp)
         if return_image:
@@ -60,10 +66,8 @@ class BodyFixedGroup(RigidBody):
 
     def instance_pass(self, camera, return_image=False):
         # Transform camera into BodyFixedGroup frame:
-        cam_rel_pos = camera.position - self.position
-        cam_rel_pos = np.matmul(self.rotation, cam_rel_pos)
-        cam_rel_rot = np.matmul(self.rotation, camera.rotation.T).T
-        camera.set_pose(cam_rel_pos, cam_rel_rot)
+        relative_position, relative_rotation = self.transform_to_body(camera.position, camera.rotation)
+        camera.set_pose(relative_position, relative_rotation)
 
         instances = self._cpp.instance_pass(camera._cpp)
         if return_image:
@@ -78,12 +82,13 @@ class BodyFixedGroup(RigidBody):
             
 
 class BodyFixedEntity(RigidBody):
-    def __init__(self, geometry_path, color=[1,1,1], geometry_type="obj", smooth_shading=False, scale=1, position=np.zeros(3), rotation=np.eye(3)):
+    def __init__(self, geometry_path, color=[1,1,1], geometry_type="obj", smooth_shading=False, **kwargs):
         self.geometry_path = geometry_path
         self.geometry_type = geometry_type
         self.color = color
         self.smooth_shading = smooth_shading
 
+        # Create corresponding C++ object:
         self._cpp = _crt.BodyFixedEntity(self.geometry_path, self.geometry_type, self.smooth_shading, self.color)
-        self.set_pose(position, rotation)
-        self.set_scale(scale)
+        self.set_pose(self.position, self.rotation)
+        self.set_scale(self.scale)

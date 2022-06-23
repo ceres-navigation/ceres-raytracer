@@ -41,11 +41,16 @@ git clone https://github.com/ceres-navigation/ceres-raytracer.git
 pip install .
 ```
 
-[sphinx](https://www.sphinx-doc.org/en/master/) is used to build documentation for the python API.  To build documentation on Linux systems, simply run:
+[sphinx](https://www.sphinx-doc.org/en/master/) is used to build documentation for the python API.  To install `sphinx`, simply use:
+```
+pip install sphinx
+pip install sphinx-rtd-theme
+pip install sphinx-autodoc-typehints
+pip install sphinx-toolbox
+```
+Once `sphinx` is installed, you can build the documentation on Linux systems by running:
 ```
 cd doc
-rm -rf build
-sphinx-apidoc -o build/ ../crt/ --force
 make html
 ```
 
