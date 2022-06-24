@@ -1,17 +1,16 @@
-Entity
+Body Fixed Entity
 ==================
 .. |default| raw:: html
 
     <div class="default-value-section"> <span class="default-value-label">Default:</span>
-
-.. currentmodule:: crt
+    
+.. currentmodule:: crt.body_fixed
 
 **Attributes Summary**
-
+    
 .. autosummary::
     :nosignatures:
 
-    crt.RigidBody.scale
     crt.RigidBody.position
     crt.RigidBody.rotation
 
@@ -27,7 +26,6 @@ Entity
 .. autosummary::
     :nosignatures:
 
-    crt.RigidBody.set_scale
     crt.RigidBody.set_position
     crt.RigidBody.set_rotation
     crt.RigidBody.set_pose
@@ -35,7 +33,7 @@ Entity
     crt.RigidBody.spice_rotation
     crt.RigidBody.spice_pose
 
-.. autoclass:: crt.Entity
+.. autoclass:: crt.body_fixed.BodyFixedEntity
    :members:
    :undoc-members:
    :inherited-members:

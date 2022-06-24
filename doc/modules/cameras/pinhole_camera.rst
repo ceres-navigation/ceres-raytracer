@@ -1,17 +1,22 @@
-Entity
+Pinhole Camera
 ==================
 .. |default| raw:: html
 
     <div class="default-value-section"> <span class="default-value-label">Default:</span>
 
-.. currentmodule:: crt
+.. currentmodule:: crt.cameras
 
 **Attributes Summary**
-
+    
 .. autosummary::
     :nosignatures:
 
-    crt.RigidBody.scale
+    PinholeCamera.focal_length
+    PinholeCamera.resolution
+    PinholeCamera.sensor_size
+
+    PinholeCamera._cpp
+
     crt.RigidBody.position
     crt.RigidBody.rotation
 
@@ -26,8 +31,9 @@ Entity
 
 .. autosummary::
     :nosignatures:
+    
+    PinholeCamera.get_fov
 
-    crt.RigidBody.set_scale
     crt.RigidBody.set_position
     crt.RigidBody.set_rotation
     crt.RigidBody.set_pose
@@ -35,7 +41,7 @@ Entity
     crt.RigidBody.spice_rotation
     crt.RigidBody.spice_pose
 
-.. autoclass:: crt.Entity
+.. autoclass:: crt.cameras.PinholeCamera
    :members:
    :undoc-members:
    :inherited-members:

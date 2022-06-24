@@ -1,23 +1,19 @@
-API Reference
-==================
+Python API Reference
+=====================
+.. |default| raw:: html
+
+    <div class="default-value-section"> <span class="default-value-label">Default:</span>
+
 .. toctree::
    :hidden:
 
    modules/entity
    modules/cameras
    modules/lights
-   modules/render
+   modules/rendering
    modules/body_fixed
-
-.. automodule:: crt.rotations
-   :members:
-   :undoc-members:
-   :inherited-members:
-
-.. automodule:: crt.rigid_body
-   :members:
-   :undoc-members:
-   :inherited-members:
+   modules/rotations
+   modules/rigid_body
 
 * :ref:`genindex`
 * :ref:`modindex`

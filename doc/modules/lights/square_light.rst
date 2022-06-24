@@ -1,17 +1,20 @@
-Entity
+Square Light
 ==================
 .. |default| raw:: html
 
     <div class="default-value-section"> <span class="default-value-label">Default:</span>
 
-.. currentmodule:: crt
+.. currentmodule:: crt.lights
 
 **Attributes Summary**
 
 .. autosummary::
     :nosignatures:
+    
+    Light.intensity
+    SquareLight.size
+    SquareLight._cpp
 
-    crt.RigidBody.scale
     crt.RigidBody.position
     crt.RigidBody.rotation
 
@@ -27,7 +30,6 @@ Entity
 .. autosummary::
     :nosignatures:
 
-    crt.RigidBody.set_scale
     crt.RigidBody.set_position
     crt.RigidBody.set_rotation
     crt.RigidBody.set_pose
@@ -35,7 +37,7 @@ Entity
     crt.RigidBody.spice_rotation
     crt.RigidBody.spice_pose
 
-.. autoclass:: crt.Entity
+.. autoclass:: crt.lights.SquareLight
    :members:
    :undoc-members:
    :inherited-members:
