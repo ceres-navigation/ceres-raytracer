@@ -10,10 +10,10 @@ from crt._pybind_convert import validate_lights, validate_entities
 
 def render(camera: Camera, lights: Union[Light, List[Light], Tuple[Light,...]],
            entities: Union[Entity, List[Entity], Tuple[Entity,...]], 
-           min_samples: int=1, max_samples: int=1, noise_threshold: float=1, num_bounces: int=1):
+           min_samples: int=1, max_samples: int=1, noise_threshold: float=1., num_bounces: int=1) -> np.ndarray:
     """
     Render a scene with dynamic entities.  Prior to rendering, a Bounding Volume Heirarchy will be built
-    from scratch for the entire scene.
+    from scratch for the entire scene
 
     :param camera: Camera model to be used for generatring rays
     :type camera: Camera
@@ -29,8 +29,8 @@ def render(camera: Camera, lights: Union[Light, List[Light], Tuple[Light,...]],
     :type noise_threshold: float, optional
     :param num_bounces: Number of ray bounces |default| :code:`1`
     :type num_bounces: int, optional
-    :return: _description_
-    :rtype: _type_
+    :return: Rendered image
+    :rtype: np.ndarray
     """
     lights_cpp = validate_lights(lights)
 
@@ -44,7 +44,7 @@ def normal_pass(camera: Camera, entities: Union[Entity, List[Entity], Tuple[Enti
                 return_image: bool=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
                 
     """
-    Perform a normal pass with dynamic entities.
+    Perform a normal pass with dynamic entities
 
     :param camera: Camera model to be used for generating rays
     :type camera: Camera
@@ -71,7 +71,7 @@ def normal_pass(camera: Camera, entities: Union[Entity, List[Entity], Tuple[Enti
 def intersection_pass(camera: Camera, entities: Union[Entity, List[Entity], Tuple[Entity,...]],
                       return_image: bool=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
-    Perform a normal pass with dynamic entities.
+    Perform a normal pass with dynamic entities
 
     :param camera: Camera model to be used for generating rays
     :type camera: Camera
@@ -100,7 +100,8 @@ def intersection_pass(camera: Camera, entities: Union[Entity, List[Entity], Tupl
 
 def instance_pass(camera: Camera, entities: Union[Entity, List[Entity], Tuple[Entity,...]], 
                   return_image: bool=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-    """_summary_
+    """
+    Perform an instance segmentation pass with dynamic entities
 
     :param camera: Camera model to be used for generating rays
     :type camera: Camera

@@ -24,7 +24,12 @@ class PointLight(RigidBody, Light):
     :type intensity: float
     """
     def __init__(self, intensity: float, **kwargs):
-        super(PointLight, self).__init__(intensity, **kwargs)
+        super(PointLight, self).__init__(**kwargs)
+
+        self.intensity = intensity
+        """
+        Intensity of the light source (:code:`float`)
+        """
 
         self._cpp = _crt.PointLight(self.intensity)
         """
@@ -43,7 +48,12 @@ class SquareLight(RigidBody, Light):
     :type size: ArrayLike
     """
     def __init__(self, intensity: float, size: ArrayLike, **kwargs):
-        super(SquareLight, self).__init__(intensity, **kwargs)
+        super(SquareLight, self).__init__( **kwargs)
+
+        self.intensity = intensity
+        """
+        Intensity of the light source (:code:`float`)
+        """
 
         self.size = size
         """

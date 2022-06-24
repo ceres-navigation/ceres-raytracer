@@ -131,11 +131,6 @@ class RigidBody:
         for more information.
         """
 
-        if (self.name is not None) and (self.origin is None):
-            warn("NAME was set to {} while ORIGIN is None".format(self.name.upper()))
-        if (self.origin is not None) and (self.name is None):
-            warn("ORIGIN was set to {} while NAME is None".format(self.name.upper()))
-
     def set_scale(self, scale: float, cpp: bool =True):
         """
         Set a new :attr:`~.RigidBody.scale`

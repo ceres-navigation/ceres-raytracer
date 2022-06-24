@@ -1,12 +1,12 @@
 from crt.lights import PointLight, SquareLight
-from crt import Entity
+from crt import Entity, BodyFixedEntity
 
 def valid_light(light):
     return (type(light) == PointLight) or \
            (type(light) == SquareLight)
 
 def validate_lights(lights):
-    err_msg = """"""
+    err_msg = """error"""
 
     lights_cpp = []
     if (type(lights) is list) or (type(lights) is tuple):
@@ -20,7 +20,7 @@ def validate_lights(lights):
     return lights_cpp
 
 def validate_entities(entities):
-    err_msg = """"""
+    err_msg = """error"""
 
     entities_cpp = []
     if (type(entities) == list) or (type(entities) == tuple):
