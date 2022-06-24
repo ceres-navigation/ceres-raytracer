@@ -143,7 +143,7 @@ setup(
     packages=["crt"],
     ext_modules=[CMakeExtension("_crt")],
     cmdclass={"build_ext": CMakeBuild},
-    install_requires = ["numpy", "Pillow"],
+    install_requires = ["numpy", "Pillow", "spiceypy"],
     zip_safe=False,
     python_requires=">=3.6",
     project_urls={

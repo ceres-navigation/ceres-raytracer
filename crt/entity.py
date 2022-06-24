@@ -1,36 +1,51 @@
 import _crt
 
 import numpy as np
+from numpy.typing import ArrayLike
 
-from crt._sanitize import sanitize_array as SA
+from crt.rigid_body import RigidBody
 
-class Entity:
-    def __init__(self,geometry_path, color=[1,1,1], geometry_type="obj", smooth_shading=False, scale=1, position=np.zeros(3), rotation=np.eye(3)):
+class Entity(RigidBody):
+    """
+    The :class:`Entity` class stores all mesh, material, and texture information for a body.
+
+    :param geometry_path: Path to the mesh geometry to be loaded
+    :type geometry_path: str
+    :param color: The RGB color code of the geometry |default| :code:`[1,1,1]`
+    :type color: ArrayLike, optional
+    :param geometry_type: The format of the mesh geoemtry provided |default| :code:`"obj"`
+    :type geometry_type: str, optional
+    :param smooth_shading: Flag to enable smooth shading via vertex normal interpolation |default| :code:`False`
+    :type smooth_shading: bool, optional
+    """
+    def __init__(self,geometry_path: str, color: ArrayLike =[1,1,1], geometry_type: str="obj", 
+                 smooth_shading: bool=False, **kwargs):
+        super(Entity, self).__init__(**kwargs)
+
         self.geometry_path = geometry_path
+        """
+        Path to the geometry (:code:`str`)
+        """
+
         self.geometry_type = geometry_type
+        """
+        Format of the provided geometry file (:code:`str`)
+        """
+
         self.color = color
+        """
+        RGB Color code for the geometry (:code:`ArrayLike`)
+        """
+
         self.smooth_shading = smooth_shading
-        self.scale = scale
-        self.position = position
-        self.rotation = rotation
+        """
+        Flag to enable smooth shading via vertex normal interpolation (:code:`bool`)
+        """
 
         self._cpp = _crt.Entity(self.geometry_path, self.geometry_type, self.smooth_shading, self.color)
-        self._cpp.set_pose(SA(self.position), SA(self.rotation))
-        self._cpp.set_scale(self.scale)
+        """
+        Corresponding C++ Entity object
+        """
 
-    def set_scale(self, scale):
-        self.scale = scale
-        self._cpp.set_scale(self.scale)
-
-    def set_position(self, position):
-        self.position = position
-        self._cpp.set_position(SA(self.position))
-
-    def set_rotation(self, rotation):
-        self.rotation = rotation
-        self._cpp.set_rotation(SA(self.rotation))
-
-    def set_pose(self, position, rotation):
-        self.position = position
-        self.rotation = rotation
-        self._cpp.set_pose(SA(self.position), SA(self.rotation))
+        self.set_pose(self.position,self.rotation)
+        self.set_scale(self.scale)

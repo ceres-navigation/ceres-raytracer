@@ -33,7 +33,7 @@
 #include "materials/brdfs.hpp"
 
 template <typename Scalar>
-class StaticScene {
+class BodyFixedGroup {
     public:
         bvh::Bvh<Scalar> bvh_cache;
         std::vector<bvh::Triangle<Scalar>> triangles;
@@ -43,7 +43,7 @@ class StaticScene {
         Scalar rotation[3][3];
 
         // Constructor:
-        StaticScene(std::vector<Entity<Scalar>*> entities){
+        BodyFixedGroup(std::vector<Entity<Scalar>*> entities){
             // Store triangles locally:
             for (auto entity : entities) {
                 // Apply current entity transofmrations:
@@ -124,7 +124,7 @@ class StaticScene {
 };
 
 template <typename Scalar>
-class StaticEntity {
+class BodyFixedEntity {
     public:
         std::string geometry_path;
         std::string geometry_type;
@@ -135,7 +135,7 @@ class StaticEntity {
         Scalar rotation[3][3];
         Scalar scale;
 
-        StaticEntity(std::string geometry_path, std::string geometry_type, bool smooth_shading, Color color){
+        BodyFixedEntity(std::string geometry_path, std::string geometry_type, bool smooth_shading, Color color){
             this->geometry_path = geometry_path;
             this->geometry_type = geometry_type;
             this->smooth_shading = smooth_shading;

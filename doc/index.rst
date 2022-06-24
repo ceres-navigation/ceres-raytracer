@@ -1,19 +1,27 @@
-.. CERES Ray Tracer documentation master file, created by
-   sphinx-quickstart on Sat Jun 11 20:06:07 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-CERES Ray Tracer (CRT) Python API Documentation
+CERES Ray Tracer (CRT)
 ===============================================
+.. |default| raw:: html
+
+    <div class="default-value-section"> <span class="default-value-label">Default:</span>
+    
+.. toctree::
+   :caption: Getting Started
+
+   installation
+   demos
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+   :caption: Documentation
+   
+   ceres_rt
 
-   build/modules
+.. sidebar-links::
+   :github:
+   :pypi: ceres-raytracer
 
-Indices and tables
-==================
+   Website <https://ceresnavigation.org>
+   license
+
 
 * :ref:`genindex`
 * :ref:`modindex`

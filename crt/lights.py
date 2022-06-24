@@ -1,46 +1,68 @@
-import _crt
 import numpy as np
+from abc import ABC
 
-from crt._sanitize import sanitize_array as SA
+from numpy.typing import ArrayLike
 
-class PointLight:
-    def __init__(self, intensity, position=np.zeros(3)):
+import _crt
+from crt.rigid_body import RigidBody
+
+class Light(ABC):
+    """
+    The :class:`Light` abstract base class
+    """
+
+    intensity: float
+    """
+    Intensity of the light source (:code:`float`)
+    """
+
+class PointLight(RigidBody, Light):
+    """
+    The :class:`PointLight` class is the simplest light model implemented
+
+    :param intensity: Intensity of the light source
+    :type intensity: float
+    """
+    def __init__(self, intensity: float, **kwargs):
+        super(PointLight, self).__init__(**kwargs)
+
         self.intensity = intensity
-        self.position = position
-        self.rotation = np.eye(3)
+        """
+        Intensity of the light source (:code:`float`)
+        """
+
         self._cpp = _crt.PointLight(self.intensity)
-        self._cpp.set_position(SA(self.position))
+        """
+        Corresponding C++ PointLight object
+        """
 
-    def set_position(self, position):
-        self.position = position
-        self._cpp.set_position(SA(self.position))
+        self.set_pose(self.position, np.eye(3))
 
-    def set_rotation(self, rotation):
-        self.rotation = rotation
-        self._cpp.set_rotation(SA(self.rotation))
-    
-    def set_pose(self, position, rotation):
-        self.set_position(SA(position))
-        self.set_rotation(SA(rotation))
+class SquareLight(RigidBody, Light):
+    """
+    The :class:`SquareLight` class is the simplest area light model implemented
 
-class SquareLight:
-    def __init__(self, intensity, size, position=np.zeros(3),rotation=np.eye(3)):
+    :param intensity: Intensity of the light source
+    :type intensity: float
+    :param size: Lengths of the sides of the light
+    :type size: ArrayLike
+    """
+    def __init__(self, intensity: float, size: ArrayLike, **kwargs):
+        super(SquareLight, self).__init__( **kwargs)
+
         self.intensity = intensity
+        """
+        Intensity of the light source (:code:`float`)
+        """
+
         self.size = size
-        self.position = position
-        self.rotation = rotation
+        """
+        Lengths of the sides of the light (:code:`numpy.ndarray` or shape :code:`(2,)`)
+        """
+
         self._cpp = _crt.SquareLight(self.intensity, self.size)
-        self._cpp.set_pose(SA(self.position), SA(self.rotation))
+        """
+        Corresponding C++ SquareLight object
+        """
 
-    def set_position(self, position):
-        self.position = position
-        self._cpp.set_position(SA(self.position))
-
-    def set_rotation(self, rotation):
-        self.rotation = rotation
-        self._cpp.set_rotation(SA(self.rotation))
-
-    def set_pose(self, position, rotation):
-        self.position = position
-        self.rotation = rotation
-        self._cpp.set_pose(SA(self.position), SA(self.rotation))
+        self.set_pose(self.position, self.rotation)
