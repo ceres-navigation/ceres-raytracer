@@ -43,10 +43,8 @@ pip install .
 
 [sphinx](https://www.sphinx-doc.org/en/master/) is used to build documentation for the python API.  To install `sphinx`, simply use:
 ```
-pip install sphinx
-pip install sphinx-rtd-theme
-pip install sphinx-autodoc-typehints
-pip install sphinx-toolbox
+sudo apt-get install python3-sphinx
+pip install sphinx-autodoc-typehints sphinx-toolbox sphinx-licenseinfo sphinx-rtd-theme
 ```
 Once `sphinx` is installed, you can build the documentation on Linux systems by running:
 ```

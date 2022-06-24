@@ -41,6 +41,7 @@ Square Light
    :members:
    :undoc-members:
    :inherited-members:
+   :member-order: bysource
 
 * :ref:`genindex`
 * :ref:`modindex`
