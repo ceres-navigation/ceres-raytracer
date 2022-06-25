@@ -1,8 +1,16 @@
 #ifndef __RENDER_H
 #define __RENDER_H
 
+#include "bvh/bvh.hpp"
+#include "bvh/single_ray_traverser.hpp"
+#include "bvh/primitive_intersectors.hpp"
+#include "bvh/triangle.hpp"
+
+#include "cameras/camera.hpp"
+#include "lights/light.hpp"
+
 template <typename Scalar>
-std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, 
+std::vector<uint8_t> render(std::unique_ptr<Camera<Scalar>> &camera, 
                             std::vector<std::unique_ptr<Light<Scalar>>> &lights, 
                             std::vector<Entity<Scalar>*> entities,
                             int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){

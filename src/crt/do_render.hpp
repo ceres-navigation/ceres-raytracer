@@ -18,14 +18,14 @@
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
 
-#include "cameras/cameras.hpp"
-#include "lights/lights.hpp"
+#include "cameras/camera.hpp"
+#include "lights/light.hpp"
 #include "materials/brdfs.hpp"
 #include "rendering_dynamic/entity.hpp"
 #include "path_tracing/unidirectional.hpp"
 
 template <typename Scalar>
-std::vector<uint8_t> do_render(std::unique_ptr<CameraModel<Scalar>> &camera, 
+std::vector<uint8_t> do_render(std::unique_ptr<Camera<Scalar>> &camera, 
                                std::vector<std::unique_ptr<Light<Scalar>>> &lights, 
                                bvh::Bvh<Scalar> &bvh,
                                std::vector<bvh::Triangle<Scalar>> &triangles,
@@ -86,7 +86,7 @@ std::vector<uint8_t> do_render(std::unique_ptr<CameraModel<Scalar>> &camera,
                 // Perform path tracing operation:
                 Color path_radiance(0);
                 if (path_tracing_type.compare("unidirectional") == 0) {
-                    path_radiance = unidirectional(camera, lights, tri_data, closest_intersector, 
+                    path_radiance = unidirectional(lights, tri_data, closest_intersector, 
                                                    any_intersector, traverser, ray, num_bounces);
                 }
                 else if (path_tracing_type.compare("bidirectional") == 0){

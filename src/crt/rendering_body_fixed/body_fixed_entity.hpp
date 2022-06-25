@@ -4,15 +4,13 @@
 #include "materials/material.hpp"
 
 template <typename Scalar>
-class BodyFixedEntity {
+class BodyFixedEntity: public RigidBody<Scalar> {
     public:
         std::string geometry_path;
         std::string geometry_type;
         bool smooth_shading;
         Color color;
 
-        bvh::Vector3<Scalar> position;
-        Scalar rotation[3][3];
         Scalar scale;
 
         BodyFixedEntity(std::string geometry_path, std::string geometry_type, bool smooth_shading, Color color){
@@ -38,20 +36,6 @@ class BodyFixedEntity {
         // Pose setting methods:
         void set_scale(Scalar scale){
             this -> scale = scale;
-        }
-        void set_position(bvh::Vector3<Scalar> position) {
-            this -> position = position;
-        }
-        void set_rotation(Scalar rotation[3][3]) {
-            for (int i = 0; i < 3; i++){
-                for (int j = 0; j <3; j++){
-                    this -> rotation[i][j] = rotation[i][j];
-                }
-            }
-        }
-        void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
-            set_rotation(rotation);
-            set_position(position);
         }
 };
 

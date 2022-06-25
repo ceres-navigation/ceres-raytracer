@@ -6,13 +6,12 @@
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
 
-#include "lights/lights.hpp"
-#include "cameras/cameras.hpp"
+#include "lights/light.hpp"
 
 template <typename Scalar, typename Intersector>
 Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Intersector &intersector, 
-                                  float u, float v, const bvh::Ray<Scalar> &light_ray, 
-                                  const bvh::Ray<Scalar> &view_ray, const bvh::Vector3<Scalar> &normal, Material<Scalar> *material) {
+                   float u, float v, const bvh::Ray<Scalar> &light_ray, 
+                   const bvh::Ray<Scalar> &view_ray, const bvh::Vector3<Scalar> &normal, Material<Scalar> *material) {
     Color intensity(0);
     auto hit = traverser.traverse(light_ray, intersector);
     if (!hit) {
@@ -22,8 +21,7 @@ Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Interse
 }
 
 template <typename Scalar>
-Color unidirectional(std::unique_ptr<CameraModel<Scalar>> &camera, 
-                     std::vector<std::unique_ptr<Light<Scalar>>> &lights,
+Color unidirectional(std::vector<std::unique_ptr<Light<Scalar>>> &lights,
                      bvh::Triangle<Scalar>* tri_data,
                      bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &closest_intersector,
                      bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> &any_intersector,

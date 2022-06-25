@@ -18,10 +18,8 @@
 #include "materials/material.hpp"
 
 template <typename Scalar>
-class Entity {
+class Entity: public RigidBody<Scalar> {
     public:
-        bvh::Vector3<Scalar> position;
-        Scalar rotation[3][3];
         Scalar scale;
         uint32_t id;
 
@@ -75,20 +73,6 @@ class Entity {
         // Pose setting methods:
         void set_scale(Scalar scale){
             this -> scale = scale;
-        }
-        void set_position(bvh::Vector3<Scalar> position) {
-            this -> position = position;
-        }
-        void set_rotation(Scalar rotation[3][3]) {
-            for (int i = 0; i < 3; i++){
-                for (int j = 0; j <3; j++){
-                    this -> rotation[i][j] = rotation[i][j];
-                }
-            }
-        }
-        void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
-            set_rotation(rotation);
-            set_position(position);
         }
 
         const std::vector<bvh::Triangle<Scalar>> get_triangles() {

@@ -38,9 +38,9 @@ class PointLight(RigidBody, Light):
 
         self.set_pose(self.position, np.eye(3))
 
-class SquareLight(RigidBody, Light):
+class AreaLight(RigidBody, Light):
     """
-    The :class:`SquareLight` class is the simplest area light model implemented
+    The :class:`AreaLight` class is the simplest area light model implemented
 
     :param intensity: Intensity of the light source
     :type intensity: float
@@ -48,7 +48,7 @@ class SquareLight(RigidBody, Light):
     :type size: ArrayLike
     """
     def __init__(self, intensity: float, size: ArrayLike, **kwargs):
-        super(SquareLight, self).__init__( **kwargs)
+        super(AreaLight, self).__init__( **kwargs)
 
         self.intensity = intensity
         """
@@ -60,9 +60,9 @@ class SquareLight(RigidBody, Light):
         Lengths of the sides of the light (:code:`numpy.ndarray` or shape :code:`(2,)`)
         """
 
-        self._cpp = _crt.SquareLight(self.intensity, self.size)
+        self._cpp = _crt.AreaLight(self.intensity, self.size)
         """
-        Corresponding C++ SquareLight object
+        Corresponding C++ AreaLight object
         """
 
         self.set_pose(self.position, self.rotation)

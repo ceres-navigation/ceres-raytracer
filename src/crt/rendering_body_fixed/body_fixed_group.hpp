@@ -22,8 +22,8 @@
 // CRT Imports:
 #include "transform.hpp"
 
-#include "lights/lights.hpp"
-#include "cameras/cameras.hpp"
+#include "lights/light.hpp"
+#include "cameras/camera.hpp"
 
 #include "materials/material.hpp"
 
@@ -33,14 +33,10 @@
 #include "passes.hpp"
 
 template <typename Scalar>
-class BodyFixedGroup {
+class BodyFixedGroup: public RigidBody<Scalar> {
     public:
         bvh::Bvh<Scalar> bvh_cache;
         std::vector<bvh::Triangle<Scalar>> triangles;
-
-        // Pose information
-        bvh::Vector3<Scalar> position;
-        Scalar rotation[3][3];
 
         // Constructor:
         BodyFixedGroup(std::vector<Entity<Scalar>*> entities){
@@ -87,36 +83,25 @@ class BodyFixedGroup {
                 << reference_count << " reference(s)\n";
             std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
-            // Default values for all pose information:
-            this -> position = bvh::Vector3<Scalar>(0,0,0);
-            this -> rotation[0][0] = 1;
-            this -> rotation[0][1] = 0;
-            this -> rotation[0][2] = 0;
-            this -> rotation[1][0] = 0;
-            this -> rotation[1][1] = 1;
-            this -> rotation[1][2] = 0;
-            this -> rotation[2][0] = 0;
-            this -> rotation[2][1] = 0;
-            this -> rotation[2][2] = 1;
         }
 
-        std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<std::unique_ptr<Light<Scalar>>> &lights,
+        std::vector<uint8_t> render(std::unique_ptr<Camera<Scalar>> &camera, std::vector<std::unique_ptr<Light<Scalar>>> &lights,
                                     int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
             auto image = do_render(camera, lights, bvh_cache, triangles, min_samples, max_samples, noise_threshold, num_bounces);
             return image;
         }
 
-        std::vector<Scalar> intersection_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
+        std::vector<Scalar> intersection_pass(std::unique_ptr<Camera<Scalar>> &camera){
             auto intersections = get_inetersections<Scalar>(camera, bvh_cache, triangles);
             return intersections;
         }
 
-        std::vector<uint32_t> instance_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
+        std::vector<uint32_t> instance_pass(std::unique_ptr<Camera<Scalar>> &camera){
             auto instances = get_instances<Scalar>(camera, bvh_cache, triangles);
             return instances;
         }
 
-        std::vector<Scalar> normal_pass(std::unique_ptr<CameraModel<Scalar>> &camera){
+        std::vector<Scalar> normal_pass(std::unique_ptr<Camera<Scalar>> &camera){
             auto normals = get_normals<Scalar>(camera, bvh_cache, triangles);
             return normals;
         }
