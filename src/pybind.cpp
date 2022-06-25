@@ -2,21 +2,19 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include "crt/transform.hpp"
-
 #include <lodepng/lodepng.h>
 
+// CRT Includes:
 #include "crt/cameras/cameras.hpp"
-#include "crt/models/entity.hpp"
-#include "crt/render.hpp"
-#include "crt/path_tracing/path_trace.hpp"
 #include "crt/lights/lights.hpp"
+
+#include "crt/rendering_body_fixed/body_fixed_entity.hpp"
+#include "crt/rendering_body_fixed/body_fixed_group.hpp"
+
+#include "crt/rendering_dynamic/entity.hpp"
+#include "crt/rendering_dynamic/render.hpp"
+
 #include "crt/passes.hpp"
-
-#include "crt/body_fixed.hpp"
-
-#include "crt/models/obj.hpp"
-#include "crt/materials/material.hpp"
 
 namespace py = pybind11;
 

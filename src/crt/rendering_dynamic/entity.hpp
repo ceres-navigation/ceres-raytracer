@@ -11,10 +11,10 @@
 
 #include "model_loaders/happly.hpp"
 #include "model_loaders/tiny_obj_loader.hpp"
+#include "model_loaders/obj.hpp"
 
 #include "transform.hpp"
 
-#include "models/obj.hpp"
 #include "materials/material.hpp"
 
 template <typename Scalar>

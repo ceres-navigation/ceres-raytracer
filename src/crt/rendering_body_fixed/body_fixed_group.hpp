@@ -1,5 +1,5 @@
-#ifndef __SCENE_H
-#define __SCENE_H
+#ifndef __BODY_FIXED_GROUP_H
+#define __BODY_FIXED_GROUP_H
 
 #include <memory>
 #include <vector>
@@ -16,21 +16,21 @@
 #include "bvh/triangle.hpp"
 #include "bvh/vector.hpp"
 
-#include "path_tracing/path_trace.hpp"
-#include "passes.hpp"
-
 #include "model_loaders/happly.hpp"
 #include "model_loaders/tiny_obj_loader.hpp"
 
+// CRT Imports:
 #include "transform.hpp"
-
-#include "models/obj.hpp"
-#include "materials/material.hpp"
 
 #include "lights/lights.hpp"
 #include "cameras/cameras.hpp"
 
-#include "materials/brdfs.hpp"
+#include "materials/material.hpp"
+
+#include "do_render.hpp"
+
+#include "path_tracing/unidirectional.hpp"
+#include "passes.hpp"
 
 template <typename Scalar>
 class BodyFixedGroup {
@@ -102,7 +102,7 @@ class BodyFixedGroup {
 
         std::vector<uint8_t> render(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<std::unique_ptr<Light<Scalar>>> &lights,
                                     int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
-            auto image = path_trace(camera, lights, bvh_cache, triangles, min_samples, max_samples, noise_threshold, num_bounces);
+            auto image = do_render(camera, lights, bvh_cache, triangles, min_samples, max_samples, noise_threshold, num_bounces);
             return image;
         }
 
@@ -121,58 +121,6 @@ class BodyFixedGroup {
             return normals;
         }
         
-};
-
-template <typename Scalar>
-class BodyFixedEntity {
-    public:
-        std::string geometry_path;
-        std::string geometry_type;
-        bool smooth_shading;
-        Color color;
-
-        bvh::Vector3<Scalar> position;
-        Scalar rotation[3][3];
-        Scalar scale;
-
-        BodyFixedEntity(std::string geometry_path, std::string geometry_type, bool smooth_shading, Color color){
-            this->geometry_path = geometry_path;
-            this->geometry_type = geometry_type;
-            this->smooth_shading = smooth_shading;
-            this->color = color;
-
-            // Default values for all pose information:
-            this -> scale = 1;
-            this -> position = bvh::Vector3<Scalar>(0,0,0);
-            this -> rotation[0][0] = 1;
-            this -> rotation[0][1] = 0;
-            this -> rotation[0][2] = 0;
-            this -> rotation[1][0] = 0;
-            this -> rotation[1][1] = 1;
-            this -> rotation[1][2] = 0;
-            this -> rotation[2][0] = 0;
-            this -> rotation[2][1] = 0;
-            this -> rotation[2][2] = 1;
-        }
-
-        // Pose setting methods:
-        void set_scale(Scalar scale){
-            this -> scale = scale;
-        }
-        void set_position(bvh::Vector3<Scalar> position) {
-            this -> position = position;
-        }
-        void set_rotation(Scalar rotation[3][3]) {
-            for (int i = 0; i < 3; i++){
-                for (int j = 0; j <3; j++){
-                    this -> rotation[i][j] = rotation[i][j];
-                }
-            }
-        }
-        void set_pose(bvh::Vector3<Scalar> position, Scalar rotation[3][3]){
-            set_rotation(rotation);
-            set_position(position);
-        }
 };
 
 #endif
