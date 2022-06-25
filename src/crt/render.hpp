@@ -3,10 +3,6 @@
 
 // From old scene.hpp
 #include <chrono>
-#include "entity.hpp"
-
-#include "path_trace.hpp"
-
 #include <bvh/binned_sah_builder.hpp>
 #include <bvh/sweep_sah_builder.hpp>
 #include <bvh/parallel_reinsertion_optimizer.hpp>
@@ -22,11 +18,11 @@
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
 
-#include "lights.hpp"
-#include "cameras.hpp"
-
+#include "cameras/cameras.hpp"
+#include "lights/lights.hpp"
 #include "materials/brdfs.hpp"
-
+#include "models/entity.hpp"
+#include "path_tracing/path_trace.hpp"
 
 template <typename Scalar, typename Intersector>
 Color illumination(bvh::SingleRayTraverser<bvh::Bvh<Scalar>> &traverser, Intersector &intersector, 

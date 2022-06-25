@@ -1,17 +1,16 @@
 add_library(
     crt
     transform.hpp
-    cameras.hpp
-    entity.hpp
     render.hpp
     passes.hpp
-    path_trace.hpp
     body_fixed.hpp
-    lights.hpp
 )
 target_include_directories(crt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_subdirectory(materials)
-add_subdirectory(obj_temp)
+add_subdirectory(models)
+add_subdirectory(path_tracing)
+add_subdirectory(cameras)
+add_subdirectory(lights)
 
 set_target_properties(crt PROPERTIES LINKER_LANGUAGE CXX)

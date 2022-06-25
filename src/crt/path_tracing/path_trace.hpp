@@ -7,8 +7,8 @@
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
 
-#include "lights.hpp"
-#include "cameras.hpp"
+#include "lights/lights.hpp"
+#include "cameras/cameras.hpp"
 
 template <typename Scalar>
 std::vector<uint8_t> path_trace(std::unique_ptr<CameraModel<Scalar>> &camera, 

@@ -6,16 +6,16 @@
 
 #include <lodepng/lodepng.h>
 
-#include "crt/cameras.hpp"
-#include "crt/entity.hpp"
+#include "crt/cameras/cameras.hpp"
+#include "crt/models/entity.hpp"
 #include "crt/render.hpp"
-#include "crt/path_trace.hpp"
-#include "crt/lights.hpp"
+#include "crt/path_tracing/path_trace.hpp"
+#include "crt/lights/lights.hpp"
 #include "crt/passes.hpp"
 
 #include "crt/body_fixed.hpp"
 
-#include "crt/obj_temp/obj.hpp"
+#include "crt/models/obj.hpp"
 #include "crt/materials/material.hpp"
 
 namespace py = pybind11;

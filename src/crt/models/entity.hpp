@@ -14,7 +14,7 @@
 
 #include "transform.hpp"
 
-#include "obj_temp/obj.hpp"
+#include "models/obj.hpp"
 #include "materials/material.hpp"
 
 template <typename Scalar>

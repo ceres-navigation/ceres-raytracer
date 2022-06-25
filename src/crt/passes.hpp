@@ -8,7 +8,7 @@
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
 
-#include "cameras.hpp"
+#include "cameras/cameras.hpp"
 
 template <typename Scalar>
 std::vector<Scalar> get_inetersections(std::unique_ptr<CameraModel<Scalar>> &camera,
