@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Size](https://img.shields.io/github/repo-size/ceres-navigation/ceres-raytracer)
 
-This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for rendering images, simulating LiDAR, and modeling radiation pressure.
+This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for rendering images, simulating LiDAR, modeling radiation pressure, and flux computations for thermal and solar panel analysis.
 
 - [Website](https://ceresnavigation.org)
 - [API Documentation](https://docs.crt.ceresnavigation.org)
@@ -71,7 +71,7 @@ and run any of the included `.py` example files:
 ## Tasks:
 - [ ] Python Interface
   - [x] Python bindings with pybind11
-  - [ ] Swith to binary distributions (cross compile for Windows and MacOS)
+  - [ ] Binary distributions (cross compiled for Windows/MacOS on Linux)
   - [ ] Python defined materials (compatible only with wavefront ray tracing)
 - [ ] Path tracing implementations
   - [x] Adaptive sampling
