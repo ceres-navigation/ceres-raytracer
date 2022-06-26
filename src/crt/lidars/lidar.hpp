@@ -1,10 +1,11 @@
-#ifndef __LIDARS_H
-#define __LIDARS_H
+#ifndef __LIDAR_H
+#define __LIDAR_H
 
 #include <bvh/bvh.hpp>
 
 template <typename Scalar>
-class LidarModel: public RigidBody<Scalar> {
+class Lidar: public RigidBody<Scalar> {
+    
 };
 
 #endif
