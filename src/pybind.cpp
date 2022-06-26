@@ -8,6 +8,9 @@
 #include "crt/cameras/camera.hpp"
 #include "crt/cameras/simple_camera.hpp"
 
+#include "crt/lidars/lidar.hpp"
+#include "crt/lidars/simple_lidar.hpp"
+
 #include "crt/lights/light.hpp"
 #include "crt/lights/point_light.hpp"
 #include "crt/lights/area_light.hpp"
@@ -17,6 +20,7 @@
 
 #include "crt/rendering_dynamic/entity.hpp"
 #include "crt/rendering_dynamic/render.hpp"
+#include "crt/rendering_dynamic/simulate_lidar.hpp"
 
 #include "crt/passes.hpp"
 
@@ -39,6 +43,10 @@ SimpleCamera<Scalar> create_simple_camera(Scalar focal_length, py::list resoluti
     sensor_size[1] = sensor_size_list[1].cast<Scalar>();
 
     return SimpleCamera<Scalar>(focal_length, resolution, sensor_size, z_positive);
+}
+
+SimpleLidar<Scalar> create_simple_lidar(bool z_positive){
+    return SimpleLidar<Scalar>(z_positive);
 }
 
 AreaLight<Scalar> create_AreaLight(Scalar intensity, py::list size_list){
@@ -79,9 +87,21 @@ std::unique_ptr<Camera<Scalar>> get_camera_model(py::handle camera){
         camera_ptr = std::make_unique<SimpleCamera<Scalar>>(camera_cast);
     }
     else {
-        // throw an exception (TEMPORARY TO AVOID WARNING)
+        // throw an exception
     }
     return camera_ptr;
+}
+
+std::unique_ptr<Lidar<Scalar>> get_lidar_model(py::handle lidar){
+    std::unique_ptr<Lidar<Scalar>> lidar_ptr;
+    if (py::isinstance<SimpleLidar<Scalar>>(lidar)){
+        SimpleLidar<Scalar> lidar_cast = lidar.cast<SimpleLidar<Scalar>>();
+        lidar_ptr = std::make_unique<SimpleLidar<Scalar>>(lidar_cast);
+    }
+    else {
+        // throw and exception
+    }
+    return lidar_ptr;
 }
 
 BodyFixedGroup<Scalar> create_body_fixed_group(py::list body_fixed_entity_list) {
@@ -150,6 +170,48 @@ PYBIND11_MODULE(_crt, crt) {
             }
             // Set the pose:
             self.set_pose(position_vector3, rotation_arr);
+        });
+
+    py::class_<SimpleLidar<Scalar>>(crt, "SimpleLidar")
+        .def(py::init(&create_simple_lidar))
+        .def("set_position", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> position){
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
+        })
+        .def("set_rotation", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> rotation){
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("set_pose", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
+
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
         });
 
     py::class_<PointLight<Scalar>>(crt, "PointLight")
@@ -360,6 +422,15 @@ PYBIND11_MODULE(_crt, crt) {
             }
             return result;
         })
+        .def("simulate_lidar", [](BodyFixedGroup<Scalar> &self, py::handle lidar, Scalar num_rays){
+            // Obtain the specific lidar model:
+            auto lidar_ptr = get_lidar_model(lidar);
+
+            // Call the lidar method:
+            auto distance = self.simulate_lidar(lidar_ptr, num_rays);
+
+            return distance;
+        })
         .def("intersection_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
             // Obtain the specific camera model:
             auto camera_ptr = get_camera_model(camera);
@@ -452,6 +523,23 @@ PYBIND11_MODULE(_crt, crt) {
             raw[i] = pixels[i];
         }
         return result;
+    });
+
+    crt.def("simulate_lidar", [](py::handle lidar, py::list entity_list, int num_rays){
+        // OBtain the specific lidar model:
+        auto lidar_ptr = get_lidar_model(lidar);
+
+        // Convert py::list of entities to std::vector
+        std::vector<Entity<Scalar>*> entities;
+        for (auto entity_handle : entity_list) {
+            Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();
+            entities.emplace_back(entity);
+        }
+
+        // Simulate the lidar:
+        auto distance = simulate_lidar(lidar_ptr, entities, num_rays);
+
+        return distance;
     });
 
     crt.def("intersection_pass", [](py::handle camera, py::list entity_list){

@@ -1,25 +1,15 @@
-#ifndef __RENDER_H
-#define __RENDER_H
+#ifndef __SIMULATE_LIDAR_H
+#define __SIMULATE_LIDAR_H
 
-#include "bvh/bvh.hpp"
-#include "bvh/single_ray_traverser.hpp"
-#include "bvh/primitive_intersectors.hpp"
-#include "bvh/triangle.hpp"
+#include <bvh/bvh.hpp>
 
-#include "cameras/camera.hpp"
-#include "lights/light.hpp"
-#include "lidars/lidar.hpp"
-
-template <typename Scalar>
-std::vector<uint8_t> render(std::unique_ptr<Camera<Scalar>> &camera, 
-                            std::vector<std::unique_ptr<Light<Scalar>>> &lights, 
-                            std::vector<Entity<Scalar>*> entities,
-                            int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
-
-    bvh::Bvh<Scalar> bvh;
-    std::vector<bvh::Triangle<Scalar>> triangles;
+template <typename Scalar> 
+Scalar simulate_lidar(std::unique_ptr<Lidar<Scalar>> &lidar, 
+                      std::vector<Entity<Scalar>*> entities,
+                      int num_rays){
 
     // Store triangles locally:
+    std::vector<bvh::Triangle<Scalar>> triangles;
     for (auto entity : entities) {
         // Apply current entity transofmrations:
         auto entity_triangles = entity->triangles;
@@ -31,11 +21,13 @@ std::vector<uint8_t> render(std::unique_ptr<Camera<Scalar>> &camera,
         triangles.insert(triangles.end(), entity_triangles.begin(), entity_triangles.end());
     }
 
+    // Build an acceleration data structure for this object set
+    bvh::Bvh<Scalar> bvh;
+
     size_t reference_count = triangles.size();
     std::unique_ptr<bvh::Triangle<Scalar>[]> shuffled_triangles;
 
     std::cout << "\nBuilding BVH ( using SweepSahBuilder )... for " << triangles.size() << " triangles\n";
-
     auto start = std::chrono::high_resolution_clock::now();
 
     auto tri_data = triangles.data();
@@ -61,8 +53,9 @@ std::vector<uint8_t> render(std::unique_ptr<Camera<Scalar>> &camera,
         << reference_count << " reference(s)\n";
     std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
-    auto image = do_render(camera, lights, bvh, triangles, min_samples, max_samples, noise_threshold, num_bounces);
-    return image;
+    auto distance = do_lidar<Scalar>(lidar, bvh, triangles, num_rays);
+
+    return distance;
 };
 
 #endif

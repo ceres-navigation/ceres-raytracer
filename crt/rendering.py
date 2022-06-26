@@ -5,6 +5,7 @@ from typing import Union, List, Tuple
 from crt import Entity
 from crt.cameras import Camera
 from crt.lights import Light
+from crt.lidars import Lidar
 
 from crt._pybind_convert import validate_lights, validate_entities
 
@@ -39,6 +40,16 @@ def render(camera: Camera, lights: Union[Light, List[Light], Tuple[Light,...]],
     image = _crt.render(camera._cpp, lights_cpp, entities_cpp,
                         min_samples, max_samples, noise_threshold, num_bounces)
     return image
+
+def simulate_lidar(lidar: Lidar, entities: Union[Entity, List[Entity], Tuple[Entity,...]],
+                   num_rays: int=1):
+
+    entities_cpp = validate_entities(entities)
+
+    distance = _crt.simulate_lidar(lidar._cpp, entities_cpp, num_rays)
+
+    return distance
+
 
 def normal_pass(camera: Camera, entities: Union[Entity, List[Entity], Tuple[Entity,...]],
                 return_image: bool=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:

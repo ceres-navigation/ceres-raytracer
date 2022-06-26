@@ -3,6 +3,7 @@ add_library(
     transform.hpp
     do_render.hpp
     rigid_body.hpp
+    do_lidar.hpp
 )
 target_include_directories(crt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 

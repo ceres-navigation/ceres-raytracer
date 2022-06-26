@@ -24,12 +24,13 @@
 
 #include "lights/light.hpp"
 #include "cameras/camera.hpp"
+#include "lidars/lidar.hpp"
 
 #include "materials/material.hpp"
 
 #include "do_render.hpp"
+#include "do_lidar.hpp"
 
-#include "path_tracing/unidirectional.hpp"
 #include "passes.hpp"
 
 template <typename Scalar>
@@ -91,18 +92,23 @@ class BodyFixedGroup: public RigidBody<Scalar> {
             return image;
         }
 
+        Scalar simulate_lidar(std::unique_ptr<Lidar<Scalar>> &lidar, int num_rays){
+            auto distance = do_lidar(lidar, this->bvh_cache, this->triangles, num_rays);
+            return distance;
+        }
+
         std::vector<Scalar> intersection_pass(std::unique_ptr<Camera<Scalar>> &camera){
-            auto intersections = get_inetersections<Scalar>(camera, bvh_cache, triangles);
+            auto intersections = get_inetersections<Scalar>(camera, this->bvh_cache, this->triangles);
             return intersections;
         }
 
         std::vector<uint32_t> instance_pass(std::unique_ptr<Camera<Scalar>> &camera){
-            auto instances = get_instances<Scalar>(camera, bvh_cache, triangles);
+            auto instances = get_instances<Scalar>(camera, this->bvh_cache, this->triangles);
             return instances;
         }
 
         std::vector<Scalar> normal_pass(std::unique_ptr<Camera<Scalar>> &camera){
-            auto normals = get_normals<Scalar>(camera, bvh_cache, triangles);
+            auto normals = get_normals<Scalar>(camera, this->bvh_cache, this->triangles);
             return normals;
         }
         

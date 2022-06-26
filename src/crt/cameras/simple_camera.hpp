@@ -41,7 +41,7 @@ class SimpleCamera: public Camera<Scalar> {
             this -> scale[0]  = original.scale[0];
             this -> scale[1]  = original.scale[1];
 
-            //
+            //TODO: move to RigidBody copy:
             this -> position = original.position;
             for (auto i = 0; i < 3; i++){
                 for (auto j = 0; j < 3; j++) {

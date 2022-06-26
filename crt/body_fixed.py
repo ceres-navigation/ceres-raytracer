@@ -5,6 +5,7 @@ from numpy.typing import ArrayLike
 
 from crt.cameras import Camera
 from crt.lights import Light
+from crt.lidars import Lidar
 
 from crt.rigid_body import RigidBody
 
@@ -139,6 +140,12 @@ class BodyFixedGroup(RigidBody):
         image = self._cpp.render(camera._cpp, lights_cpp,
                                  min_samples, max_samples, noise_threshold, num_bounces)
         return image
+
+    def simulate_lidar(self, lidar: Lidar, num_rays: int=1):
+
+        distance = self._cpp.simulate_lidar(lidar._cpp, num_rays)
+
+        return distance
 
     def normal_pass(self, camera: Camera, 
                     return_image: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
