@@ -71,39 +71,28 @@ and run any of the included `.py` example files:
 ## Tasks:
 - [ ] Python Interface
   - [x] Python bindings with pybind11
-  - [ ] Add support for SPICE
-  - [ ] Validate vector and rotation inputs
-- [ ] Rendering
-  - [ ] Improve the adaptive sampling noise calculation
-  - [x] Implement normal vector render pass
-  - [x] Implement intersection/depth render pass
-  - [x] Implement instance render pass
-  - [ ] Implement bidirectional path tracing
-  - [ ] Implement Primary Sample Space Metropolis Light Transport
-- [ ] Importance Sampling
-  - [ ] Implement Malley's method for cosine importance
-  - [ ] Alternative importance sampling method for planetary bodies
-- [ ] Lighting
-  - [x] Add output intensity to light objects
-  - [ ] Add circular area lights
-  - [ ] Add emissive mesh geometries
-  - [ ] Add polarized light
-  - [ ] Add specific wavelength support
-  - [ ] Add spectral power density
-  - [ ] Implement physically based radiance tracking for paths
-- [ ] Cameras
-  - [ ] Add linear pushbroom camera model
-  - [ ] Add calibrated camera model
-- [ ] Entities
-  - [x] Add parent object pointer to triangular meshes
-  - [ ] Add parsers for more mesh type (.PLY, .GLTF/.GLB)
+  - [ ] Swith to binary distributions (cross compile for Windows and MacOS)
+  - [ ] Python defined materials (compatible only with wavefront ray tracing)
+- [ ] Path tracing implementations
+  - [x] Adaptive sampling
+  - [ ] Wavefront ray tracing
+  - [ ] Bidirectional path tracing
+  - [ ] Primary Sample Space Metropolis Light Transport
+- [ ] Physics
+  - [ ] Polarization of light rays
+  - [ ] Wavelength of light rays
+  - [ ] Spectral power density of rays
+  - [ ] Physically based radiance tracking for paths
+  - [ ] Momentum of paths
 - [ ] Materials
-  - [ ] Refactor materials module to allow texturing
-  - [ ] Add McEwen BRDF
-  - [ ] Add PBR texture support
-- [ ] Simulation
-  - [ ] Add radiation pressure modeling
-  - [ ] Add solar panel flux modeling
+  - [ ] PBR Texture support
+  - [ ] Hapke function support
+  - [ ] Microfacet support
+- [ ] Major architecture changes
+  - [ ] TBB for parallelization
+  - [ ] Add Embree single precision support
+  - [ ] Add OptiX (GPU) single precision support
+  - [ ] Add Vulkan (GPU) single precision support
 
 ***
 ## Attributions
