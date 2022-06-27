@@ -68,7 +68,7 @@ This demo script demonstrates multi-bounce path tracing using the traditional co
 ### comet67p.py
 This demo script demonstrates how to use CRT's SPICE support, and rendering in a body fixed frame (allowing for the BVH to be cached and therefore overall faster render times):
 
-![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/comet67p.gif)
+![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/comet67p.gif) ![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/lidar.png)
 
 
 ***

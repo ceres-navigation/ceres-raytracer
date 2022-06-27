@@ -103,6 +103,11 @@ class BodyFixedGroup: public RigidBody<Scalar> {
             return distance;
         }
 
+        std::vector<Scalar> batch_simulate_lidar(std::unique_ptr<Lidar<Scalar>> &lidar, int num_rays){
+            auto distances = do_batch_lidar(lidar, this->bvh_cache, this->triangles, num_rays);
+            return distances;
+        }
+
         std::vector<Scalar> intersection_pass(std::unique_ptr<Camera<Scalar>> &camera){
             auto intersections = get_inetersections<Scalar>(camera, this->bvh_cache, this->triangles);
             return intersections;

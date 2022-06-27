@@ -144,10 +144,23 @@ class BodyFixedGroup(RigidBody):
         return image
 
     def simulate_lidar(self, lidar: Lidar, num_rays: int=1):
-
+        relative_position, relative_rotation = self.transform_to_body(lidar.position, lidar.rotation)
+        lidar.set_pose(relative_position, relative_rotation)
         distance = self._cpp.simulate_lidar(lidar._cpp, num_rays)
-
         return distance
+
+    def batch_simulate_lidar(self, lidar: Lidar, num_rays: int=1):
+        positions = lidar.batch_positions
+        rotations = lidar.batch_rotations
+        relative_positions = np.zeros(positions.shape)
+        relative_rotations = np.zeros(rotations.shape)
+        for idx in range(0,positions.shape[0]):
+            relative_positions[idx,:], relative_rotations[:,:,idx] = self.transform_to_body(positions[idx,:], rotations[:,:,idx])
+
+        lidar.batch_set_pose(relative_positions, relative_rotations)
+
+        distances = self._cpp.batch_simulate_lidar(lidar._cpp, num_rays)
+        return distances
 
     def normal_pass(self, camera: Camera, 
                     return_image: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:

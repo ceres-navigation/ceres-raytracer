@@ -212,6 +212,38 @@ PYBIND11_MODULE(_crt, crt) {
                 }
             }
             self.set_rotation(rotation_arr);
+        })
+        .def("batch_set_pose", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> batch_positions, 
+                                                             py::array_t<Scalar> batch_rotations,
+                                                             int number_of_poses){
+            // Read the batch positions data:
+            py::buffer_info buffer_batch_pos = batch_positions.request();
+            Scalar *ptr_batch_pos = static_cast<Scalar *>(buffer_batch_pos.ptr);
+            std::vector<bvh::Vector3<Scalar>> batch_positions_vector3;
+            for (auto i = 0; i < number_of_poses; i++){
+                auto position_vector3 = Vector3(ptr_batch_pos[0 + 3*i],
+                                                ptr_batch_pos[1 + 3*i],
+                                                ptr_batch_pos[2 + 3*i]);
+                batch_positions_vector3.push_back(position_vector3);
+            }
+
+            // Read the batch rotations data:
+            py::buffer_info buffer_batch_rot = batch_rotations.request();
+            Scalar *ptr_batch_rot = static_cast<Scalar *>(buffer_batch_rot.ptr);
+
+            Scalar batch_rotations_arr[3][3][100000] = {0};
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    for (auto k = 0; k < 100000; k++){
+                        batch_rotations_arr[i][j][k] = ptr_batch_rot[idx];
+                        idx++;
+                    }
+                }
+            }
+
+            // Batch set the pose:
+            self.batch_set_pose(batch_positions_vector3, batch_rotations_arr);
         });
 
     py::class_<PointLight<Scalar>>(crt, "PointLight")
@@ -430,6 +462,7 @@ PYBIND11_MODULE(_crt, crt) {
                     idx++;
                 }
             }
+            self.set_rotation(rotation_arr);
         })
         .def("render", [](BodyFixedGroup<Scalar> &self, py::handle camera, py::list lights_list,
                           int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){ 
@@ -471,6 +504,25 @@ PYBIND11_MODULE(_crt, crt) {
             auto distance = self.simulate_lidar(lidar_ptr, num_rays);
 
             return distance;
+        })
+        .def("batch_simulate_lidar", [](BodyFixedGroup<Scalar> &self, py::handle lidar, Scalar num_rays){
+            // Obtain the specific lidar model:
+            auto lidar_ptr = get_lidar_model(lidar);
+
+            // Call the lidar method:
+            auto distances = self.batch_simulate_lidar(lidar_ptr, num_rays);
+
+            // Format the output array:
+            int length = (size_t) distances.size();
+            auto result = py::array_t<Scalar>({1,length});
+            auto raw = result.mutable_data();
+            int i = 0;
+            for (Scalar dist : distances){
+                raw[i] = dist;
+                i++;
+            }
+
+            return result;
         })
         .def("intersection_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
             // Obtain the specific camera model:
