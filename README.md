@@ -60,11 +60,15 @@ git clone https://github.com/ceres-navigation/ceres-raytracer-demos.git
 ```
 and run any of the included `.py` example files:
 
-### cornel__box.py
+### cornel_box.py
+This demo script demonstrates multi-bounce path tracing using the traditional cornell box scene.  It additionally shows how to render depth, instances and normal passes:
+
 ![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/cornell.png)
 
-### bunny.py
-![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/bunny.gif)
+### comet67p.py
+This demo script demonstrates how to use CRT's SPICE support, and rendering in a body fixed frame (allowing for the BVH to be cached and therefore overall faster render times):
+
+![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/comet67p.gif)
 
 
 ***

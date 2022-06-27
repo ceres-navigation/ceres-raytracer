@@ -84,9 +84,6 @@ class BodyFixedGroup(RigidBody):
         Corresponding C++ BodyFixedGroup object
         """
 
-        self.set_pose(self.position, self.rotation, cpp=False)
-        self.set_scale(self.scale, cpp=False)
-
     def transform_to_body(self, position: ArrayLike, rotation: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
         """
         Transform provided position and rotation into the body fixed frame
@@ -99,7 +96,7 @@ class BodyFixedGroup(RigidBody):
         :rtype: Tuple[np.ndarray, np.ndarray]
         """
         relative_position = position - self.position
-        relative_position = np.matmul(self.rotation, relative_position)
+        relative_position = self.scale*np.matmul(self.rotation, relative_position)
         relative_rotation = np.matmul(self.rotation, rotation.T).T
         return relative_position, relative_rotation
 
@@ -132,10 +129,15 @@ class BodyFixedGroup(RigidBody):
         camera.set_pose(relative_position, relative_rotation)
 
         lights_cpp = []
-        for light in lights:
-            relative_position, relative_rotation = self.transform_to_body(light.position, light.rotation)
-            light.set_pose(relative_position, relative_rotation)
-            lights_cpp.append(light._cpp)
+        if (type(lights) is list) or (type(lights) is tuple):
+            for light in lights:
+                relative_position, relative_rotation = self.transform_to_body(light.position, light.rotation)
+                light.set_pose(relative_position, relative_rotation)
+                lights_cpp.append(light._cpp)
+        else:
+            relative_position, relative_rotation = self.transform_to_body(lights.position, lights.rotation)
+            lights.set_pose(relative_position, relative_rotation)
+            lights_cpp.append(lights._cpp)
 
         image = self._cpp.render(camera._cpp, lights_cpp,
                                  min_samples, max_samples, noise_threshold, num_bounces)

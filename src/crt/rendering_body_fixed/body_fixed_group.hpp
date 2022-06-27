@@ -39,6 +39,8 @@ class BodyFixedGroup: public RigidBody<Scalar> {
         bvh::Bvh<Scalar> bvh_cache;
         std::vector<bvh::Triangle<Scalar>> triangles;
 
+        Scalar scale;
+
         // Constructor:
         BodyFixedGroup(std::vector<Entity<Scalar>*> entities){
             // Store triangles locally:
@@ -84,6 +86,10 @@ class BodyFixedGroup: public RigidBody<Scalar> {
                 << reference_count << " reference(s)\n";
             std::cout << "    BVH built in " << duration.count()/1000000.0 << " seconds\n\n";
 
+        }
+
+        void set_scale(Scalar scale){
+            this -> scale = scale;
         }
 
         std::vector<uint8_t> render(std::unique_ptr<Camera<Scalar>> &camera, std::vector<std::unique_ptr<Light<Scalar>>> &lights,

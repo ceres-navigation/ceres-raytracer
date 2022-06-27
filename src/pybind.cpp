@@ -390,8 +390,49 @@ PYBIND11_MODULE(_crt, crt) {
 
     py::class_<BodyFixedGroup<Scalar>>(crt, "BodyFixedGroup")
         .def(py::init(&create_body_fixed_group))
-        .def("render",    [](BodyFixedGroup<Scalar> &self, py::handle camera, py::list lights_list,
-                             int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){ 
+        .def("set_scale",    [](BodyFixedGroup<Scalar> &self, Scalar scale){ 
+            self.set_scale(scale);
+        })
+        .def("set_position", [](BodyFixedGroup<Scalar> &self, py::array_t<Scalar> position){
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
+        })
+        .def("set_rotation", [](BodyFixedGroup<Scalar> &self, py::array_t<Scalar> rotation){
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("set_pose", [](BodyFixedGroup<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
+
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+        })
+        .def("render", [](BodyFixedGroup<Scalar> &self, py::handle camera, py::list lights_list,
+                          int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){ 
 
             // Obtain the specific camera model:
             auto camera_ptr = get_camera_model(camera);

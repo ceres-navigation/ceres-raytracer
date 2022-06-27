@@ -33,7 +33,6 @@ class BodyFixedEntity: public RigidBody<Scalar> {
             this -> rotation[2][2] = 1;
         }
 
-        // Pose setting methods:
         void set_scale(Scalar scale){
             this -> scale = scale;
         }
