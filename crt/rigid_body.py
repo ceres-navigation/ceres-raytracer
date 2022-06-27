@@ -139,6 +139,7 @@ class RigidBody:
         :type scale: float
         """
         self.scale = validate_scale(scale)
+        self._cpp.set_scale(self.scale)
 
     def set_position(self, position: ArrayLike):
         """
@@ -148,6 +149,7 @@ class RigidBody:
         :type position: ArrayLike
         """
         self.position = validate_position(position)
+        self._cpp.set_position(self.position)
 
     def set_rotation(self, rotation: ArrayLike):
         """
@@ -157,6 +159,7 @@ class RigidBody:
         :type rotation: ArrayLike
         """
         self.rotation = validate_rotation(rotation)
+        self._cpp.set_rotation(self.rotation)
 
     def set_pose(self, position: ArrayLike, rotation: ArrayLike):
         """
@@ -169,6 +172,7 @@ class RigidBody:
         """
         self.position = validate_position(position)
         self.rotation = validate_rotation(rotation)
+        self._cpp.set_pose(self.position, self.rotation)
 
     def spice_position(self, et: float):
         """
@@ -185,7 +189,7 @@ class RigidBody:
         :type et: float
         """
         position,_ = spkpos(self.name, et, self.ref, self.abcorr, self.origin)
-        self.position = validate_position(position)
+        self.set_position(position)
 
     def spice_rotation(self, et: float):
         """
@@ -200,7 +204,7 @@ class RigidBody:
         :type et: float
         """
         rotation = pxform(self.ref, self.frame, et)
-        self.rotation = validate_rotation(rotation)
+        self.set_rotation(rotation)
 
     def spice_pose(self, et: float):
         """
@@ -224,5 +228,4 @@ class RigidBody:
         """
         position,_ = spkpos(self.name, et, self.ref, self.abcorr, self.origin)
         rotation   = pxform(self.ref, self.frame, et)
-        self.position = validate_position(position)
-        self.rotation = validate_rotation(rotation)
+        self.set_pose(position, rotation)

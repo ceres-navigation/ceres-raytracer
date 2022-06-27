@@ -55,15 +55,16 @@ std::vector<uint8_t> do_render(std::unique_ptr<Camera<Scalar>> &camera,
     std::string path_tracing_type = "unidirectional";
 
     // Sample pixels:
+    int num_threads;
     #ifdef _OPENMP
         #pragma omp parallel 
         {   
             #pragma omp single
-            std::cout << "Path tracing on " << omp_get_num_threads() << " threads..." << std::endl;
+            num_threads = omp_get_num_threads();
         }
         #pragma omp parallel for
     #else
-        std::cout << "Path tracing on single thread..." << std::endl;
+        num_threads = 1;
     #endif
     for(size_t i = 0; i < width; ++i) {
         for(size_t j = 0; j < height; ++j) {
@@ -134,7 +135,7 @@ std::vector<uint8_t> do_render(std::unique_ptr<Camera<Scalar>> &camera,
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "    Rendering completed in " << duration.count()/1000000.0 << " seconds\n\n";
+    std::cout << "    Rendering completed in " << duration.count()/1000000.0 << " seconds (on " << num_threads << " threads)\n";
 
     return image;
 };

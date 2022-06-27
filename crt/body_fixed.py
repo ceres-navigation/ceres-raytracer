@@ -156,7 +156,6 @@ class BodyFixedGroup(RigidBody):
         relative_rotations = np.zeros(rotations.shape)
         for idx in range(0,positions.shape[0]):
             relative_positions[idx,:], relative_rotations[:,:,idx] = self.transform_to_body(positions[idx,:], rotations[:,:,idx])
-
         lidar.batch_set_pose(relative_positions, relative_rotations)
 
         distances = self._cpp.batch_simulate_lidar(lidar._cpp, num_rays)

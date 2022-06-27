@@ -1,6 +1,8 @@
 #ifndef __DO_LIDAR_H
 #define __DO_LIDAR_H
 
+#include <chrono>
+
 #include "bvh/bvh.hpp"
 #include "bvh/single_ray_traverser.hpp"
 #include "bvh/primitive_intersectors.hpp"
@@ -14,7 +16,9 @@ Scalar do_lidar(std::unique_ptr<Lidar<Scalar>> &lidar,
                 std::vector<bvh::Triangle<Scalar>> triangles,
                 int num_rays){
 
-    // Start the rendering process:
+    // Start time of the lidar process:
+    auto start = std::chrono::high_resolution_clock::now();
+
     auto tri_data = triangles.data();
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh_cache, tri_data);
     bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh_cache, tri_data);
@@ -25,8 +29,16 @@ Scalar do_lidar(std::unique_ptr<Lidar<Scalar>> &lidar,
     std::vector<Scalar> distances;
 
     // Run parallel if available:
+    int num_threads;
     #ifdef _OPENMP
+        #pragma omp parallel 
+        {   
+            #pragma omp single
+            num_threads = omp_get_num_threads();
+        }
         #pragma omp parallel for
+    #else
+        num_threads = 1;
     #endif
     for (auto ray : rays) {
         // Traverse ray through BVH:
@@ -56,6 +68,11 @@ Scalar do_lidar(std::unique_ptr<Lidar<Scalar>> &lidar,
         count++;
     }
     auto distance = d_sum/count;
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "    Lidar simulation completed in " << duration.count()/1000000.0 << " seconds (on " << num_threads << " threads)\n";
+
     return distance;
 };
 
@@ -65,7 +82,9 @@ std::vector<Scalar> do_batch_lidar(std::unique_ptr<Lidar<Scalar>> &lidar,
                                    std::vector<bvh::Triangle<Scalar>> triangles,
                                    int num_rays){
 
-    // Start the rendering process:
+    // Start time of the batch lidar process:
+    auto start = std::chrono::high_resolution_clock::now();
+
     auto tri_data = triangles.data();
     bvh::ClosestPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> closest_intersector(bvh_cache, tri_data);
     bvh::AnyPrimitiveIntersector<bvh::Bvh<Scalar>, bvh::Triangle<Scalar>, false> any_int(bvh_cache, tri_data);
@@ -76,11 +95,18 @@ std::vector<Scalar> do_batch_lidar(std::unique_ptr<Lidar<Scalar>> &lidar,
 
     int num_batches = (size_t) batch_rays.size();
     Scalar batch_distances_array[num_batches];
-    int batch_count = 0;
 
     // Run parallel if available:
+    int num_threads;
     #ifdef _OPENMP
+        #pragma omp parallel 
+        {   
+            #pragma omp single
+            num_threads = omp_get_num_threads();
+        }
         #pragma omp parallel for
+    #else
+        num_threads = 1;
     #endif
     for (int i = 0; i < num_batches; i++) {
         auto rays = batch_rays[i];
@@ -120,6 +146,11 @@ std::vector<Scalar> do_batch_lidar(std::unique_ptr<Lidar<Scalar>> &lidar,
     for (int i = 0; i < num_batches; i++){
         batch_distances.push_back(batch_distances_array[i]);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "    Batch lidar simulation completed in " << duration.count()/1000000.0 << " seconds (on " << num_threads << " threads)\n";
+
     return batch_distances;
 };
 
