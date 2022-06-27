@@ -8,10 +8,10 @@
 #include "bvh/primitive_intersectors.hpp"
 #include "bvh/triangle.hpp"
 
-#include "cameras.hpp"
+#include "cameras/camera.hpp"
 
 template <typename Scalar>
-std::vector<Scalar> get_inetersections(std::unique_ptr<CameraModel<Scalar>> &camera,
+std::vector<Scalar> get_inetersections(std::unique_ptr<Camera<Scalar>> &camera,
                                        bvh::Bvh<Scalar> &bvh_cache,
                                        std::vector<bvh::Triangle<Scalar>> triangles){
 
@@ -75,7 +75,7 @@ std::vector<Scalar> get_inetersections(std::unique_ptr<CameraModel<Scalar>> &cam
 };
 
 template <typename Scalar>
-std::vector<uint32_t> get_instances(std::unique_ptr<CameraModel<Scalar>> &camera,
+std::vector<uint32_t> get_instances(std::unique_ptr<Camera<Scalar>> &camera,
                                     bvh::Bvh<Scalar> &bvh_cache,
                                     std::vector<bvh::Triangle<Scalar>> triangles) {
 
@@ -135,7 +135,7 @@ std::vector<uint32_t> get_instances(std::unique_ptr<CameraModel<Scalar>> &camera
 };
 
 template <typename Scalar>
-std::vector<Scalar> get_normals(std::unique_ptr<CameraModel<Scalar>> &camera, 
+std::vector<Scalar> get_normals(std::unique_ptr<Camera<Scalar>> &camera, 
                                 bvh::Bvh<Scalar> &bvh_cache,
                                 std::vector<bvh::Triangle<Scalar>> triangles){
 
@@ -198,7 +198,7 @@ std::vector<Scalar> get_normals(std::unique_ptr<CameraModel<Scalar>> &camera,
 };
 
 template <typename Scalar> 
-std::vector<Scalar> intersection_pass(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
+std::vector<Scalar> intersection_pass(std::unique_ptr<Camera<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
 
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
@@ -251,7 +251,7 @@ std::vector<Scalar> intersection_pass(std::unique_ptr<CameraModel<Scalar>> &came
 };
 
 template <typename Scalar>
-std::vector<uint32_t> instance_pass(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
+std::vector<uint32_t> instance_pass(std::unique_ptr<Camera<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
 
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
@@ -304,7 +304,7 @@ std::vector<uint32_t> instance_pass(std::unique_ptr<CameraModel<Scalar>> &camera
 }
 
 template <typename Scalar>
-std::vector<Scalar> normal_pass(std::unique_ptr<CameraModel<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
+std::vector<Scalar> normal_pass(std::unique_ptr<Camera<Scalar>> &camera, std::vector<Entity<Scalar>*> entities){
     // Store triangles locally:
     std::vector<bvh::Triangle<Scalar>> triangles;
     for (auto entity : entities) {

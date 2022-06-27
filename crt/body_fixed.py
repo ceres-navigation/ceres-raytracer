@@ -5,6 +5,7 @@ from numpy.typing import ArrayLike
 
 from crt.cameras import Camera
 from crt.lights import Light
+from crt.lidars import Lidar
 
 from crt.rigid_body import RigidBody
 
@@ -83,9 +84,6 @@ class BodyFixedGroup(RigidBody):
         Corresponding C++ BodyFixedGroup object
         """
 
-        self.set_pose(self.position, self.rotation, cpp=False)
-        self.set_scale(self.scale, cpp=False)
-
     def transform_to_body(self, position: ArrayLike, rotation: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
         """
         Transform provided position and rotation into the body fixed frame
@@ -98,7 +96,7 @@ class BodyFixedGroup(RigidBody):
         :rtype: Tuple[np.ndarray, np.ndarray]
         """
         relative_position = position - self.position
-        relative_position = np.matmul(self.rotation, relative_position)
+        relative_position = self.scale*np.matmul(self.rotation, relative_position)
         relative_rotation = np.matmul(self.rotation, rotation.T).T
         return relative_position, relative_rotation
 
@@ -131,14 +129,38 @@ class BodyFixedGroup(RigidBody):
         camera.set_pose(relative_position, relative_rotation)
 
         lights_cpp = []
-        for light in lights:
-            relative_position, relative_rotation = self.transform_to_body(light.position, light.rotation)
-            light.set_pose(relative_position, relative_rotation)
-            lights_cpp.append(light._cpp)
+        if (type(lights) is list) or (type(lights) is tuple):
+            for light in lights:
+                relative_position, relative_rotation = self.transform_to_body(light.position, light.rotation)
+                light.set_pose(relative_position, relative_rotation)
+                lights_cpp.append(light._cpp)
+        else:
+            relative_position, relative_rotation = self.transform_to_body(lights.position, lights.rotation)
+            lights.set_pose(relative_position, relative_rotation)
+            lights_cpp.append(lights._cpp)
 
         image = self._cpp.render(camera._cpp, lights_cpp,
                                  min_samples, max_samples, noise_threshold, num_bounces)
         return image
+
+    def simulate_lidar(self, lidar: Lidar, num_rays: int=1):
+        relative_position, relative_rotation = self.transform_to_body(lidar.position, lidar.rotation)
+        lidar.set_pose(relative_position, relative_rotation)
+        distance = self._cpp.simulate_lidar(lidar._cpp, num_rays)
+        return distance
+
+    def batch_simulate_lidar(self, lidar: Lidar, num_rays: int=1):
+        positions = lidar.batch_positions
+        rotations = lidar.batch_rotations
+        relative_positions = np.zeros(positions.shape)
+        relative_rotations = np.zeros(rotations.shape)
+        for idx in range(0,positions.shape[0]):
+            relative_positions[idx,:], relative_rotations[:,:,idx] = self.transform_to_body(positions[idx,:], rotations[:,:,idx])
+
+        lidar.batch_set_pose(relative_positions, relative_rotations)
+
+        distances = self._cpp.batch_simulate_lidar(lidar._cpp, num_rays)
+        return distances
 
     def normal_pass(self, camera: Camera, 
                     return_image: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:

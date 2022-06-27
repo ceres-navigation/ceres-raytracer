@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Size](https://img.shields.io/github/repo-size/ceres-navigation/ceres-raytracer)
 
-This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for rendering images, simulating LiDAR, and modeling radiation pressure.
+This project was developed as part of [CERES](https://ceresnavigation.org) and aims to provide scientifically useful path tracing capabilities for rendering images, simulating LiDAR, modeling radiation pressure, and flux computations for thermal and solar panel analysis.
 
 - [Website](https://ceresnavigation.org)
 - [API Documentation](https://docs.crt.ceresnavigation.org)
@@ -60,50 +60,43 @@ git clone https://github.com/ceres-navigation/ceres-raytracer-demos.git
 ```
 and run any of the included `.py` example files:
 
-### cornel__box.py
+### cornel_box.py
+This demo script demonstrates multi-bounce path tracing using the traditional cornell box scene.  It additionally shows how to render depth, instances and normal passes:
+
 ![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/cornell.png)
 
-### bunny.py
-![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/bunny.gif)
+### comet67p.py
+This demo script demonstrates how to use CRT's SPICE support, and rendering in a body fixed frame (allowing for the BVH to be cached and therefore overall faster render times):
+
+![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/comet67p.gif) ![](https://raw.githubusercontent.com/ceres-navigation/ceres-raytracer-demos/master/results/lidar.png)
 
 
 ***
 ## Tasks:
 - [ ] Python Interface
   - [x] Python bindings with pybind11
-  - [ ] Add support for SPICE
-  - [ ] Validate vector and rotation inputs
-- [ ] Rendering
-  - [ ] Improve the adaptive sampling noise calculation
-  - [x] Implement normal vector render pass
-  - [x] Implement intersection/depth render pass
-  - [x] Implement instance render pass
-  - [ ] Implement bidirectional path tracing
-  - [ ] Implement Primary Sample Space Metropolis Light Transport
-- [ ] Importance Sampling
-  - [ ] Implement Malley's method for cosine importance
-  - [ ] Alternative importance sampling method for planetary bodies
-- [ ] Lighting
-  - [x] Add output intensity to light objects
-  - [ ] Add circular area lights
-  - [ ] Add emissive mesh geometries
-  - [ ] Add polarized light
-  - [ ] Add specific wavelength support
-  - [ ] Add spectral power density
-  - [ ] Implement physically based radiance tracking for paths
-- [ ] Cameras
-  - [ ] Add linear pushbroom camera model
-  - [ ] Add calibrated camera model
-- [ ] Entities
-  - [x] Add parent object pointer to triangular meshes
-  - [ ] Add parsers for more mesh type (.PLY, .GLTF/.GLB)
+  - [ ] Binary distributions (cross compiled for Windows/MacOS on Linux)
+  - [ ] Python defined materials (compatible only with wavefront ray tracing)
+- [ ] Path tracing implementations
+  - [x] Adaptive sampling
+  - [ ] Wavefront ray tracing
+  - [ ] Bidirectional path tracing
+  - [ ] Primary Sample Space Metropolis Light Transport
+- [ ] Physics
+  - [ ] Polarization of light rays
+  - [ ] Wavelength of light rays
+  - [ ] Spectral power density of rays
+  - [ ] Physically based radiance tracking for paths
+  - [ ] Momentum of paths
 - [ ] Materials
-  - [ ] Refactor materials module to allow texturing
-  - [ ] Add McEwen BRDF
-  - [ ] Add PBR texture support
-- [ ] Simulation
-  - [ ] Add radiation pressure modeling
-  - [ ] Add solar panel flux modeling
+  - [ ] PBR Texture support
+  - [ ] Hapke function support
+  - [ ] Microfacet support
+- [ ] Major architecture changes
+  - [ ] TBB for parallelization
+  - [ ] Add Embree single precision support
+  - [ ] Add OptiX (GPU) single precision support
+  - [ ] Add Vulkan (GPU) single precision support
 
 ***
 ## Attributions

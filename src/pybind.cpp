@@ -2,21 +2,27 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include "crt/transform.hpp"
-
 #include <lodepng/lodepng.h>
 
-#include "crt/cameras.hpp"
-#include "crt/entity.hpp"
-#include "crt/render.hpp"
-#include "crt/path_trace.hpp"
-#include "crt/lights.hpp"
+// CRT Includes:
+#include "crt/cameras/camera.hpp"
+#include "crt/cameras/simple_camera.hpp"
+
+#include "crt/lidars/lidar.hpp"
+#include "crt/lidars/simple_lidar.hpp"
+
+#include "crt/lights/light.hpp"
+#include "crt/lights/point_light.hpp"
+#include "crt/lights/area_light.hpp"
+
+#include "crt/rendering_body_fixed/body_fixed_entity.hpp"
+#include "crt/rendering_body_fixed/body_fixed_group.hpp"
+
+#include "crt/rendering_dynamic/entity.hpp"
+#include "crt/rendering_dynamic/render.hpp"
+#include "crt/rendering_dynamic/simulate_lidar.hpp"
+
 #include "crt/passes.hpp"
-
-#include "crt/body_fixed.hpp"
-
-#include "crt/obj_temp/obj.hpp"
-#include "crt/materials/material.hpp"
 
 namespace py = pybind11;
 
@@ -26,7 +32,7 @@ using Scalar = double;
 using Vector3 = bvh::Vector3<Scalar>;
 
 // Wrapper functions to handle type casting?  This seems weird to do it this way....
-PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_list, py::list sensor_size_list, bool z_positive) {
+SimpleCamera<Scalar> create_simple_camera(Scalar focal_length, py::list resolution_list, py::list sensor_size_list, bool z_positive) {
     Scalar resolution[2];
     Scalar sensor_size[2];
 
@@ -36,16 +42,20 @@ PinholeCamera<Scalar> create_pinhole(Scalar focal_length, py::list resolution_li
     sensor_size[0] = sensor_size_list[0].cast<Scalar>();
     sensor_size[1] = sensor_size_list[1].cast<Scalar>();
 
-    return PinholeCamera<Scalar>(focal_length, resolution, sensor_size, z_positive);
+    return SimpleCamera<Scalar>(focal_length, resolution, sensor_size, z_positive);
 }
 
-SquareLight<Scalar> create_squarelight(Scalar intensity, py::list size_list){
+SimpleLidar<Scalar> create_simple_lidar(bool z_positive){
+    return SimpleLidar<Scalar>(z_positive);
+}
+
+AreaLight<Scalar> create_AreaLight(Scalar intensity, py::list size_list){
     Scalar size[2];
 
     size[0] = size_list[0].cast<Scalar>();
     size[1] = size_list[1].cast<Scalar>();
     
-    return SquareLight<Scalar>(intensity, size);
+    return AreaLight<Scalar>(intensity, size);
 }
 
 PointLight<Scalar> create_pointlight(Scalar intensity){
@@ -70,16 +80,28 @@ Entity<Scalar>* create_entity(std::string geometry_path, std::string geometry_ty
     return new_entity;
 }
 
-std::unique_ptr<CameraModel<Scalar>> copy_camera_unique(py::handle camera){
-    std::unique_ptr<CameraModel<Scalar>> camera_copy;
-    if (py::isinstance<PinholeCamera<Scalar>>(camera)){
-        PinholeCamera<Scalar> camera_cast = camera.cast<PinholeCamera<Scalar>>();
-        camera_copy = std::make_unique<PinholeCamera<Scalar>>(camera_cast);
+std::unique_ptr<Camera<Scalar>> get_camera_model(py::handle camera){
+    std::unique_ptr<Camera<Scalar>> camera_ptr;
+    if (py::isinstance<SimpleCamera<Scalar>>(camera)){
+        SimpleCamera<Scalar> camera_cast = camera.cast<SimpleCamera<Scalar>>();
+        camera_ptr = std::make_unique<SimpleCamera<Scalar>>(camera_cast);
     }
     else {
         // throw an exception
     }
-    return camera_copy;
+    return camera_ptr;
+}
+
+std::unique_ptr<Lidar<Scalar>> get_lidar_model(py::handle lidar){
+    std::unique_ptr<Lidar<Scalar>> lidar_ptr;
+    if (py::isinstance<SimpleLidar<Scalar>>(lidar)){
+        SimpleLidar<Scalar> lidar_cast = lidar.cast<SimpleLidar<Scalar>>();
+        lidar_ptr = std::make_unique<SimpleLidar<Scalar>>(lidar_cast);
+    }
+    else {
+        // throw and exception
+    }
+    return lidar_ptr;
 }
 
 BodyFixedGroup<Scalar> create_body_fixed_group(py::list body_fixed_entity_list) {
@@ -108,15 +130,15 @@ BodyFixedGroup<Scalar> create_body_fixed_group(py::list body_fixed_entity_list) 
 PYBIND11_MODULE(_crt, crt) {
     crt.doc() = "ceres ray tracer";
 
-    py::class_<PinholeCamera<Scalar>>(crt, "PinholeCamera")
-        .def(py::init(&create_pinhole))
-        .def("set_position", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> position){
+    py::class_<SimpleCamera<Scalar>>(crt, "SimpleCamera")
+        .def(py::init(&create_simple_camera))
+        .def("set_position", [](SimpleCamera<Scalar> &self, py::array_t<Scalar> position){
             py::buffer_info buffer = position.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
             self.set_position(position_vector3);
         })
-        .def("set_rotation", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> rotation){
+        .def("set_rotation", [](SimpleCamera<Scalar> &self, py::array_t<Scalar> rotation){
             py::buffer_info buffer = rotation.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             Scalar rotation_arr[3][3];
@@ -129,7 +151,7 @@ PYBIND11_MODULE(_crt, crt) {
             }
             self.set_rotation(rotation_arr);
         })
-        .def("set_pose", [](PinholeCamera<Scalar> &self, py::array_t<Scalar> position, py::array_t<double, py::array::c_style | py::array::forcecast> rotation){
+        .def("set_pose", [](SimpleCamera<Scalar> &self, py::array_t<Scalar> position, py::array_t<double, py::array::c_style | py::array::forcecast> rotation){
             // Get the position:
             py::buffer_info buffer_pos = position.request();
             Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
@@ -148,6 +170,80 @@ PYBIND11_MODULE(_crt, crt) {
             }
             // Set the pose:
             self.set_pose(position_vector3, rotation_arr);
+        });
+
+    py::class_<SimpleLidar<Scalar>>(crt, "SimpleLidar")
+        .def(py::init(&create_simple_lidar))
+        .def("set_position", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> position){
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
+        })
+        .def("set_rotation", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> rotation){
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("set_pose", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
+
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("batch_set_pose", [](SimpleLidar<Scalar> &self, py::array_t<Scalar> batch_positions, 
+                                                             py::array_t<Scalar> batch_rotations,
+                                                             int number_of_poses){
+            // Read the batch positions data:
+            py::buffer_info buffer_batch_pos = batch_positions.request();
+            Scalar *ptr_batch_pos = static_cast<Scalar *>(buffer_batch_pos.ptr);
+            std::vector<bvh::Vector3<Scalar>> batch_positions_vector3;
+            for (auto i = 0; i < number_of_poses; i++){
+                auto position_vector3 = Vector3(ptr_batch_pos[0 + 3*i],
+                                                ptr_batch_pos[1 + 3*i],
+                                                ptr_batch_pos[2 + 3*i]);
+                batch_positions_vector3.push_back(position_vector3);
+            }
+
+            // Read the batch rotations data:
+            py::buffer_info buffer_batch_rot = batch_rotations.request();
+            Scalar *ptr_batch_rot = static_cast<Scalar *>(buffer_batch_rot.ptr);
+
+            Scalar batch_rotations_arr[3][3][100000] = {0};
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    for (auto k = 0; k < 100000; k++){
+                        batch_rotations_arr[i][j][k] = ptr_batch_rot[idx];
+                        idx++;
+                    }
+                }
+            }
+
+            // Batch set the pose:
+            self.batch_set_pose(batch_positions_vector3, batch_rotations_arr);
         });
 
     py::class_<PointLight<Scalar>>(crt, "PointLight")
@@ -192,15 +288,15 @@ PYBIND11_MODULE(_crt, crt) {
             self.set_rotation(rotation_arr);
         });
 
-    py::class_<SquareLight<Scalar>>(crt, "SquareLight")
-        .def(py::init(&create_squarelight))
-        .def("set_position", [](SquareLight<Scalar> &self, py::array_t<Scalar> position){
+    py::class_<AreaLight<Scalar>>(crt, "AreaLight")
+        .def(py::init(&create_AreaLight))
+        .def("set_position", [](AreaLight<Scalar> &self, py::array_t<Scalar> position){
             py::buffer_info buffer = position.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
             self.set_position(position_vector3);
         })
-        .def("set_rotation", [](SquareLight<Scalar> &self, py::array_t<Scalar> rotation){
+        .def("set_rotation", [](AreaLight<Scalar> &self, py::array_t<Scalar> rotation){
             py::buffer_info buffer = rotation.request();
             Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
             Scalar rotation_arr[3][3];
@@ -213,7 +309,7 @@ PYBIND11_MODULE(_crt, crt) {
             }
             self.set_rotation(rotation_arr);
         })
-        .def("set_pose", [](SquareLight<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+        .def("set_pose", [](AreaLight<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
             // Set the position:
             py::buffer_info buffer_pos = position.request();
             Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
@@ -326,11 +422,53 @@ PYBIND11_MODULE(_crt, crt) {
 
     py::class_<BodyFixedGroup<Scalar>>(crt, "BodyFixedGroup")
         .def(py::init(&create_body_fixed_group))
-        .def("render",    [](BodyFixedGroup<Scalar> &self, py::handle camera, py::list lights_list,
-                             int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){ 
+        .def("set_scale",    [](BodyFixedGroup<Scalar> &self, Scalar scale){ 
+            self.set_scale(scale);
+        })
+        .def("set_position", [](BodyFixedGroup<Scalar> &self, py::array_t<Scalar> position){
+            py::buffer_info buffer = position.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            auto position_vector3 = Vector3(ptr[0],ptr[1],ptr[2]);
+            self.set_position(position_vector3);
+        })
+        .def("set_rotation", [](BodyFixedGroup<Scalar> &self, py::array_t<Scalar> rotation){
+            py::buffer_info buffer = rotation.request();
+            Scalar *ptr = static_cast<Scalar *>(buffer.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("set_pose", [](BodyFixedGroup<Scalar> &self, py::array_t<Scalar> position, py::array_t<Scalar> rotation){
+            // Set the position:
+            py::buffer_info buffer_pos = position.request();
+            Scalar *ptr_pos = static_cast<Scalar *>(buffer_pos.ptr);
+            auto position_vector3 = Vector3(ptr_pos[0],ptr_pos[1],ptr_pos[2]);
+            self.set_position(position_vector3);
 
-            // Duplicate camera to obtain unique_ptr:
-            auto camera_use = copy_camera_unique(camera);
+            // Set the rotation:
+            py::buffer_info buffer_rot = rotation.request();
+            Scalar *ptr_rot = static_cast<Scalar *>(buffer_rot.ptr);
+            Scalar rotation_arr[3][3];
+            int idx = 0;
+            for (auto i = 0; i < 3; i++){
+                for (auto j = 0; j < 3; j++){
+                    rotation_arr[i][j] = ptr_rot[idx];
+                    idx++;
+                }
+            }
+            self.set_rotation(rotation_arr);
+        })
+        .def("render", [](BodyFixedGroup<Scalar> &self, py::handle camera, py::list lights_list,
+                          int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){ 
+
+            // Obtain the specific camera model:
+            auto camera_ptr = get_camera_model(camera);
 
             // Convert py::list of lights to std::vector
             std::vector<std::unique_ptr<Light<Scalar>>> lights;
@@ -339,18 +477,18 @@ PYBIND11_MODULE(_crt, crt) {
                     PointLight<Scalar> light_new = light.cast<PointLight<Scalar>>();
                     lights.push_back(std::make_unique<PointLight<Scalar>>(light_new));
                 }
-                else if (py::isinstance<SquareLight<Scalar>>(light)){
-                    SquareLight<Scalar> light_new = light.cast<SquareLight<Scalar>>();
-                    lights.push_back(std::make_unique<SquareLight<Scalar>>(light_new));
+                else if (py::isinstance<AreaLight<Scalar>>(light)){
+                    AreaLight<Scalar> light_new = light.cast<AreaLight<Scalar>>();
+                    lights.push_back(std::make_unique<AreaLight<Scalar>>(light_new));
                 }
             }
 
             // Call the render method:
-            auto pixels = self.render(camera_use, lights, min_samples, max_samples, noise_threshold, num_bounces);
+            auto pixels = self.render(camera_ptr, lights, min_samples, max_samples, noise_threshold, num_bounces);
 
             // Format the output image:
-            int width  = (size_t) floor(camera_use->get_resolutionX());
-            int height = (size_t) floor(camera_use->get_resolutionY());
+            int width  = (size_t) floor(camera_ptr->get_resolutionX());
+            int height = (size_t) floor(camera_ptr->get_resolutionY());
             auto result = py::array_t<uint8_t>({height,width,4});
             auto raw = result.mutable_data();
             for (int i = 0; i < height*width*4; i++) {
@@ -358,16 +496,44 @@ PYBIND11_MODULE(_crt, crt) {
             }
             return result;
         })
-        .def("intersection_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
-            // Duplicate camera to obtain unique_ptr:
-            auto camera_use = copy_camera_unique(camera);
+        .def("simulate_lidar", [](BodyFixedGroup<Scalar> &self, py::handle lidar, Scalar num_rays){
+            // Obtain the specific lidar model:
+            auto lidar_ptr = get_lidar_model(lidar);
 
-            // Call the intersection_pass method:
-            auto intersections = self.intersection_pass(camera_use);
+            // Call the lidar method:
+            auto distance = self.simulate_lidar(lidar_ptr, num_rays);
+
+            return distance;
+        })
+        .def("batch_simulate_lidar", [](BodyFixedGroup<Scalar> &self, py::handle lidar, Scalar num_rays){
+            // Obtain the specific lidar model:
+            auto lidar_ptr = get_lidar_model(lidar);
+
+            // Call the lidar method:
+            auto distances = self.batch_simulate_lidar(lidar_ptr, num_rays);
 
             // Format the output array:
-            int width  = (size_t) floor(camera_use->get_resolutionX());
-            int height = (size_t) floor(camera_use->get_resolutionY());
+            int length = (size_t) distances.size();
+            auto result = py::array_t<Scalar>({1,length});
+            auto raw = result.mutable_data();
+            int i = 0;
+            for (Scalar dist : distances){
+                raw[i] = dist;
+                i++;
+            }
+
+            return result;
+        })
+        .def("intersection_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
+            // Obtain the specific camera model:
+            auto camera_ptr = get_camera_model(camera);
+
+            // Call the intersection_pass method:
+            auto intersections = self.intersection_pass(camera_ptr);
+
+            // Format the output array:
+            int width  = (size_t) floor(camera_ptr->get_resolutionX());
+            int height = (size_t) floor(camera_ptr->get_resolutionY());
             auto result = py::array_t<Scalar>({height,width,3});
             auto raw = result.mutable_data();
             for (int i = 0; i < height*width*3; i++){
@@ -377,15 +543,15 @@ PYBIND11_MODULE(_crt, crt) {
 
         })
         .def("instance_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
-            // Duplicate camera to obtain unique_ptr:
-            auto camera_use = copy_camera_unique(camera);
+            // Obtain the specific camera model:
+            auto camera_ptr = get_camera_model(camera);
 
             // Call the instance_pass method:
-            auto instances = self.instance_pass(camera_use);
+            auto instances = self.instance_pass(camera_ptr);
 
             // Format the output array:
-            int width  = (size_t) floor(camera_use->get_resolutionX());
-            int height = (size_t) floor(camera_use->get_resolutionY());
+            int width  = (size_t) floor(camera_ptr->get_resolutionX());
+            int height = (size_t) floor(camera_ptr->get_resolutionY());
             auto result = py::array_t<uint32_t>({height,width});
             auto raw = result.mutable_data();
             for (int i = 0; i < height*width; i++){
@@ -394,15 +560,15 @@ PYBIND11_MODULE(_crt, crt) {
             return result;
         })
         .def("normal_pass", [](BodyFixedGroup<Scalar> &self, py::handle camera){
-            // Duplicate camera to obtain unique_ptr:
-            auto camera_use = copy_camera_unique(camera);
+            // Obtain the specific camera model:
+            auto camera_ptr = get_camera_model(camera);
 
             // Call the normal_pass method:
-            auto normals = self.normal_pass(camera_use);
+            auto normals = self.normal_pass(camera_ptr);
 
             // Format the output array:
-            int width  = (size_t) floor(camera_use->get_resolutionX());
-            int height = (size_t) floor(camera_use->get_resolutionY());
+            int width  = (size_t) floor(camera_ptr->get_resolutionX());
+            int height = (size_t) floor(camera_ptr->get_resolutionY());
             auto result = py::array_t<Scalar>({height,width,3});
             auto raw = result.mutable_data();
             for (int i = 0; i < height*width*3; i++){
@@ -414,8 +580,8 @@ PYBIND11_MODULE(_crt, crt) {
     crt.def("render", [](py::handle camera, py::list lights_list, py::list entity_list,
                          int min_samples, int max_samples, Scalar noise_threshold, int num_bounces){
 
-        // Duplicate camera to obtain unique_ptr:
-        auto camera_use = copy_camera_unique(camera);
+        // Obtain the specific camera model:
+        auto camera_ptr = get_camera_model(camera);
 
         // Convert py::list of lights to std::vector
         std::vector<std::unique_ptr<Light<Scalar>>> lights;
@@ -424,9 +590,9 @@ PYBIND11_MODULE(_crt, crt) {
                 PointLight<Scalar> light_new = light.cast<PointLight<Scalar>>();
                 lights.push_back(std::make_unique<PointLight<Scalar>>(light_new));
             }
-            else if (py::isinstance<SquareLight<Scalar>>(light)){
-                SquareLight<Scalar> light_new = light.cast<SquareLight<Scalar>>();
-                lights.push_back(std::make_unique<SquareLight<Scalar>>(light_new));
+            else if (py::isinstance<AreaLight<Scalar>>(light)){
+                AreaLight<Scalar> light_new = light.cast<AreaLight<Scalar>>();
+                lights.push_back(std::make_unique<AreaLight<Scalar>>(light_new));
             }
         }
 
@@ -438,12 +604,12 @@ PYBIND11_MODULE(_crt, crt) {
         }
 
         // Call the rendering function:
-        auto pixels = render(camera_use, lights, entities,
+        auto pixels = render(camera_ptr, lights, entities,
                              min_samples, max_samples, noise_threshold, num_bounces);
 
         // Format the output image:
-        int width  = (size_t) floor(camera_use->get_resolutionX());
-        int height = (size_t) floor(camera_use->get_resolutionY());
+        int width  = (size_t) floor(camera_ptr->get_resolutionX());
+        int height = (size_t) floor(camera_ptr->get_resolutionY());
         auto result = py::array_t<uint8_t>({height,width,4});
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width*4; i++) {
@@ -452,9 +618,26 @@ PYBIND11_MODULE(_crt, crt) {
         return result;
     });
 
+    crt.def("simulate_lidar", [](py::handle lidar, py::list entity_list, int num_rays){
+        // OBtain the specific lidar model:
+        auto lidar_ptr = get_lidar_model(lidar);
+
+        // Convert py::list of entities to std::vector
+        std::vector<Entity<Scalar>*> entities;
+        for (auto entity_handle : entity_list) {
+            Entity<Scalar>* entity = entity_handle.cast<Entity<Scalar>*>();
+            entities.emplace_back(entity);
+        }
+
+        // Simulate the lidar:
+        auto distance = simulate_lidar(lidar_ptr, entities, num_rays);
+
+        return distance;
+    });
+
     crt.def("intersection_pass", [](py::handle camera, py::list entity_list){
-        // Duplicate camera to obtain unique_ptr:
-        auto camera_use = copy_camera_unique(camera);
+        // Obtain the specific camera model:
+        auto camera_ptr = get_camera_model(camera);
 
         // Convert py::list of entities to std::vector
         std::vector<Entity<Scalar>*> entities;
@@ -464,11 +647,11 @@ PYBIND11_MODULE(_crt, crt) {
         }
 
         // Call the intersection tracing function:
-        auto intersections = intersection_pass(camera_use, entities);
+        auto intersections = intersection_pass(camera_ptr, entities);
 
         // Format the output array:
-        int width  = (size_t) floor(camera_use->get_resolutionX());
-        int height = (size_t) floor(camera_use->get_resolutionY());
+        int width  = (size_t) floor(camera_ptr->get_resolutionX());
+        int height = (size_t) floor(camera_ptr->get_resolutionY());
         auto result = py::array_t<Scalar>({height,width,3});
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width*3; i++){
@@ -478,8 +661,8 @@ PYBIND11_MODULE(_crt, crt) {
     });
 
     crt.def("instance_pass", [](py::handle camera, py::list entity_list){
-        // Duplicate camera to obtain unique_ptr:
-        auto camera_use = copy_camera_unique(camera);
+        // Obtain the specific camera model:
+        auto camera_ptr = get_camera_model(camera);
 
         // Convert py::list of entities to std::vector
         uint32_t id = 1;
@@ -492,11 +675,11 @@ PYBIND11_MODULE(_crt, crt) {
         }
 
         // Call the intersection tracing function:
-        auto instances = instance_pass(camera_use, entities);
+        auto instances = instance_pass(camera_ptr, entities);
 
         // Format the output array:
-        int width  = (size_t) floor(camera_use->get_resolutionX());
-        int height = (size_t) floor(camera_use->get_resolutionY());
+        int width  = (size_t) floor(camera_ptr->get_resolutionX());
+        int height = (size_t) floor(camera_ptr->get_resolutionY());
         auto result = py::array_t<uint32_t>({height,width});
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width; i++){
@@ -506,8 +689,8 @@ PYBIND11_MODULE(_crt, crt) {
     });
 
     crt.def("normal_pass", [](py::handle camera, py::list entity_list){
-        // Duplicate camera to obtain unique_ptr:
-        auto camera_use = copy_camera_unique(camera);
+        // Obtain the specific camera model:
+        auto camera_ptr = get_camera_model(camera);
 
         // Convert py::list of entities to std::vector
         uint32_t id = 1;
@@ -520,11 +703,11 @@ PYBIND11_MODULE(_crt, crt) {
         }
 
         // Call the intersection tracing function:
-        auto normals = normal_pass(camera_use, entities);
+        auto normals = normal_pass(camera_ptr, entities);
 
         // Format the output array:
-        int width  = (size_t) floor(camera_use->get_resolutionX());
-        int height = (size_t) floor(camera_use->get_resolutionY());
+        int width  = (size_t) floor(camera_ptr->get_resolutionX());
+        int height = (size_t) floor(camera_ptr->get_resolutionY());
         auto result = py::array_t<Scalar>({height,width,3});
         auto raw = result.mutable_data();
         for (int i = 0; i < height*width*3; i++){

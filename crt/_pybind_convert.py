@@ -1,9 +1,9 @@
-from crt.lights import PointLight, SquareLight
-from crt import Entity, BodyFixedEntity
+from crt.lights import PointLight, AreaLight
+from crt import Entity
 
 def valid_light(light):
     return (type(light) == PointLight) or \
-           (type(light) == SquareLight)
+           (type(light) == AreaLight)
 
 def validate_lights(lights):
     err_msg = """error"""

@@ -14,9 +14,9 @@ class Camera(ABC):
         return
 
 
-class PinholeCamera(RigidBody, Camera):
+class SimpleCamera(RigidBody, Camera):
     """
-    The :class:`PinholeCamera` class is the simplest camera model implemented
+    The :class:`SimpleCamera` class is the simplest camera model implemented
 
     :param focal_length: Focal length of the camera
     :type focal_length: float
@@ -30,7 +30,7 @@ class PinholeCamera(RigidBody, Camera):
     def __init__(self, focal_length: float, resolution: ArrayLike, sensor_size: ArrayLike, 
                  z_positive: bool=False, **kwargs):
         
-        super(PinholeCamera, self).__init__(**kwargs)
+        super(SimpleCamera, self).__init__(**kwargs)
 
         self.focal_length = focal_length
         """
@@ -47,9 +47,9 @@ class PinholeCamera(RigidBody, Camera):
         Sensor size of the camera (:code:`numpy.array` of shape :code:`(2,)`)
         """
 
-        self._cpp = _crt.PinholeCamera(focal_length, resolution, sensor_size,z_positive)
+        self._cpp = _crt.SimpleCamera(focal_length, resolution, sensor_size,z_positive)
         """
-        Corresponding C++ PinholeCamera object
+        Corresponding C++ SimpleCamera object
         """
 
         self.set_pose(self.position, self.rotation)

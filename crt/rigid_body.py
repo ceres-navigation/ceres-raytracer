@@ -131,49 +131,34 @@ class RigidBody:
         for more information.
         """
 
-    def set_scale(self, scale: float, cpp: bool =True):
+    def set_scale(self, scale: float):
         """
         Set a new :attr:`~.RigidBody.scale`
 
         :param scale: Scale to be applied
         :type scale: float
-        :param cpp: Flag for if the underlying C++ body should be updated 
-                    |default| :code:`True`
-        :type cpp: bool, optional
         """
         self.scale = validate_scale(scale)
-        if cpp:
-            self._cpp.set_scale(self.scale)
 
-    def set_position(self, position: ArrayLike, cpp: bool =True):
+    def set_position(self, position: ArrayLike):
         """
         Set a new :attr:`~.RigidBody.position`
 
         :param position: Position to be applied (xyz)
         :type position: ArrayLike
-        :param cpp: Flag for if the underlying C++ body should be updated 
-                    |default| :code:`True`
-        :type cpp: bool, optional
         """
         self.position = validate_position(position)
-        if cpp:
-            self._cpp.set_position(self.position)
 
-    def set_rotation(self, rotation: ArrayLike, cpp: bool =True):
+    def set_rotation(self, rotation: ArrayLike):
         """
         Set a new :attr:`~.RigidBody.rotation`
 
         :param rotation: 3 by 3 Rotation matrix that must obey :math:`R^T = R^{-1}` and :math:`\det(R)=1`
         :type rotation: ArrayLike
-        :param cpp: Flag for if the underlying C++ body should be updated 
-                    |default| :code:`True`
-        :type cpp: bool, optional
         """
         self.rotation = validate_rotation(rotation)
-        if cpp:
-            self._cpp.set_rotation(self.rotation)
 
-    def set_pose(self, position: ArrayLike, rotation: ArrayLike, cpp: bool =True):
+    def set_pose(self, position: ArrayLike, rotation: ArrayLike):
         """
         Set both a new :attr:`~.RigidBody.position` and :attr:`~.RigidBody.rotation`
 
@@ -181,16 +166,11 @@ class RigidBody:
         :type position: ArrayLike
         :param rotation: 3 by 3 Rotation matrix that must obey :math:`R^T = R^{-1}` and :math:`\det(R)=1`
         :type rotation: ArrayLike
-        :param cpp: Flag for if the underlying C++ body should be updated 
-                    |default| :code:`True`
-        :type cpp: bool, optional
         """
         self.position = validate_position(position)
         self.rotation = validate_rotation(rotation)
-        if cpp:
-            self._cpp.set_pose(self.position, self.rotation)
 
-    def spice_position(self, et: float, cpp: bool =True):
+    def spice_position(self, et: float):
         """
         Set new position for a given ephemeris time using SPICE
         
@@ -203,16 +183,11 @@ class RigidBody:
 
         :param et: Ephemeris time (seconds since the J2000 epoch), also known as Barycentric Dynamical Time
         :type et: float
-        :param cpp: Flag for if the underlying C++ body should be updated 
-                    |default| :code:`True`
-        :type cpp: bool, optional
         """
         position,_ = spkpos(self.name, et, self.ref, self.abcorr, self.origin)
         self.position = validate_position(position)
-        if cpp:
-            self._cpp.set_position(self.position)
 
-    def spice_rotation(self, et: float, cpp: bool =True):
+    def spice_rotation(self, et: float):
         """
         Set new rotation for a given ephemeris time using SPICE
 
@@ -223,16 +198,11 @@ class RigidBody:
 
         :param et: Ephemeris time (seconds since the J2000 epoch), also known as Barycentric Dynamical Time
         :type et: float
-        :param cpp: Flag for if the underlying C++ body should be updated 
-                    |default| :code:`True`
-        :type cpp: bool, optional
         """
         rotation = pxform(self.ref, self.frame, et)
         self.rotation = validate_rotation(rotation)
-        if cpp:
-            self._cpp.set_position(self.rotation)
 
-    def spice_pose(self, et: float, cpp: bool =True):
+    def spice_pose(self, et: float):
         """
         Set both a new position and rotation for a given ephemeris time using SPICE
 
@@ -251,13 +221,8 @@ class RigidBody:
 
         :param et: Ephemeris time (seconds since the J2000 epoch), also known as Barycentric Dynamical Time
         :type et: float
-        :param cpp: Flag for if the underlying C++ body should be updated 
-                    |default| :code:`True`
-        :type cpp: bool, optional
         """
         position,_ = spkpos(self.name, et, self.ref, self.abcorr, self.origin)
         rotation   = pxform(self.ref, self.frame, et)
         self.position = validate_position(position)
         self.rotation = validate_rotation(rotation)
-        if cpp:
-            self._cpp.set_pose(self.position, self.rotation)
