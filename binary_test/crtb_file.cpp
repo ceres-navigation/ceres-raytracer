@@ -6,15 +6,17 @@
 #include <fstream>
 #include <cstdio>
 #include <cstdint>
-#include <cstring>
 #include <cstdlib>
 #include <cassert>
 #include <limits>
 
 #include <zstd.h>
 
+#include <chrono>
+
 #include <iostream>
 
+#include <cstring>
 #include <memory>
 #include <vector>
 #include <random>
@@ -41,8 +43,11 @@ typedef struct {
 
 
 void read_obj(std::string input_file,
-              std::vector<std::vector<Scalar>> &verts,
+              std::vector<std::vector<Scalar>> &vertices,
               std::vector<std::vector<uint32_t>> &faces){
+
+    std::cout << "Reading OBJ file from " << input_file << "\n";
+    auto start = std::chrono::system_clock::now();
     tinyobj::ObjReader reader;
     tinyobj::ObjReaderConfig reader_config;
 
@@ -61,7 +66,7 @@ void read_obj(std::string input_file,
     auto& shapes = reader.GetShapes();
 
     // Loop over vertices:
-    for (size_t i = 0; i < sizeof(attrib.vertices); i=i+3){
+    for (size_t i = 0; i < attrib.vertices.size(); i=i+3){
         std::vector<Scalar> vertex;
         tinyobj::real_t vx_i = attrib.vertices[size_t(i)+0];
         tinyobj::real_t vy_i = attrib.vertices[size_t(i)+1];
@@ -69,7 +74,7 @@ void read_obj(std::string input_file,
         vertex.push_back((Scalar) vx_i);
         vertex.push_back((Scalar) vy_i);
         vertex.push_back((Scalar) vz_i);
-        verts.push_back(vertex);
+        vertices.push_back(vertex);
     }
 
     // Loop over shapes
@@ -93,16 +98,21 @@ void read_obj(std::string input_file,
             shapes[s].mesh.material_ids[f];
         }
     }
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "    DONE: " << vertices.size() << " vertices and " << faces.size() << " faces read in " << elapsed_seconds.count() << " seconds\n";
 }
 
-void write_crtb(std::string output_file,
+void write_crtb(std::string file_path,
                 std::vector<std::vector<Scalar>> vertices,
                 std::vector<std::vector<uint32_t>> faces){
-    std::cout << "Writing triangles to " << output_file << "\n";
 
     // HEADER FORMAT:
     // {char magic[6], uint32_t compressed_v_size, uint32_t compressed_f_size, 
     //  uint32_t num_v, uint32_t num_f}
+    std::cout << "Writing geometry to " << file_path << "\n";
+    auto start = std::chrono::system_clock::now();
 
     uint32_t num_v = vertices.size();
     uint32_t num_f = faces.size();
@@ -129,8 +139,8 @@ void write_crtb(std::string output_file,
     // Compress the vertices:
     size_t v_size = num_v*3*sizeof(Scalar);
     size_bound = ZSTD_compressBound(v_size);
-    auto compressed_v = new uint8_t[size_bound];
-    uint32_t compressed_v_size = ZSTD_compress(compressed_v, size_bound, v_array, v_size, 4);
+    uint8_t compressed_v[size_bound];
+    uint32_t compressed_v_size = ZSTD_compress(&compressed_v, size_bound, v_array, v_size, 4);
     if (ZSTD_isError(compressed_v_size)) {
         std::cerr << ZSTD_getErrorName(compressed_v_size) << std::endl;
         assert(!ZSTD_isError(compressed_v_size));
@@ -139,15 +149,16 @@ void write_crtb(std::string output_file,
     // Compress the faces:
     size_t f_size = num_f*3*sizeof(uint32_t);
     size_bound = ZSTD_compressBound(f_size);
-    auto compressed_f = new uint8_t[size_bound];
-    uint32_t compressed_f_size = ZSTD_compress(compressed_f, size_bound, f_array, f_size, 4);
+    uint8_t compressed_f[size_bound];
+    uint32_t compressed_f_size = ZSTD_compress(&compressed_f, size_bound, f_array, f_size, 4);
     if (ZSTD_isError(compressed_f_size)) {
         std::cerr << ZSTD_getErrorName(compressed_f_size) << std::endl;
         assert(!ZSTD_isError(compressed_f_size));
     }
 
     // Write uncompressed header to file:
-    FILE* file = fopen(output_file.c_str(), "w");
+    const char *file_char_ptr = file_path.c_str();
+    FILE* file = fopen(file_char_ptr, "wb");
     fwrite(magic, sizeof(char), magic_length, file);
     fwrite(&compressed_v_size, sizeof(uint32_t), 1, file);
     fwrite(&compressed_f_size, sizeof(uint32_t), 1, file);
@@ -157,15 +168,21 @@ void write_crtb(std::string output_file,
     // Write out the compressed data blocks:
     fwrite(&compressed_v, compressed_v_size, 1, file);
     fwrite(&compressed_f, compressed_f_size, 1, file);
+    fclose(file);
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "    DONE: " << num_v << " vertices and " << num_f << " faces written in " << elapsed_seconds.count() << " seconds\n";
 }
 
-void read_crtb(std::string input_file, 
-               std::vector<std::vector<Scalar>> vertices,
-               std::vector<std::vector<uint32_t>> faces){
+void read_crtb(std::string file_path, 
+               std::vector<std::vector<Scalar>> &vertices,
+               std::vector<std::vector<uint32_t>> &faces){
 
     // HEADER FORMAT:
     // {char magic[6], uint32_t compressed_v_size, uint32_t compressed_f_size, 
     //  uint32_t num_v, uint32_t num_f}
+    std::cout << "Reading geometry from " << file_path << "\n";
+    auto start = std::chrono::system_clock::now();
 
     char magic_return[magic_length];
     uint32_t compressed_v_size;
@@ -173,22 +190,62 @@ void read_crtb(std::string input_file,
     uint32_t num_v;
     uint32_t num_f;
 
-    FILE* file = fopen(input_file.c_str(), "r");
+    // Read the file:
+    const char *file_char_ptr = file_path.c_str();
+    FILE* file = fopen(file_char_ptr, "rb");
 
     // Verify magic keyword:
-    fread(&magic_return, sizeof(char), magic_length, file);
+    fread(&magic_return, sizeof(char), 6, file);
     fread(&compressed_v_size, sizeof(uint32_t), 1, file);
     fread(&compressed_f_size, sizeof(uint32_t), 1, file);
     fread(&num_v, sizeof(uint32_t), 1, file);
     fread(&num_f, sizeof(uint32_t), 1, file);
 
+    // TODO: DEBUG WHY THIS DOESNT WORK:
     for (size_t i = 0; i < magic_length; i++){
-        std::cout << magic_return[i] << "\n";
-        // assert(magic_return[i] == magic[i]);
+        assert(magic_return[i] == magic[i]);
     }
 
-    std::cout << num_v << "\n";
-    std::cout << num_f << "\n";
+    // Decompress vertices:
+    uint8_t v_compressed[compressed_v_size];
+    fread(&v_compressed, sizeof(uint8_t), compressed_v_size, file);
+    Scalar v_array[num_v][3];
+    auto size_v = ZSTD_decompress(&v_array, num_v*3*sizeof(Scalar), v_compressed, compressed_v_size);
+    if (ZSTD_isError(size_v)) {
+        std::cerr << compressed_v_size << " " << ZSTD_getErrorName(size_v) << std::endl;
+    }
+
+    // Decompress faces:
+    uint8_t f_compressed[compressed_f_size];
+    fread(&f_compressed, sizeof(uint8_t), compressed_f_size, file);
+    uint32_t f_array[num_f][3];
+    auto size_f = ZSTD_decompress(&f_array, num_f*3*sizeof(uint32_t), f_compressed, compressed_f_size);
+    if (ZSTD_isError(size_f)) {
+        std::cerr << compressed_f_size << " " << ZSTD_getErrorName(size_f) << std::endl;
+    }
+
+    fclose(file);
+
+    // Convert 2d array to vector of vector:
+    for (uint32_t i = 0; i < num_v; i++){
+        std::vector<Scalar> vertex;
+        for (int j = 0; j < 3; j++){
+            vertex.push_back(v_array[i][j]);
+        }
+        vertices.push_back(vertex);
+    }
+
+    // Convert 2d array to vector of vector:
+    for (uint32_t i = 0; i < num_f; i++){
+        std::vector<uint32_t> face_def;
+        for (int j = 0; j < 3; j++){
+            face_def.push_back(f_array[i][j]);
+        }
+        faces.push_back(face_def);
+    }
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    std::cout << "    DONE: " << num_v << " vertices and " << num_f << " faces read in " << elapsed_seconds.count() << " seconds\n";
 }
 
 void print_vertices(std::vector<std::vector<Scalar>> vertices){
@@ -213,14 +270,15 @@ void print_faces(std::vector<std::vector<uint32_t>> faces){
 
 
 int main(){
-    std::string file = "cube.crtb";
-    std::string obj_file = "cube.obj";
+    std::string file = "bennu_tile.crtb";
+    std::string obj_file = "bennu_tile.obj";
 
     // Read a .OBJ:
     std::vector<std::vector<Scalar>> v;
     std::vector<std::vector<uint32_t>> f;
-    
     read_obj(obj_file,v,f);
+    // print_vertices(v);
+    // print_faces(f);
     
     // Write triangles to binary:
     write_crtb(file,v,f);
@@ -231,7 +289,7 @@ int main(){
     read_crtb(file, v2, f2);
 
     // Print triangles:
-    std::cout << "OBJ loaded from binary:\n";
+    // std::cout << "OBJ loaded from binary:\n";
     // print_vertices(v2);
     // print_faces(f2);
     
